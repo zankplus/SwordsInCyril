@@ -24,7 +24,7 @@ class ChallengeeDialog extends JDialog
 			this.user = user;
 			setModal(true);
 			setBounds(100, 100, 200, 125);
-			setLocationRelativeTo(gui.mainFrame);
+			setLocationRelativeTo(gui.chatWindow);
 			getContentPane().setLayout(new BorderLayout());
 			contentPanel.setLayout(new FlowLayout());
 			contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));

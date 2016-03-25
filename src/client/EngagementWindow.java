@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -21,6 +22,7 @@ import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
 import javax.swing.border.TitledBorder;
 
+import fftadata.ActiveUnit;
 import zank.*;
 
 import java.awt.Color;
@@ -196,6 +198,27 @@ public class EngagementWindow extends JFrame {
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		out.writeObject(message);
 		out.flush();
+	}
+	
+	// ZankMessage handlers
+	
+	// CHAT: append the message to the engagement chat and move the caret to the bottom
+	public void receiveChat(String user, String msg)
+	{
+		battleChat.append("\r\n" + user + ": " + msg);
+		battleChat.setCaretPosition(battleChat.getDocument().getLength());
+	}
+	
+	// READY: the server 
+	public void receiveReady(ArrayList<ActiveUnit> units)
+	{
+		if (playerNumber == 1)
+			map.p2Units = units;
+		else if (playerNumber == 2)
+			map.p1Units = units;
+		
+		gamePanel.beginGame();
+		repaint();
 	}
 }
 

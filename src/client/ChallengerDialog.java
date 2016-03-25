@@ -8,6 +8,7 @@ import java.net.Socket;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
@@ -19,13 +20,13 @@ class ChallengerDialog extends JDialog
 		Socket socket;
 		String user; 
 			
-		public ChallengerDialog(String user, ZankClient gui)
+		public ChallengerDialog(String user, ZankClient client)
 		{
 			this.user = user;
 			setModal(true);
 			
 			setBounds(100, 100, 200, 125);
-			setLocationRelativeTo(gui.mainFrame);
+			setLocationRelativeTo(client.chatWindow);
 			getContentPane().setLayout(new BorderLayout());
 			contentPanel.setLayout(new FlowLayout());
 			contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -41,7 +42,7 @@ class ChallengerDialog extends JDialog
 				public void actionPerformed(ActionEvent arg0)
 				{
 					try {
-						gui.sendChallenge(user);
+						client.sendChallenge(user);
 					} catch (IOException e) {
 						System.out.println("Couldn't challenge user " + user);
 					}
