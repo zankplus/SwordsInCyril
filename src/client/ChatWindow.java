@@ -24,8 +24,15 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.border.EmptyBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import javax.swing.text.MutableAttributeSet;
+import javax.swing.text.StyleConstants;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.html.HTMLDocument;
 
 import zank.ZankMessage;
 import zank.ZankMessageType;
@@ -44,25 +51,10 @@ public class ChatWindow extends JFrame {
 	
 	JList userlist;
 	ArrayList<String> usersOnline;
-	JTextArea chatArea;
+	JTextPane chatArea;
 	JTextField chatLine;
 	JDialog challenge;
 	
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					ChatWindow frame = new ChatWindow(null);
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
 
 	/**
 	 * Create the frame.
@@ -86,10 +78,14 @@ public class ChatWindow extends JFrame {
 		RightPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		splitPane.setRightComponent(RightPane);
 		
-		chatArea = new JTextArea();
-		chatArea.setLineWrap(true);
+		chatArea = new JTextPane();
+		chatArea.setContentType("text/html");
+		
+
+        chatArea.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
+        
+//		chatArea.setLineWrap(true);
 		chatArea.setEditable(false);
-		chatArea.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		RightPane.setViewportView(chatArea);
 		
 		JPanel LeftPane = new JPanel();
@@ -206,13 +202,23 @@ public class ChatWindow extends JFrame {
 		userlist.setListData(usersOnline.toArray());
 	}
 	
+	public void appendToChat(String s)
+	{
+		try {
+			HTMLDocument doc = (HTMLDocument) chatArea.getDocument();
+			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
 	
 	// ZankMessage handlers: When the SocketMonitor receives a new message intended for the ChatWindow, it calls the corresponding method here to handle it
 	
 	// CHAT: Append the message to the chat
 	public void receiveChat(String user, String msg)
 	{
-		chatArea.append("\r\n " + user + ": " + msg);
+		appendToChat("<br><b>" + user + "</b>: " + msg);
 	}
 	
 	// LOGIN: If you're the one logging in, confirm connection. If not, notify that the user has joined.
@@ -220,9 +226,9 @@ public class ChatWindow extends JFrame {
 	public void receiveLogin(String user)
 	{
 		if (user.equals(zu.username))
-			chatArea.append("** You are now connected to Swords in Cyril as " + zu.username);
+			appendToChat("<em><span style=\"color:blue\">** You are now connected to Swords in Cyril as <strong>" + zu.username + "</strong></span>");
 		else
-			chatArea.append("\r\n* " + user + " has entered the room");
+			appendToChat("<br><i><span style=\"color:gray\">* " + user + " has entered the room");
 		usersOnline.add(user);
 		updateUserlist();
 	}
@@ -230,7 +236,7 @@ public class ChatWindow extends JFrame {
 	// LOGOUT: Append logout message to chat and remove the exiting user from the userlist; update the userlist display
 	public void receiveLogout(String user)
 	{
-		chatArea.append("\r\n* " + user + " has left the room");
+		appendToChat("<br><i><span style=\"color:gray\">* " + user + " has left the room");
 		usersOnline.remove(user);
 		updateUserlist();
 	}
@@ -254,6 +260,6 @@ public class ChatWindow extends JFrame {
 	// ENGAGE: Notify the client that the involved users are engaging
 	public void receiveEngage(String user1, String user2)
 	{
-		chatArea.append("\r\n* " + user1 + " and " + user2 + " are engaging!");
+		appendToChat("<br><i><span style=\"color:gray\">* " + user1 + " and " + user2 + " are engaging!");
 	}
 }

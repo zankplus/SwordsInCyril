@@ -154,7 +154,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 				
 				// Disconnection handler
 				// TODO: idk do something about this
-				cw.chatArea.append("\r\n* you have been disconnected from the server");					
+//				cw.chatArea.append("\r\n* you have been disconnected from the server");					
 			}
 		}
 		catch (IOException e) { System.err.println(e); } catch (ClassNotFoundException e) {	System.err.println(e);	}

@@ -84,7 +84,7 @@ public class EngagementWindow extends JFrame {
 		this.out = out;
 		
 		// Set up window
-		ImageIcon img = new ImageIcon("resources/misc/appicon.png");
+		ImageIcon img = new ImageIcon("resources/misc/appicon2.png");
 		setIconImage(img.getImage());
 		
 		try
