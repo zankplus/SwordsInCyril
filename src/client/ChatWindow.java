@@ -2,7 +2,6 @@ package client;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -22,16 +21,9 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.border.EmptyBorder;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
-import javax.swing.text.MutableAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyledDocument;
 import javax.swing.text.html.HTMLDocument;
 
 import zank.ZankMessage;
@@ -40,6 +32,7 @@ import zank.ZankUser;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import java.awt.Cursor;
 
 public class ChatWindow extends JFrame {
 
@@ -51,7 +44,7 @@ public class ChatWindow extends JFrame {
 	
 	JList userlist;
 	ArrayList<String> usersOnline;
-	JTextPane chatArea;
+	JTextPane chat;
 	JTextField chatLine;
 	JDialog challenge;
 	
@@ -78,15 +71,13 @@ public class ChatWindow extends JFrame {
 		RightPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		splitPane.setRightComponent(RightPane);
 		
-		chatArea = new JTextPane();
-		chatArea.setContentType("text/html");
-		
-
-        chatArea.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
+		chat = new JTextPane();
+		chat.setContentType("text/html");
+        chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
         
 //		chatArea.setLineWrap(true);
-		chatArea.setEditable(false);
-		RightPane.setViewportView(chatArea);
+		chat.setEditable(false);
+		RightPane.setViewportView(chat);
 		
 		JPanel LeftPane = new JPanel();
 		splitPane.setLeftComponent(LeftPane);
@@ -205,7 +196,7 @@ public class ChatWindow extends JFrame {
 	public void appendToChat(String s)
 	{
 		try {
-			HTMLDocument doc = (HTMLDocument) chatArea.getDocument();
+			HTMLDocument doc = (HTMLDocument) chat.getDocument();
 			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
 		} catch (Exception e) {
 			e.printStackTrace();

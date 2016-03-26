@@ -16,17 +16,16 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import java.awt.Dimension;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
-import javax.swing.border.TitledBorder;
+import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import zank.*;
 
-import java.awt.Color;
-import javax.swing.border.BevelBorder;
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
@@ -35,8 +34,8 @@ import java.awt.SystemColor;
 public class EngagementWindow extends JFrame {
 
 	private JPanel contentPane;
-	JTextArea battleChat;
-	private JTextField battleChatEntry;
+	JTextPane chat;
+	private JTextField chatEntry;
 	Socket socket;
 	ZankUser player, opponent;
 	String gameID;
@@ -93,7 +92,7 @@ public class EngagementWindow extends JFrame {
 		} catch (NullPointerException e) { setTitle("Testin' mode"); }
 		
 		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		setBounds(100, 100, 800, 600);
+		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
 		contentPane.setBorder(null);
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -111,28 +110,28 @@ public class EngagementWindow extends JFrame {
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		rightPanel.add(scrollPane, BorderLayout.CENTER);
 		
-		battleChat = new JTextArea();
-		battleChat.setLineWrap(true);
-		battleChat.setEditable(false);
-		battleChat.setFont(new Font("Tahoma", Font.PLAIN, 11));
-		scrollPane.setViewportView(battleChat);
+		chat = new JTextPane();
+		chat.setContentType("text/html");
+		chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
+		chat.setFont(new Font("Tahoma", Font.PLAIN, 11));
+		scrollPane.setViewportView(chat);
 		
-		battleChatEntry = new JTextField();
-		rightPanel.add(battleChatEntry, BorderLayout.SOUTH);
-		battleChatEntry.setColumns(10);
-		battleChatEntry.setEnabled(true);
-		battleChatEntry.addActionListener(new ActionListener()
+		chatEntry = new JTextField();
+		rightPanel.add(chatEntry, BorderLayout.SOUTH);
+		chatEntry.setColumns(10);
+		chatEntry.setEnabled(true);
+		chatEntry.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
 			{
-				String s= battleChatEntry.getText();
+				String s= chatEntry.getText();
 				if (!s.equals(""))
 				{
 					try
 					{
 							sendChat(s);
 					} catch (IOException e1) { e1.printStackTrace(); }
-					battleChatEntry.setText("");
+					chatEntry.setText("");
 				}
 			}
 		});
@@ -200,13 +199,21 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
-	// ZankMessage handlers
+	public void appendToChat(String s)
+	{
+		try {
+			HTMLDocument doc = (HTMLDocument) chat.getDocument();
+			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 	
+	// ZankMessage handlers
 	// CHAT: append the message to the engagement chat and move the caret to the bottom
 	public void receiveChat(String user, String msg)
 	{
-		battleChat.append("\r\n" + user + ": " + msg);
-		battleChat.setCaretPosition(battleChat.getDocument().getLength());
+		appendToChat("<br><b>" + user + "</b>: " + msg);
 	}
 	
 	// READY: the server 

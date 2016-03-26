@@ -146,7 +146,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 						else
 							System.out.println("received bad game message from server: " + msg);
 
-						cw.chatArea.setCaretPosition(cw.chatArea.getDocument().getLength());							
+						cw.chat.setCaretPosition(cw.chat.getDocument().getLength());							
 					}
 					catch (NullPointerException e) { System.err.println("received bad message from server: " + msg); e.printStackTrace(); }
 				}
