@@ -201,6 +201,9 @@ public class ActiveUser extends Thread
 												zm = new ZankMessage(ZankMessageType.GAME, null, za);
 												ag.player2.messageQueue.put(zm);
 												
+												// Initialize turn order
+												
+												ag.initializeTurnOrder();
 											}
 										}
 									}

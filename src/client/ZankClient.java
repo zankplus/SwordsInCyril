@@ -81,9 +81,7 @@ public class ZankClient
 		
 		gameWindow = new EngagementWindow(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, in, out);
 		gameWindow.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
-		gameWindow.setVisible(true);
-		
-		
+		gameWindow.setVisible(true);	
 	}
 	
 	public void launchClanBuilder()

@@ -102,7 +102,8 @@ public class EngagementWindow extends JFrame {
 		contentPane.add(splitPane, BorderLayout.CENTER);
 		
 		JPanel rightPanel = new JPanel();
-		splitPane.setRightComponent(rightPanel);
+		rightPanel.setPreferredSize(new Dimension(320, 10));
+		contentPane.add(rightPanel, BorderLayout.CENTER);
 		rightPanel.setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane = new JScrollPane();
@@ -139,7 +140,7 @@ public class EngagementWindow extends JFrame {
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		leftPanel.setBorder(null);
 		leftPanel.setPreferredSize(new Dimension(560, 10));
-		splitPane.setLeftComponent(leftPanel);
+		contentPane.add(leftPanel, BorderLayout.WEST);
 		
 //		ClanBuilderRoster roster = new ClanBuilderRoster();
 //		panel.add(roster, BorderLayout.SOUTH);
@@ -220,9 +221,19 @@ public class EngagementWindow extends JFrame {
 	public void receiveReady(ArrayList<ActiveUnit> units)
 	{
 		if (playerNumber == 1)
-			map.p2Units = units;
+			gamePanel.p2Units = units;
 		else if (playerNumber == 2)
-			map.p1Units = units;
+			gamePanel.p1Units = units;
+		
+		ActiveUnit[] aus = new ActiveUnit[gamePanel.p1Units.size() + gamePanel.p2Units.size()];
+		
+		for (int i = 0; i < gamePanel.p1Units.size(); i++)
+			aus[i] = gamePanel.p1Units.get(i);
+		
+		for (int i = 0; i < gamePanel.p2Units.size(); i++)
+			aus[i + gamePanel.p1Units.size()] =gamePanel.p2Units.get(i);
+		
+		gamePanel.units = aus;
 		
 		gamePanel.beginGame();
 		repaint();
@@ -268,9 +279,9 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 					{
 						ew.sendReady();
 						if (ew.playerNumber == 1)
-							ew.map.p1Units = ew.mapPanel.units;
+							ew.gamePanel.p1Units = ew.mapPanel.units;
 						else if (ew.playerNumber == 2)
-							ew.map.p2Units = ew.mapPanel.units;
+							ew.gamePanel.p2Units = ew.mapPanel.units;
 						
 						btnReady.setEnabled(false);
 						btnReady.setText("Waiting for other player...");

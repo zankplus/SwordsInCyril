@@ -15,6 +15,8 @@ public class ActiveGame
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	boolean finishedPrep1, finishedPrep2;
 	
+	TurnOrder turnOrder;
+	
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2)
 	{
@@ -31,6 +33,11 @@ public class ActiveGame
 		player2 = p2;
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
+	}
+	
+	public void initializeTurnOrder()
+	{
+		turnOrder = new TurnOrder(p1Units, p2Units);
 	}
 	
 	public ZankMessage getStartMessage()

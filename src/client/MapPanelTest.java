@@ -94,7 +94,7 @@ public class MapPanelTest extends JFrame {
 }
 
 // Panel containing everything needed to interact with the game, including the MapPanel and
-// whatever's happening below it
+// whatever's happening below it. Also contains the game state
 class GamePanel extends JPanel
 {
 	ZankGameMap map;
@@ -102,6 +102,10 @@ class GamePanel extends JPanel
 	JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
 	EngagementWindowRosterPanel rosterPanel;
 	EngagementWindow ew;	// Parent frame
+	
+	ArrayList<ActiveUnit> p1Units, p2Units;
+	ActiveUnit[] units;
+	
 	int player;
 	
 	public GamePanel(EngagementWindow base)
@@ -150,6 +154,19 @@ class GamePanel extends JPanel
 		unitPreview = blankUnitPreview;
 		
 		bottomPanel.add(unitPreview, BorderLayout.WEST);
+	
+		ArrayList<ActiveUnit> otherTeam;
+		if (player == 1)
+			otherTeam = p2Units;
+		else
+			otherTeam = p1Units;
+		
+		for (ActiveUnit au : otherTeam)
+		{
+			mapPanel.addUnit(au);
+			mapPanel.units.add(au);
+		}
+		
 		
 		mapPanel.beginGame();
 	}
@@ -341,17 +358,7 @@ class MapPanel extends JPanel
 	{
 		mode = 0;
 		removeHighlightedTiles();
-		ArrayList<ActiveUnit> otherTeam;
-		if (player == 1)
-			otherTeam = map.p2Units;
-		else
-			otherTeam = map.p1Units;
 		
-		for (ActiveUnit au : otherTeam)
-		{
-			addUnit(au);
-			units.add(au);
-		}
 	}
 	
 	public void removeHighlightedTiles()
@@ -417,7 +424,7 @@ class ZankGameMap
 	TreeSet<ForegroundObject> mapObjects;
 	ZankMapTile[][] mapData;
 	ZankMapTile[] tileList, p1StartingTiles, p2StartingTiles;
-	ArrayList<ActiveUnit> p1Units, p2Units;
+	
 	
 	
 }
