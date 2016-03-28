@@ -70,13 +70,13 @@ public class ZankClient
 		if (zu.username.equals(startMsg.player1))
 		{
 			opponentName = startMsg.player2;
-			playerNumber = 2;
+			playerNumber = 1;
 		}
 		
 		else
 		{
 			opponentName = startMsg.player1;
-			playerNumber = 1;
+			playerNumber = 2;
 		}
 		
 		gameWindow = new EngagementWindow(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, in, out);

@@ -16,6 +16,7 @@ import fftadata.FFTAUnit;
 public class ClanBuilderRosterPanel extends JPanel
 {
 	public ClanBuilderRoster roster;
+	JPanel rightPanel;
 	DefaultListModel rosterModel;
 	public JButton btnNewUnit, btnNextRow, btnPrevRow, btnSwapLeft, btnSwapRight, btnDelete;
 	
@@ -25,19 +26,15 @@ public class ClanBuilderRosterPanel extends JPanel
 
 		setLayout(new BorderLayout(0, 0));
 		
-//		rosterModel = new DefaultListModel();
-//		rosterModel.addElement(new FFTAUnit(FFTARace.MOOGLE));
-//		rosterModel.addElement(new FFTAUnit(FFTARace.BANGAA));
-//		rosterModel.addElement(new FFTAUnit(FFTARace.HUMAN));
-//		rosterModel.addElement(new FFTAUnit(FFTARace.VIERA));
-//		rosterModel.addElement(new FFTAUnit(FFTARace.NU_MOU));
-//		
 		roster = new ClanBuilderRoster();
 		add(roster);
 		rosterModel = roster.model;
 		
+		rightPanel = new JPanel(new BorderLayout());
+		
 		JPanel rosterActions = new JPanel();
-		add(rosterActions, BorderLayout.EAST);
+		rightPanel.add(rosterActions, BorderLayout.CENTER);
+		add(rightPanel, BorderLayout.EAST);
 		rosterActions.setPreferredSize(new Dimension(56, 96));
 		rosterActions.setLayout(new GridLayout(6, 1, 0, 0));
 		

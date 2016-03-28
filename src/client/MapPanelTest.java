@@ -73,22 +73,22 @@ public class MapPanelTest extends JFrame {
 		
 		contentPane.add(gp);
 		
-//		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(0), 1, 11, 7, 1);
-//		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
-//		units1.add(au1);
-//		gp.map.p1Units = units1;
-//		
-//		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
-//		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
-//		units2.add(au2);
-//		gp.map.p2Units = units2;
-//		
-//		gp.mapPanel.units = units2;
-//		
-//		gp.mapPanel.addUnit(au1);
-//		gp.mapPanel.addUnit(au2);
-//		
-//		gp.beginGame();
+		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(0), 1, 11, 7, 1);
+		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
+		units1.add(au1);
+		gp.p1Units = units1;
+		
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
+		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
+		units2.add(au2);
+		gp.p2Units = units2;
+		
+		gp.mapPanel.units = units2;
+		
+		gp.mapPanel.addUnit(au1);
+		gp.mapPanel.addUnit(au2);
+		
+		gp.beginGame();
 	}
 
 }
@@ -100,6 +100,7 @@ class GamePanel extends JPanel
 	ZankGameMap map;
 	MapPanel mapPanel;
 	JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
+	UnitActionPanel unitAction;
 	EngagementWindowRosterPanel rosterPanel;
 	EngagementWindow ew;	// Parent frame
 	
@@ -138,15 +139,15 @@ class GamePanel extends JPanel
 
 	public void beginPlacementMode()
 	{
-		leftPanel.add(rosterPanel, BorderLayout.SOUTH);
+		add(rosterPanel, BorderLayout.SOUTH);
 		mapPanel.beginPlacementMode();
 	}
 	
 	public void beginGame()
 	{
-		leftPanel.remove(rosterPanel);
+		remove(rosterPanel);
 		bottomPanel = new JPanel(new BorderLayout());
-		leftPanel.add(bottomPanel, BorderLayout.SOUTH);
+		add(bottomPanel, BorderLayout.SOUTH);
 		
 		blankUnitPreview = new JPanel();
 		blankUnitPreview.setPreferredSize(new Dimension(320, 162));
@@ -155,6 +156,9 @@ class GamePanel extends JPanel
 		
 		bottomPanel.add(unitPreview, BorderLayout.WEST);
 	
+		unitAction = new UnitActionPanel(ew);
+		bottomPanel.add(unitAction, BorderLayout.EAST);
+		
 		ArrayList<ActiveUnit> otherTeam;
 		if (player == 1)
 			otherTeam = p2Units;
@@ -192,6 +196,7 @@ class MapPanel extends JPanel
 	
 	public MapPanel(GamePanel gamePanel)
 	{
+		this.gamePanel = gamePanel;
 		player = gamePanel.player;
 		map = MuscadetMapLoader.getMap();
 		// int targetX = 240 + 16*x - 16*y, targetY = 160 + 8*x + 8*y;
@@ -226,38 +231,7 @@ class MapPanel extends JPanel
 				// Generic selection mode
 				if (mode == 0)
 				{
-					if (selectedTile != null)
-					{
-						fgObjects.remove(selector);
-						selector.moveTo(selectedTile);
-						fgObjects.add(selector);
-						
-						int index = -1;
-						for (int i = 0; i < units.size(); i++)
-							if (units.get(i).x == selectedTile.x && units.get(i).y == selectedTile.y)
-								index = i;
-						
-						if (index == -1)
-						{
-							selectedUnit = null;
-							
-							gamePanel.bottomPanel.remove(gamePanel.unitPreview);
-							gamePanel.unitPreview = gamePanel.blankUnitPreview;
-							gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
-							gamePanel.revalidate();
-						}
-						else
-						{
-							long start = System.currentTimeMillis();
-							selectedUnit = units.get(index);
-							
-							gamePanel.bottomPanel.remove(gamePanel.unitPreview);
-							gamePanel.unitPreview = new UnitPreviewPanel(selectedUnit);
-							gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
-							gamePanel.revalidate();
-						}
-					}	
-					repaint();
+					selectTile(selectedTile);
 				}
 				
 				// Unit placement mode
@@ -394,6 +368,45 @@ class MapPanel extends JPanel
 		ZankMapTile tile = map.mapData[au.x][au.y];
 		tile.fgobj = ForegroundObject.makeFGObject(au);
 		fgObjects.add(tile.fgobj);
+	}
+	
+	public void selectTile(ZankMapTile selectedTile)
+	{
+		this.selectedTile = selectedTile;
+		if (selectedTile != null)
+		{
+			fgObjects.remove(selector);
+			selector.moveTo(selectedTile);
+			fgObjects.add(selector);
+			
+			int index = -1;
+			for (int i = 0; i < units.size(); i++)
+				if (units.get(i).x == selectedTile.x && units.get(i).y == selectedTile.y)
+					index = i;
+			
+			if (index == -1)
+			{
+				selectedUnit = null;
+				
+				gamePanel.bottomPanel.remove(gamePanel.unitPreview);
+				gamePanel.unitPreview = gamePanel.blankUnitPreview;
+				gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
+				gamePanel.revalidate();
+			}
+			else
+			{
+				long start = System.currentTimeMillis();
+				selectedUnit = units.get(index);
+				
+				System.out.println(gamePanel);
+				
+				gamePanel.bottomPanel.remove(gamePanel.unitPreview);
+				gamePanel.unitPreview = new UnitPreviewPanel(selectedUnit);
+				gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
+				gamePanel.revalidate();
+			}
+		}	
+		repaint();
 	}
 	
 	@Override

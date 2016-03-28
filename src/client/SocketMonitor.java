@@ -142,6 +142,12 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							{
 								gw.receiveReady((ArrayList<ActiveUnit>) action.data);
 							}
+							
+							// NEXT: the server has indicated that a new unit's turn should begin
+							else if (action.type.equals(ZankGameActionType.NEXT))
+							{
+								gw.receiveNext((Integer) action.data);
+							}
 						}
 						else
 							System.out.println("received bad game message from server: " + msg);
@@ -154,7 +160,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 				
 				// Disconnection handler
 				// TODO: idk do something about this
-//				cw.chatArea.append("\r\n* you have been disconnected from the server");					
+				cw.appendToChat("<br><span style=\"color:red\"><em>* you have been disconnected from the server");					
 			}
 		}
 		catch (IOException e) { System.err.println(e); } catch (ClassNotFoundException e) {	System.err.println(e);	}

@@ -81,7 +81,7 @@ public class ActiveUnit implements Serializable
 //		if (status[SPEED_DOWN] > 0)
 //			modifier *= 0.5;
 		
-		return (int) (1 * unit.speed);
+		return (int) (modifier * unit.getTotalSpeed());
 	}
 }
 

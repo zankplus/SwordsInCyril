@@ -114,6 +114,9 @@ public class EngagementWindow extends JFrame {
 		chat = new JTextPane();
 		chat.setContentType("text/html");
 		chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
+		
+		appendToChat("player number " + playerNumber + " is " + player.username);
+		
 		chat.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		scrollPane.setViewportView(chat);
 		
@@ -200,6 +203,14 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
+	public void sendTurnTest(int ct) throws IOException
+	{
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
 	public void appendToChat(String s)
 	{
 		try {
@@ -217,7 +228,8 @@ public class EngagementWindow extends JFrame {
 		appendToChat("<br><b>" + user + "</b>: " + msg);
 	}
 	
-	// READY: the server 
+	// READY: register the received units to the rival team and create a list all the game's units in gamePanel
+	// before telling gamePanel to start the game.
 	public void receiveReady(ArrayList<ActiveUnit> units)
 	{
 		if (playerNumber == 1)
@@ -238,6 +250,21 @@ public class EngagementWindow extends JFrame {
 		gamePanel.beginGame();
 		repaint();
 	}
+	
+	// NEXT: initiate the given character's turn
+	public void receiveNext(int index)
+	{
+		if (gamePanel.units[index].team == playerNumber)
+			gamePanel.unitAction.yourTurn();
+		else
+			gamePanel.unitAction.enemyTurn();
+		
+		ActiveUnit au = gamePanel.units[index];
+		
+		mapPanel.selectTile(map.mapData[au.x][au.y]);
+		
+		appendToChat("<br><em><span style=\"color:gray\"><strong>" + gamePanel.units[index].unit.name + "</strong> takes their turn!");
+	}
 }
 
 class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
@@ -247,12 +274,14 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 	public EngagementWindowRosterPanel(EngagementWindow ew)
 	{
 		this.ew = ew;
-		
-		JPanel space = new JPanel(), space2 = new JPanel();
-		space.setPreferredSize(new Dimension(36, 1));
-		space2.setPreferredSize(new Dimension(1, 10));
-		add(space, BorderLayout.WEST);
-		add(space2, BorderLayout.SOUTH);
+		setPreferredSize(new Dimension(1, 162));
+		JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
+		padding.setPreferredSize(new Dimension(36, 1));
+		padding2.setPreferredSize(new Dimension(1, 22));
+		padding3.setPreferredSize(new Dimension(80, 1));
+		add(padding, BorderLayout.WEST);
+		add(padding2, BorderLayout.SOUTH);
+		rightPanel.add(padding3, BorderLayout.EAST);
 		btnNewUnit.setEnabled(false);
 		btnDelete.setEnabled(false);
 		btnSwapLeft.setEnabled(false);
@@ -269,10 +298,6 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				System.out.println("\r\n" + ew);
-				System.out.println("\r\n" + ew.mapPanel);
-				System.out.println("\r\n" + ew.mapPanel.units);
-				System.out.println("\r\n" + ew.mapPanel.units.size());
 				if (ew.mapPanel.units.size() > 0)
 				{
 					try

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class TurnOrder
 {
-	ActiveUnit[] units;
+	public ActiveUnit[] units;
 	
 	public TurnOrder(ArrayList<ActiveUnit> p1Units, ArrayList<ActiveUnit> p2Units)
 	{
@@ -38,6 +38,8 @@ public class TurnOrder
 		{
 			int baseReserve = Math.min(max.counter - 1000, 500);
 			
+			
+			
 			for (ActiveUnit au : units)
 			{
 				if (au.counter < baseReserve)
@@ -50,6 +52,7 @@ public class TurnOrder
 					au.counter -= baseReserve;
 					au.reserve = baseReserve;
 				}
+				
 			}
 			
 			
@@ -57,7 +60,11 @@ public class TurnOrder
 					
 		System.out.print("\t");
 		for (ActiveUnit au : units)
+		{
 			System.out.print(au.counter + "\t" + au.reserve + "\t");
+			if (au.counter > 2000)
+				System.exit(1);
+		}
 		System.out.println();
 //
 //		//////
@@ -72,33 +79,33 @@ public class TurnOrder
 //		}
 	}
 	
-	public ActiveUnit getNext()
+	// Returns the index of the next unit to move
+	public int getNext()
 	{
-		ActiveUnit result = null;
+		int result = -1;
 		boolean loop = true;
 		
 		// 1. Check for Quick status
 		for (int i = 0; i < units.length; i++)
 			if (units[i].status[ActiveUnit.QUICK] > 0)
 			{
-				result = units[i];
+				result = i;
 				i = units.length;
 			}
 		
-		if (result == null)
+		if (result == -1)
 		{
 			while (loop)
 			{				
 				// 2. Check for units with 1000 counter. 
 				for (int i = 0; i < units.length; i++)
-					if (units[i].counter == 1000)
-						if (result == null || units[i].priority < result.priority)	// lowest priority wins
+					if (units[i].counter >= 1000)
+						if (result == -1 || units[i].priority < units[result].priority)	// lowest priority wins
 						{
-							result = units[i];
-							i = units.length;							
+							result = i;							
 						}
 				
-				if (result != null)
+				if (result != -1)
 					loop = false;
 				else
 					// 3. If no units have 1000 counter, advance the clock by a tick and check again.
@@ -112,20 +119,41 @@ public class TurnOrder
 	
 	public void assignPriority()
 	{
+//		for (int i = 0; i < units.length; i++)
+//			units[i].priority = (i + 3) % units.length;
+		
 		for (int i = 0; i < units.length; i++)
-			units[i].priority = (i + 3) % units.length;
+		{
+			String name = units[i].unit.name;
+			if (name.equals("Kilov"))
+				units[i].priority = 1;
+			else if (name.equals("Georg"))
+				units[i].priority = 2;
+			else if (name.equals("Seneka"))
+				units[i].priority = 3;
+			else if (name.equals("Istavan"))
+				units[i].priority = 4;
+			else if (name.equals("Shara"))
+				units[i].priority = 5;
+			else if (name.equals("Mondo"))
+				units[i].priority = 6;
+			else if (name.equals("Cesare"))
+				units[i].priority = 7;
+		}
+		
 	}
 	
 	public static void main(String[] args)
 	{
-		FFTAUnit u1 = new FFTAUnit(), u2 = new FFTAUnit(), u3 = new FFTAUnit(), u4 = new FFTAUnit(), u5 = new FFTAUnit(), u6 = new FFTAUnit();
-		u1.speed = 195; u2.speed = 138; u3.speed = 136; u4.speed = 164; u5.speed = 160; u6.speed = 127;
+		FFTAUnit u1 = new FFTAUnit(), u2 = new FFTAUnit(), u3 = new FFTAUnit(), u4 = new FFTAUnit(), u5 = new FFTAUnit(), u6 = new FFTAUnit(), u7 = new FFTAUnit();
+		u1.speed = 191; u2.speed = 174; u3.speed = 138; u4.speed = 136; u5.speed = 164; u6.speed = 158; u7.speed = 127;
 		ActiveUnit au1  = new ActiveUnit(u1, 0, 0, 0, 0); au1.unit.name = "Shara";
-		ActiveUnit au2  = new ActiveUnit(u2, 0, 0, 0, 0); au2.unit.name = "Georg";
-		ActiveUnit au3  = new ActiveUnit(u3, 0, 0, 0, 0); au3.unit.name = "Seneka";
-		ActiveUnit au4  = new ActiveUnit(u4, 0, 0, 0, 0); au4.unit.name = "Mondo";
-		ActiveUnit au5  = new ActiveUnit(u5, 0, 0, 0, 0); au5.unit.name = "Istavan";
-		ActiveUnit au6  = new ActiveUnit(u6, 0, 0, 0, 0); au6.unit.name = "Kilov";
+		ActiveUnit au2  = new ActiveUnit(u2, 0, 0, 0, 0); au2.unit.name = "Cesare";
+		ActiveUnit au3  = new ActiveUnit(u3, 0, 0, 0, 0); au3.unit.name = "Georg";
+		ActiveUnit au4  = new ActiveUnit(u4, 0, 0, 0, 0); au4.unit.name = "Seneka";
+		ActiveUnit au5  = new ActiveUnit(u5, 0, 0, 0, 0); au5.unit.name = "Mondo";
+		ActiveUnit au6  = new ActiveUnit(u6, 0, 0, 0, 0); au6.unit.name = "Istavan";
+		ActiveUnit au7  = new ActiveUnit(u7, 0, 0, 0, 0); au7.unit.name = "Kilov";
 		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
 		
@@ -135,14 +163,21 @@ public class TurnOrder
 		units2.add(au4);
 		units2.add(au5);
 		units2.add(au6);
+		units2.add(au7);
 		
 		TurnOrder to = new TurnOrder(units1, units2);
 		
-		for (int i = 0; i < 20; i++)
+		for (int i = 0; i < 10; i++)
 		{
-			ActiveUnit au = to.getNext();
-			System.out.println(au.unit.name);
-			au.counter = 0; au.reserve = 0;
+			int aui = to.getNext();
+			System.out.println(to.units[aui].unit.name);
+			if (i == 0 || i == 2)
+				to.units[aui].counter = 0;
+			else if (i == 1)
+				to.units[aui].counter = 500;
+			else
+				to.units[aui].counter = 200;
+			to.units[aui].reserve = 0;
 		}
 	}
 }
