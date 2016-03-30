@@ -102,7 +102,8 @@ public class EngagementWindow extends JFrame {
 		contentPane.add(splitPane, BorderLayout.CENTER);
 		
 		JPanel rightPanel = new JPanel();
-		splitPane.setRightComponent(rightPanel);
+		rightPanel.setPreferredSize(new Dimension(320, 10));
+		contentPane.add(rightPanel, BorderLayout.CENTER);
 		rightPanel.setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane = new JScrollPane();
@@ -113,6 +114,7 @@ public class EngagementWindow extends JFrame {
 		chat = new JTextPane();
 		chat.setContentType("text/html");
 		chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
+		
 		chat.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		scrollPane.setViewportView(chat);
 		
@@ -139,7 +141,7 @@ public class EngagementWindow extends JFrame {
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		leftPanel.setBorder(null);
 		leftPanel.setPreferredSize(new Dimension(560, 10));
-		splitPane.setLeftComponent(leftPanel);
+		contentPane.add(leftPanel, BorderLayout.WEST);
 		
 //		ClanBuilderRoster roster = new ClanBuilderRoster();
 //		panel.add(roster, BorderLayout.SOUTH);
@@ -199,6 +201,14 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
+	public void sendTurnTest(int ct) throws IOException
+	{
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
 	public void appendToChat(String s)
 	{
 		try {
@@ -216,16 +226,42 @@ public class EngagementWindow extends JFrame {
 		appendToChat("<br><b>" + user + "</b>: " + msg);
 	}
 	
-	// READY: the server 
+	// READY: register the received units to the rival team and create a list all the game's units in gamePanel
+	// before telling gamePanel to start the game.
 	public void receiveReady(ArrayList<ActiveUnit> units)
 	{
 		if (playerNumber == 1)
-			map.p2Units = units;
+			gamePanel.p2Units = units;
 		else if (playerNumber == 2)
-			map.p1Units = units;
+			gamePanel.p1Units = units;
+		
+		ActiveUnit[] aus = new ActiveUnit[gamePanel.p1Units.size() + gamePanel.p2Units.size()];
+		
+		for (int i = 0; i < gamePanel.p1Units.size(); i++)
+			aus[i] = gamePanel.p1Units.get(i);
+		
+		for (int i = 0; i < gamePanel.p2Units.size(); i++)
+			aus[i + gamePanel.p1Units.size()] =gamePanel.p2Units.get(i);
+		
+		gamePanel.units = aus;
 		
 		gamePanel.beginGame();
 		repaint();
+	}
+	
+	// NEXT: initiate the given character's turn
+	public void receiveNext(int index)
+	{
+		if (gamePanel.units[index].team == playerNumber)
+			gamePanel.unitAction.yourTurn();
+		else
+			gamePanel.unitAction.enemyTurn();
+		
+		ActiveUnit au = gamePanel.units[index];
+		
+		mapPanel.selectTile(map.mapData[au.x][au.y]);
+		
+		appendToChat("<br><em><span style=\"color:gray\"><strong>" + gamePanel.units[index].unit.name + "</strong> takes their turn!");
 	}
 }
 
@@ -236,12 +272,14 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 	public EngagementWindowRosterPanel(EngagementWindow ew)
 	{
 		this.ew = ew;
-		
-		JPanel space = new JPanel(), space2 = new JPanel();
-		space.setPreferredSize(new Dimension(36, 1));
-		space2.setPreferredSize(new Dimension(1, 10));
-		add(space, BorderLayout.WEST);
-		add(space2, BorderLayout.SOUTH);
+		setPreferredSize(new Dimension(1, 162));
+		JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
+		padding.setPreferredSize(new Dimension(36, 1));
+		padding2.setPreferredSize(new Dimension(1, 22));
+		padding3.setPreferredSize(new Dimension(80, 1));
+		add(padding, BorderLayout.WEST);
+		add(padding2, BorderLayout.SOUTH);
+		rightPanel.add(padding3, BorderLayout.EAST);
 		btnNewUnit.setEnabled(false);
 		btnDelete.setEnabled(false);
 		btnSwapLeft.setEnabled(false);
@@ -258,19 +296,15 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				System.out.println("\r\n" + ew);
-				System.out.println("\r\n" + ew.mapPanel);
-				System.out.println("\r\n" + ew.mapPanel.units);
-				System.out.println("\r\n" + ew.mapPanel.units.size());
 				if (ew.mapPanel.units.size() > 0)
 				{
 					try
 					{
 						ew.sendReady();
 						if (ew.playerNumber == 1)
-							ew.map.p1Units = ew.mapPanel.units;
+							ew.gamePanel.p1Units = ew.mapPanel.units;
 						else if (ew.playerNumber == 2)
-							ew.map.p2Units = ew.mapPanel.units;
+							ew.gamePanel.p2Units = ew.mapPanel.units;
 						
 						btnReady.setEnabled(false);
 						btnReady.setText("Waiting for other player...");

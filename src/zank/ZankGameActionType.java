@@ -1,3 +1,3 @@
 package zank;
 
-public enum ZankGameActionType { START, CHAT, FORFEIT, READY; }
+public enum ZankGameActionType { START, CHAT, FORFEIT, READY, NEXT, TURNTEST; }

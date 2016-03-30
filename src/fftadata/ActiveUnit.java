@@ -5,11 +5,23 @@ import java.io.Serializable;
 
 public class ActiveUnit implements Serializable
 {
+	// Status effect constants
+	static final int QUICK = 0;
+	static final int HASTE = 1;
+	static final int SLOW = 2;
+	static final int SPEED_DOWN = 3;
+	
+	// Fields
 	public FFTAUnit unit;
 	public int x, y, z;
 	public int currHP, currMP;
+	public int counter;
+	public int reserve;
 	public int team;
+	public int priority;	// used to decide who goes first if two units both have 1000 counter
 	public Direction dir;
+	
+	public int[] status;
 		
 	public ActiveUnit(FFTAUnit unit, int x, int y, int z, int team)
 	{
@@ -24,6 +36,11 @@ public class ActiveUnit implements Serializable
 			dir = Direction.SOUTHWEST;
 		else if (team == 2)
 			dir = Direction.SOUTHEAST;
+		
+		counter = 0;
+		reserve = 0;
+		
+		status = new int[40];
 	}
 	
 	public String getSpriteURL()
@@ -51,6 +68,20 @@ public class ActiveUnit implements Serializable
 	public boolean isSpriteReflected()
 	{
 		return (dir == Direction.SOUTHEAST || dir == Direction.NORTHEAST);
+	}
+	
+	// Returns the unit's speed as modified by the unit's current status effects 
+	public int getTickSpeed()
+	{
+		double modifier = 1.0;
+//		if (status[HASTE] > 0)
+//			modifier *= 2;
+//		else if (status[SLOW] > 0)
+//			modifier *= 0.5;
+//		if (status[SPEED_DOWN] > 0)
+//			modifier *= 0.5;
+		
+		return (int) (modifier * unit.getTotalSpeed());
 	}
 }
 

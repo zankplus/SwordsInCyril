@@ -64,7 +64,7 @@ public class ActiveUser extends Thread
 						{
 							msg = (ZankMessage) in.readObject();
 							
-							System.out.print("\r\nIN:\t" + msg);
+//							System.out.print("\r\nIN:\t" + msg);
 							
 							// String[] tokens = line.toString().split("\\s+");
 							String username = msg.user;
@@ -139,6 +139,10 @@ public class ActiveUser extends Thread
 								if (player2 != null)
 								{
 									ActiveUser player1 = this;
+									
+									System.out.println("player 1 = " + player1.nickname);
+									System.out.println("player 2 = " + player2.nickname);
+									
 									game = new ActiveGame(player1, player2);
 									ChatServer.gameList.add(game);
 									ZankMessage startMessage = game.getStartMessage();
@@ -167,7 +171,7 @@ public class ActiveUser extends Thread
 											ag.player2.messageQueue.put(msg);
 										}
 										
-										if (action.type == ZankGameActionType.READY && ag.status == GameStatus.SETUP)
+										else if (action.type == ZankGameActionType.READY && ag.status == GameStatus.SETUP)
 										{
 											// If player signals that they're ready, mark their finishedPrep flag and extract
 											// their clan from the message.
@@ -176,12 +180,14 @@ public class ActiveUser extends Thread
 												
 												ag.finishedPrep1 = true;
 												ag.p1Units = (ArrayList<ActiveUnit>) action.data;
+												System.out.println("Received P1's unit " + ag.p1Units.get(0).unit.name + " from " + msg.user);
 											}
 											
 											else if (msg.user.equals(ag.player2.nickname))
 											{
 												ag.finishedPrep2 = true;
 												ag.p2Units = (ArrayList<ActiveUnit>) action.data;
+												System.out.println("Received P2's unit: " + ag.p2Units.get(0).unit.name + " from " + msg.user);
 											}
 											
 											
@@ -201,7 +207,18 @@ public class ActiveUser extends Thread
 												zm = new ZankMessage(ZankMessageType.GAME, null, za);
 												ag.player2.messageQueue.put(zm);
 												
+												// Initialize turn order
+												
+												ag.initializeTurnOrder();
+												
+												ag.advanceTurn();
 											}
+										}
+										else if (action.type == ZankGameActionType.TURNTEST)
+										{
+											ag.turnOrder.units[ag.currentUnit].counter -= (Integer) action.data;
+											ag.turnOrder.units[ag.currentUnit].reserve = 0;
+											ag.advanceTurn();
 										}
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); }
@@ -218,7 +235,7 @@ public class ActiveUser extends Thread
 					if (!messageQueue.isEmpty() && !done)
 					{
 						ZankMessage m = messageQueue.take();
-						System.out.print("\r\nOUT:\t" + m);
+//						System.out.print("\r\nOUT:\t" + m);
 						out.writeObject(m);
 						out.flush();
 					}
