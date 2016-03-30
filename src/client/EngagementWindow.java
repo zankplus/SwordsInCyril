@@ -115,8 +115,6 @@ public class EngagementWindow extends JFrame {
 		chat.setContentType("text/html");
 		chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
 		
-		appendToChat("player number " + playerNumber + " is " + player.username);
-		
 		chat.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		scrollPane.setViewportView(chat);
 		
