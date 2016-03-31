@@ -17,17 +17,35 @@ import java.io.IOException;
 
 import javax.swing.JButton;
 import java.awt.CardLayout;
+import javax.swing.JLabel;
+import javax.swing.SwingConstants;
 
 public class UnitActionPanel extends JPanel
 {
 	JPanel actionsPanel;
 	JPanel blankPanel;
 	CardLayout cl;
-	private JButton btnWait;
-	private JButton btnAct;
-	private JButton btnMove;
-	private JButton btnActMove;
 	EngagementWindow ew;
+	private JButton btnAct;
+	private JButton btnWait;
+	private JPanel movePanel;
+	private JButton btnMoveCancel;
+	private JLabel lblMoveInstruction;
+	private JButton btnQuickMove;
+	private JButton btnMove;
+	ActionListener movelistener, unmoveListener, actionListener;
+	boolean unitHasMoved, unitHasActed;
+	private JPanel actPanel;
+	private JButton btnActCancel;
+	private JButton btnQuickAct;
+	private JPanel waitPanel;
+	private JButton btnWaitCancel;
+	private JPanel directionsPanel;
+	private JButton btnNe;
+	private JButton btnNw;
+	private JButton btnSe;
+	private JButton btnSw;
+	
 	
 	/**
 	 * Create the panel.
@@ -59,64 +77,181 @@ public class UnitActionPanel extends JPanel
 		
 		actionsPanel = new JPanel();
 		blankPanel = new JPanel();
-		add(blankPanel);
-		add(actionsPanel);
+		add(blankPanel, "Blank");
 		
-		TOListener tol = new TOListener();
+		waitPanel = new JPanel();
+		add(waitPanel, "Wait");
+		waitPanel.setLayout(new BorderLayout(0, 0));
 		
-		actionsPanel.setLayout(new GridLayout(2, 2, 0, 0));
+		btnWaitCancel = new JButton("Cancel");
+		waitPanel.add(btnWaitCancel, BorderLayout.SOUTH);
+		btnWaitCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				yourTurn();
+			}
+		});
 		
-		btnWait = new JButton("Wait");
-		btnWait.addActionListener(tol);
-		actionsPanel.add(btnWait);
+		directionsPanel = new JPanel();
+		waitPanel.add(directionsPanel, BorderLayout.CENTER);
+		directionsPanel.setLayout(new GridLayout(2, 2, 0, 0));
 		
-		btnAct = new JButton("Act");
-		btnAct.addActionListener(tol);
-		actionsPanel.add(btnAct);
+		btnNe = new JButton("NE");
+		directionsPanel.add(btnNe);
+		
+		btnNw = new JButton("NW");
+		directionsPanel.add(btnNw);
+		
+		btnSe = new JButton("SE");
+		directionsPanel.add(btnSe);
+		
+		btnSw = new JButton("SW");
+		directionsPanel.add(btnSw);
+		
+		actPanel = new JPanel();
+		add(actPanel, "Act");
+		actPanel.setLayout(new BorderLayout(0, 0));
+		
+		btnActCancel = new JButton("Cancel");
+		actPanel.add(btnActCancel, BorderLayout.SOUTH);
+		btnActCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				yourTurn();
+			}
+		});
+		
+		btnQuickAct = new JButton("(Quick Act)");
+		actPanel.add(btnQuickAct, BorderLayout.CENTER);
+		btnQuickAct.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				unitHasActed = true;
+				if (unitHasMoved)
+				{
+					btnWaitCancel.setEnabled(false);
+					doWait();
+				}
+				else
+					yourTurn();
+			}
+		});
+		add(actionsPanel, "Actions");
+		actionsPanel.setLayout(new GridLayout(3, 1, 0, 0));
+		
+		
+		
+		ActionListener moveListener = new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				if (!unitHasMoved)
+					move();
+				
+				else
+					undoMove();
+			}
+		};
+		
 		
 		btnMove = new JButton("Move");
-		btnMove.addActionListener(tol);
+		btnMove.addActionListener(moveListener);
+		
+		
 		actionsPanel.add(btnMove);
 		
-		btnActMove = new JButton("Act & Move");
-		btnActMove.addActionListener(tol);
-		actionsPanel.add(btnActMove);
+		btnAct = new JButton("Act");
+		actionsPanel.add(btnAct);
+		btnAct.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				act();
+			}
+		});
+		
+		btnWait = new JButton("Wait");
+		btnWait.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				doWait();
+			}
+		});
+		actionsPanel.add(btnWait);
+		
+		
+		movePanel = new JPanel();
+		add(movePanel, "Move");
+		movePanel.setLayout(new BorderLayout(0, 0));
+		
+		btnMoveCancel = new JButton("Cancel");
+		btnMoveCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				yourTurn();
+			}
+		});
+		movePanel.add(btnMoveCancel, BorderLayout.SOUTH);
+		
+		lblMoveInstruction = new JLabel("Click the tile to which to move.");
+		lblMoveInstruction.setHorizontalAlignment(SwingConstants.CENTER);
+		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
+		
+		btnQuickMove = new JButton("(Quick Move)");
+		movePanel.add(btnQuickMove, BorderLayout.NORTH);
+		btnQuickMove.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				unitHasMoved = true;
+				if (unitHasActed)
+				{
+					btnWaitCancel.setEnabled(false);
+					doWait();
+				}
+				else
+					yourTurn();
+			}
+		});
+		
+		yourTurn();
 	}
 	
 	public void yourTurn()
 	{
-		cl.last(this);
+		if (unitHasActed)
+			btnAct.setEnabled(false);
+		else
+			btnAct.setEnabled(true);
+		
+		if (unitHasMoved)
+			btnMove.setText("Undo move");
+		else
+			btnMove.setText("Move");
+		
+		cl.show(this, "Actions");
 	}
 	
 	public void enemyTurn()
 	{
-		cl.first(this);
+		cl.show(this, "Blank");
 	}
 	
-	private class TOListener implements ActionListener
+	public void move()
 	{
-		public void actionPerformed(ActionEvent e)
-		{
-			try {
-				int ct = 0;
-				
-				if (e.getSource() == btnWait)
-					ct = 500;
-				
-				else if (e.getSource() == btnAct)
-					ct = 700;
-				
-				else if (e.getSource() == btnMove)
-					ct = 800;
-				
-				else if (e.getSource() == btnActMove)
-					ct = 1000;
-				
-				if (ct > 0)
-					ew.sendTurnTest(ct);
-			} catch (IOException e1) {
-				e1.printStackTrace();
-			}
-		}
+		cl.show(this, "Move");
+	}
+	
+	public void act()
+	{
+		cl.show(this, "Act");
+	}
+	
+	public void undoMove()
+	{
+		unitHasMoved = false;
+		yourTurn();
+	}
+	
+	public void doWait()
+	{
+		cl.show(this,  "Wait");
 	}
 }

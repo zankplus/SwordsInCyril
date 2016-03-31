@@ -100,7 +100,7 @@ class GamePanel extends JPanel
 	ZankGameMap map;
 	MapPanel mapPanel;
 	JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
-	UnitActionPanel unitAction;
+	OldUnitActionPanel unitAction;
 	EngagementWindowRosterPanel rosterPanel;
 	EngagementWindow ew;	// Parent frame
 	
@@ -156,7 +156,7 @@ class GamePanel extends JPanel
 		
 		bottomPanel.add(unitPreview, BorderLayout.WEST);
 	
-		unitAction = new UnitActionPanel(ew);
+		unitAction = new OldUnitActionPanel(ew);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
 		
 		ArrayList<ActiveUnit> otherTeam;
