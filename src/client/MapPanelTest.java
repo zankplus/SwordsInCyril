@@ -1,10 +1,12 @@
 package client;
 
+import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.GridLayout;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
@@ -25,6 +27,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import fftadata.ActiveUnit;
+import fftadata.FFTAEquip;
 import fftadata.FFTAUnit;
 
 public class MapPanelTest extends JFrame {
@@ -70,6 +73,7 @@ public class MapPanelTest extends JFrame {
 		setContentPane(contentPane);
 		
 		GamePanel gp = new GamePanel(new EngagementWindow(null, 2, null, null, null, null));
+		gp.ew.gamePanel = gp;
 		
 		contentPane.add(gp);
 		
@@ -78,17 +82,38 @@ public class MapPanelTest extends JFrame {
 		units1.add(au1);
 		gp.p1Units = units1;
 		
-		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
+//		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 1, 8, 8, 2);
+		au2.face("SE");
+		au1.face("NW");
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
 		units2.add(au2);
 		gp.p2Units = units2;
 		
 		gp.mapPanel.units = units2;
 		
-		gp.mapPanel.addUnit(au1);
+//		gp.mapPanel.addUnit(au1);
 		gp.mapPanel.addUnit(au2);
 		
 		gp.beginGame();
+		
+		gp.units = new ActiveUnit[2];
+		gp.units[0] = au1; gp.units[1] = au2;
+		
+		
+		gp.currentUnit = 0;
+		
+		if (gp.units[0].team == gp.ew.playerNumber)
+			gp.unitAction.yourTurn();
+		else
+			gp.unitAction.enemyTurn();
+		
+		ActiveUnit au = gp.units[0];
+		gp.mapPanel.selectTile(gp.map.mapData[au.x][au.y]);
+		
+		
+		
+		gp.unitAction.yourTurn();
 	}
 
 }
@@ -100,14 +125,13 @@ class GamePanel extends JPanel
 	ZankGameMap map;
 	MapPanel mapPanel;
 	JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
-	OldUnitActionPanel unitAction;
+	UnitActionPanel unitAction;
 	EngagementWindowRosterPanel rosterPanel;
 	EngagementWindow ew;	// Parent frame
 	
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	ActiveUnit[] units;
-	
-	int player;
+	int player, currentUnit;
 	
 	public GamePanel(EngagementWindow base)
 	{
@@ -134,6 +158,7 @@ class GamePanel extends JPanel
 		ZankGameMap map = mapPanel.map;
 		
 		
+		
 		beginPlacementMode();
 	}
 
@@ -156,7 +181,7 @@ class GamePanel extends JPanel
 		
 		bottomPanel.add(unitPreview, BorderLayout.WEST);
 	
-		unitAction = new OldUnitActionPanel(ew);
+		unitAction = new UnitActionPanel(ew);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
 		
 		ArrayList<ActiveUnit> otherTeam;
@@ -174,6 +199,37 @@ class GamePanel extends JPanel
 		
 		mapPanel.beginGame();
 	}
+	
+	public void yourTurn(ActiveUnit au)
+	{
+		
+	}
+	
+	public void beginMovementMode()
+	{
+		mapPanel.mode = 2;
+		mapPanel.highlightWalkableTiles();
+	}
+	
+	public void cancelMovementMode()
+	{
+		mapPanel.mode = 0;
+		mapPanel.removeHighlightedTiles();
+	}
+	
+	public void finishMovementMode()
+	{
+		cancelMovementMode();
+		unitAction.completeMovement();
+	}
+	
+	public void undoMovement()
+	{
+		ActiveUnit au = units[currentUnit];
+		ZankMapTile old = map.mapData[au.oldX][au.oldY];
+		mapPanel.moveUnit(au, old);
+		repaint();
+	}
 }
 
 
@@ -190,7 +246,7 @@ class MapPanel extends JPanel
 	ZankMapTile selectedTile;
 	ActiveUnit selectedUnit;
 	GamePanel gamePanel;
-	static ForegroundObject selector = new ForegroundObject("resources/maps/selector.png", 0, 0, 0, 0, -32, false, FGObjectType.SELECTOR);
+	static ForegroundObject selector = new ForegroundObject("resources/maps/selector.png", 0, 0, 0, 0, -31, false, FGObjectType.SELECTOR);
 	ArrayList<ForegroundObject> hlTiles;
 	int mode;
 	
@@ -225,6 +281,8 @@ class MapPanel extends JPanel
 					int dist = (Math.abs(e.getX() - tile.renderCenterX())) + Math.abs((e.getY() - tile.renderCenterY())) * 2;
 					if (dist <= 16)
 						selectedTile = tile;
+					
+					
 				}
 				
 				
@@ -300,6 +358,26 @@ class MapPanel extends JPanel
 						}
 					}
 				}
+				else if (mode == 2)	// movement mode
+				{
+					if (e.getClickCount() == 1)
+						selectTile(selectedTile);
+					else if (e.getClickCount() == 2 && selectedTile != null)
+					{
+						System.out.println("[" + selectedTile.x + ", " + selectedTile.y + "]");
+						for (int i = 0; i < hlTiles.size(); i++)
+						{
+							System.out.println(hlTiles.get(i).x + ", " + hlTiles.get(i).y);
+							if (selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile)
+							{
+								moveUnit(gamePanel.units[gamePanel.currentUnit], selectedTile);
+								gamePanel.finishMovementMode();
+								
+								i = hlTiles.size();
+							}
+						}
+					}
+				}
 			}
 
 			@Override
@@ -318,9 +396,10 @@ class MapPanel extends JPanel
 		else if (player == 2) startingTiles = map.p2StartingTiles;
 		else startingTiles = new ZankMapTile[0];
 		
+		
 		for (ZankMapTile tile : startingTiles)
 		{
-			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 0, false, FGObjectType.HIGHLIGHT);
+			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
 			fgObjects.add(fgo);
 		}
@@ -344,6 +423,7 @@ class MapPanel extends JPanel
 			if (hlTiles.contains(curr))
 				itr.remove();
 		}
+		repaint();
 	}
 	
 	// Remove units' fgobjects from the treeset
@@ -362,16 +442,66 @@ class MapPanel extends JPanel
 		}
 	}
 	
+	public void highlightWalkableTiles()
+	{
+		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
+		
+		ArrayList<ZankMapTile> reachableTiles = map.getReachableTiles(au);
+		for (ZankMapTile tile : reachableTiles)
+		{
+			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
+			hlTiles.add(fgo);
+			fgObjects.add(fgo);
+		}
+		repaint();
+	}
+	
 	// Add a unit's fgobject to the treeset at a certain location
 	public void addUnit(ActiveUnit au)
 	{
 		ZankMapTile tile = map.mapData[au.x][au.y];
+		tile.unit = au;
 		tile.fgobj = ForegroundObject.makeFGObject(au);
 		fgObjects.add(tile.fgobj);
 	}
 	
+	public void removeUnit(ActiveUnit au)
+	{
+		ZankMapTile tile = map.mapData[au.x][au.y];
+		tile.unit = null;
+		
+		Iterator<ForegroundObject> itr = fgObjects.iterator();
+		while (itr.hasNext())
+		{
+			ForegroundObject curr = itr.next();
+			if (curr == tile.fgobj)
+			{
+				map.mapData[au.x][au.y].fgobj = null;
+				itr.remove();
+			}
+			
+		}
+		tile.fgobj = null;
+	}
+	
+	public void moveUnit(ActiveUnit au, ZankMapTile dest)
+	{
+		au = gamePanel.units[gamePanel.currentUnit]; 
+		removeUnit(au);
+		au.oldX = au.x;
+		au.oldY = au.y;
+		au.oldZ = au.z;
+		au.x = dest.x;
+		au.y = dest.y;
+		au.z = dest.z;
+		addUnit(au);
+		repaint();
+	}
+	
 	public void selectTile(ZankMapTile selectedTile)
 	{
+		if (selectedTile != null)
+			System.out.println("Selected " + selectedTile.x + ", " + selectedTile.y + ", " + selectedTile.z);
 		this.selectedTile = selectedTile;
 		if (selectedTile != null)
 		{
@@ -384,6 +514,8 @@ class MapPanel extends JPanel
 				if (units.get(i).x == selectedTile.x && units.get(i).y == selectedTile.y)
 					index = i;
 			
+
+			
 			if (index == -1)
 			{
 				selectedUnit = null;
@@ -395,7 +527,6 @@ class MapPanel extends JPanel
 			}
 			else
 			{
-				long start = System.currentTimeMillis();
 				selectedUnit = units.get(index);
 				
 				System.out.println(gamePanel);
@@ -405,7 +536,8 @@ class MapPanel extends JPanel
 				gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
 				gamePanel.revalidate();
 			}
-		}	
+		}
+		
 		repaint();
 	}
 	
@@ -420,13 +552,30 @@ class MapPanel extends JPanel
 		Iterator<ForegroundObject> itr = map.mapObjects.iterator();
 		while (itr.hasNext())
 		{
-			fgobj = itr.next(); 
+			fgobj = itr.next();
+			
+			BufferedImage target;
+			if (fgobj.type == FGObjectType.HIGHLIGHT)
+				target = makeTranslucent(fgobj.img, 0.85);
+			else
+				target = fgobj.img;
+			
 			if (fgobj.z > 0)
-				g.drawImage(fgobj.img, fgobj.x, fgobj.y, fgobj.img.getWidth() * fgobj.reflectX, fgobj.img.getHeight(), null);
+				g.drawImage(target, fgobj.x, fgobj.y, fgobj.img.getWidth() * fgobj.reflectX, fgobj.img.getHeight(), null);
 			
 			// System.out.println(fgobj.name);
 		}
 		
+	}
+	
+	public BufferedImage makeTranslucent(BufferedImage source, double alpha)
+	{
+		BufferedImage target = new BufferedImage(source.getWidth(), source.getHeight(), java.awt.Transparency.TRANSLUCENT);
+		Graphics2D g = target.createGraphics();
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
+		g.drawImage(source, null, 0, 0);
+		g.dispose();
+		return target;
 	}
 }
 
@@ -438,8 +587,59 @@ class ZankGameMap
 	ZankMapTile[][] mapData;
 	ZankMapTile[] tileList, p1StartingTiles, p2StartingTiles;
 	
+	public ArrayList<ZankMapTile> getReachableTiles(ActiveUnit au)
+	{
+		
+		ArrayList<ZankMapTile> reachableTiles = new ArrayList<ZankMapTile>();
+		ZankMapTile start = mapData[au.x][au.y];
+		
+		getReachableTiles(reachableTiles, start, au.unit.getTotalMove(), au);
+		
+		return reachableTiles;
+	}
 	
+	public void getReachableTiles(ArrayList<ZankMapTile> reachableTiles, ZankMapTile curr, int move, ActiveUnit au)
+	{
+		
+		FFTAEquip shoes = au.unit.equips.getShoes();
+		if (move >= 0)
+		{
+//			System.out.println("\t(" + move + ") Can move to " + curr.x + ", " + curr.y  + ", " + curr.z);
+			if (!reachableTiles.contains(curr) && (curr.unit == null))
+				reachableTiles.add(curr);
+			
+			ArrayList<ZankMapTile> checkNext = new ArrayList<ZankMapTile>();
+			if (tileIsWalkable(curr.x+1, curr.y, au))
+				checkNext.add(mapData[curr.x+1][curr.y]);
+			if (tileIsWalkable(curr.x, curr.y+1, au))
+				checkNext.add(mapData[curr.x][curr.y+1]);
+			if (tileIsWalkable(curr.x-1, curr.y, au))
+				checkNext.add(mapData[curr.x-1][curr.y]);
+			if (tileIsWalkable(curr.x, curr.y-1, au))
+				checkNext.add(mapData[curr.x][curr.y-1]);
+			
+			for (ZankMapTile zt : checkNext)
+			{
+				if ((zt.z <= curr.z + au.unit.getTotalJump() && zt.z >= curr.z - (au.unit.getTotalJump() + 1))
+						|| shoes == FFTAEquip.FAIRY_SHOES || shoes == FFTAEquip.GALMIA_SHOES)
+					getReachableTiles(reachableTiles, zt, move - 1, au);
+			}
+		}
+		
+	}
 	
+	public boolean tileIsWalkable(int x, int y, ActiveUnit au)
+	{
+		try
+		{
+			return (x >= 0 && x < 15 &&
+					y >= 0 && y < 15 &&
+					mapData[x][y] != null &&
+					(mapData[x][y].unit == null || mapData[x][y].unit.team == au.team || au.unit.equips.getShoes() == FFTAEquip.FAIRY_SHOES));
+		}
+		catch(NullPointerException e) { System.err.println(x + ", " + y + " | " + mapData[x][y]); return false;}
+		
+	}
 }
 
 class ForegroundObject implements Comparable<ForegroundObject>
@@ -452,6 +652,7 @@ class ForegroundObject implements Comparable<ForegroundObject>
 	FGObjectType type;
 	String name;
 	
+	// TODO: Have this constructor take an image instead of a URL for one to avoid loading the same image multiple times
 	public ForegroundObject(String url, int x, int y, int z, int xOffset, int yOffset, boolean reflectX, FGObjectType type)
 	{
 		try
@@ -514,17 +715,21 @@ class ForegroundObject implements Comparable<ForegroundObject>
 	{
 		return new ForegroundObject(au.getSpriteURL(), au.x, au.y, au.z, 8, -18, au.isSpriteReflected(), FGObjectType.UNIT);
 	}
+	
+	public String toString()
+	{
+		return x + "\t" + y + "\t" + name;
+	}
 }
 
 enum FGObjectType { GROUND, UNIT, OBJECT, SELECTOR, HIGHLIGHT; }
 
 // Sorted list that orders ForegroundObjects by their depth
-
 class ZankMapTile
 {
 	int x, y, z;
 	Terrain terrain;
-	FFTAUnit unit;
+	ActiveUnit unit;
 	ForegroundObject fgobj;
 	
 	public ZankMapTile(int x, int y, int z, Terrain terrain)
@@ -565,6 +770,8 @@ class ZankMapTile
 	{
 		return x + ", " + y + ", " + z + ". " + terrain;
 	}
+	
+	
 	
 	enum Terrain { NORMAL, WATER, BLOCK };
 }

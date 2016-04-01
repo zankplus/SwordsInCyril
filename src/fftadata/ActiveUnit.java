@@ -14,6 +14,7 @@ public class ActiveUnit implements Serializable
 	// Fields
 	public FFTAUnit unit;
 	public int x, y, z;
+	public int oldX, oldY, oldZ;
 	public int currHP, currMP;
 	public int counter;
 	public int reserve;
@@ -82,6 +83,18 @@ public class ActiveUnit implements Serializable
 //			modifier *= 0.5;
 		
 		return (int) (modifier * unit.getTotalSpeed());
+	}
+	
+	public void face(String dir)
+	{
+		if (dir.equalsIgnoreCase("NW"))
+			this.dir = Direction.NORTHWEST;
+		else if (dir.equalsIgnoreCase("NE"))
+			this.dir = Direction.NORTHEAST;
+		else if (dir.equalsIgnoreCase("SW"))
+			this.dir = Direction.SOUTHWEST;
+		else
+			this.dir = Direction.SOUTHEAST;
 	}
 }
 

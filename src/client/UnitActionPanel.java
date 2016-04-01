@@ -26,25 +26,15 @@ public class UnitActionPanel extends JPanel
 	JPanel blankPanel;
 	CardLayout cl;
 	EngagementWindow ew;
-	private JButton btnAct;
-	private JButton btnWait;
-	private JPanel movePanel;
-	private JButton btnMoveCancel;
-	private JLabel lblMoveInstruction;
-	private JButton btnQuickMove;
-	private JButton btnMove;
-	ActionListener movelistener, unmoveListener, actionListener;
+	GamePanel gp;
+	private JButton btnAct, btnWait, btnMoveCancel, btnMove, btnActCancel, btnQuickAct, btnWaitCancel,
+						btnNe, btnNw, btnSe, btnSw;
+	private JPanel movePanel, waitPanel, directionsPanel, actPanel;
+	private JLabel lblMoveInstruction; 
+	
+//	ActionListener movelistener, unmoveListener, actionListener;
 	boolean unitHasMoved, unitHasActed;
-	private JPanel actPanel;
-	private JButton btnActCancel;
-	private JButton btnQuickAct;
-	private JPanel waitPanel;
-	private JButton btnWaitCancel;
-	private JPanel directionsPanel;
-	private JButton btnNe;
-	private JButton btnNw;
-	private JButton btnSe;
-	private JButton btnSw;
+	
 	
 	
 	/**
@@ -55,7 +45,9 @@ public class UnitActionPanel extends JPanel
 			public void run() {
 				try {
 					MapPanelTest frame = new MapPanelTest();
-					frame.getContentPane().add(new UnitActionPanel(null));
+					UnitActionPanel uap = new UnitActionPanel(null);
+					uap.yourTurn();
+					frame.getContentPane().add(uap);
 					frame.pack();
 					frame.setVisible(true);
 				} catch (Exception e) {
@@ -68,6 +60,8 @@ public class UnitActionPanel extends JPanel
 	public UnitActionPanel(EngagementWindow ew)
 	{
 		this.ew = ew;
+		gp = ew.gamePanel;
+		
 		
 		setBorder(new TitledBorder(null, "Action", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setPreferredSize(new Dimension(240, 162));
@@ -186,7 +180,7 @@ public class UnitActionPanel extends JPanel
 		btnMoveCancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				yourTurn();
+				cancelMovement();
 			}
 		});
 		movePanel.add(btnMoveCancel, BorderLayout.SOUTH);
@@ -195,23 +189,7 @@ public class UnitActionPanel extends JPanel
 		lblMoveInstruction.setHorizontalAlignment(SwingConstants.CENTER);
 		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
 		
-		btnQuickMove = new JButton("(Quick Move)");
-		movePanel.add(btnQuickMove, BorderLayout.NORTH);
-		btnQuickMove.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				unitHasMoved = true;
-				if (unitHasActed)
-				{
-					btnWaitCancel.setEnabled(false);
-					doWait();
-				}
-				else
-					yourTurn();
-			}
-		});
 		
-		yourTurn();
 	}
 	
 	public void yourTurn()
@@ -236,6 +214,7 @@ public class UnitActionPanel extends JPanel
 	
 	public void move()
 	{
+		gp.beginMovementMode();
 		cl.show(this, "Move");
 	}
 	
@@ -246,6 +225,7 @@ public class UnitActionPanel extends JPanel
 	
 	public void undoMove()
 	{
+		gp.undoMovement();
 		unitHasMoved = false;
 		yourTurn();
 	}
@@ -253,5 +233,23 @@ public class UnitActionPanel extends JPanel
 	public void doWait()
 	{
 		cl.show(this,  "Wait");
+	}
+	
+	public void cancelMovement()
+	{
+		gp.cancelMovementMode();
+		yourTurn();
+	}
+	
+	public void completeMovement()
+	{
+		unitHasMoved = true;
+		if (unitHasActed)
+		{
+			btnWaitCancel.setEnabled(false);
+			doWait();
+		}
+		else
+			yourTurn();
 	}
 }

@@ -327,4 +327,12 @@ public class EquipSet implements Serializable
 			result.addElement(slots[i]);
 		return result;
 	}
+	
+	public FFTAEquip getShoes()
+	{
+		if (feet != -1)
+			return slots[feet];
+		else
+			return null;
+	}
 }

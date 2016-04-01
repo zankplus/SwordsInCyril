@@ -252,6 +252,8 @@ public class EngagementWindow extends JFrame {
 	// NEXT: initiate the given character's turn
 	public void receiveNext(int index)
 	{
+		gamePanel.currentUnit = index;
+		
 		if (gamePanel.units[index].team == playerNumber)
 			gamePanel.unitAction.yourTurn();
 		else
