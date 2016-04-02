@@ -123,7 +123,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 						else if (type.equals(ZankMessageType.GAME))
 						{
 							ZankGameAction action = (ZankGameAction) msg.data;
-							EngagementWindow gw = client.gameWindow;
+							EngagementWindow ew = client.gameWindow;
 							
 							// START: the challenge has been accepted and the client's game is beginning
 							if (action.type.equals(ZankGameActionType.START))
@@ -134,19 +134,31 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							// CHAT: a user in the engagement has sent a message to the engagement chat 
 							else if (action.type.equals(ZankGameActionType.CHAT))
 							{
-								gw.receiveChat(user, (String) action.data); 
+								ew.receiveChat(user, (String) action.data); 
 							}
 							
 							// READY: the server has sent confirmation that both players are ready to begin the battle
 							else if (action.type.equals(ZankGameActionType.READY))
 							{
-								gw.receiveReady((ArrayList<ActiveUnit>) action.data);
+								ew.receiveReady((ArrayList<ActiveUnit>) action.data);
 							}
 							
 							// NEXT: the server has indicated that a new unit's turn should begin
 							else if (action.type.equals(ZankGameActionType.NEXT))
 							{
-								gw.receiveNext((Integer) action.data);
+								ew.receiveNext((Integer) action.data);
+							}
+							
+							// MOVE: the server has indicated that one of the participants in the engagement has moved a unit
+							else if (action.type.equals(ZankGameActionType.MOVE))
+							{
+								ew.receiveMove((int[]) action.data);
+							}
+							
+							// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
+							else if (action.type.equals(ZankGameActionType.WAIT))
+							{
+								ew.receiveWait((int[]) action.data);
 							}
 						}
 						else

@@ -220,6 +220,21 @@ public class ActiveUser extends Thread
 											ag.turnOrder.units[ag.currentUnit].reserve = 0;
 											ag.advanceTurn();
 										}
+										else if (action.type == ZankGameActionType.MOVE)
+										{
+											int[] data = (int[]) action.data;
+											ag.moveUnit(data[0], data[1], data[2], data[3]);
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
+										}
+										else if (action.type == ZankGameActionType.WAIT)
+										{
+											int[] data = (int[]) action.data;
+											ag.waitUnit(data[0], data[1]);
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
+											ag.advanceTurn();
+										}
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); }
 								}

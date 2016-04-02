@@ -104,16 +104,16 @@ public class MapPanelTest extends JFrame {
 		gp.currentUnit = 0;
 		
 		if (gp.units[0].team == gp.ew.playerNumber)
-			gp.unitAction.yourTurn();
+			gp.unitAction.showActionsPanel();
 		else
-			gp.unitAction.enemyTurn();
+			gp.unitAction.hideActionPanel();
 		
 		ActiveUnit au = gp.units[0];
 		gp.mapPanel.selectTile(gp.map.mapData[au.x][au.y]);
 		
 		
 		
-		gp.unitAction.yourTurn();
+		gp.unitAction.showActionsPanel();
 	}
 
 }
@@ -229,6 +229,13 @@ class GamePanel extends JPanel
 		ZankMapTile old = map.mapData[au.oldX][au.oldY];
 		mapPanel.moveUnit(au, old);
 		repaint();
+	}
+	
+	public void faceUnit(int dir)
+	{
+		ActiveUnit au = units[currentUnit];
+		au.dir = dir;
+		mapPanel.updateSprite(au);
 	}
 }
 
@@ -484,6 +491,12 @@ class MapPanel extends JPanel
 		tile.fgobj = null;
 	}
 	
+	public void updateSprite(ActiveUnit au)
+	{
+		moveUnit(au, map.mapData[au.x][au.y]);
+		repaint();
+	}
+	
 	public void moveUnit(ActiveUnit au, ZankMapTile dest)
 	{
 		au = gamePanel.units[gamePanel.currentUnit]; 
@@ -709,6 +722,16 @@ class ForegroundObject implements Comparable<ForegroundObject>
 		if (diff == 0 && type != FGObjectType.SELECTOR && other.type != FGObjectType.SELECTOR)	// Non-selectors should be allowed to share depths.
 			return 1;																			// However, it needs to return 0 for comparisons with the selector or it'll never get removed
 		return this.depth - other.depth;
+	}
+	
+	public void setImage(String url)
+	{
+		name = url;
+		try
+		{
+			img = ImageIO.read(new File(url));
+		}
+		catch (IOException e) { System.err.println("ForegroundObject couldn't find image: " + url); }
 	}
 	
 	public static ForegroundObject makeFGObject(ActiveUnit au)

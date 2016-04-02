@@ -32,8 +32,9 @@ public class UnitActionPanel extends JPanel
 	private JPanel movePanel, waitPanel, directionsPanel, actPanel;
 	private JLabel lblMoveInstruction; 
 	
+	
 //	ActionListener movelistener, unmoveListener, actionListener;
-	boolean unitHasMoved, unitHasActed;
+	boolean unitHasMoved, unitHasActed, sendMove;
 	
 	
 	
@@ -46,7 +47,7 @@ public class UnitActionPanel extends JPanel
 				try {
 					MapPanelTest frame = new MapPanelTest();
 					UnitActionPanel uap = new UnitActionPanel(null);
-					uap.yourTurn();
+					uap.showActionsPanel();
 					frame.getContentPane().add(uap);
 					frame.pack();
 					frame.setVisible(true);
@@ -62,12 +63,31 @@ public class UnitActionPanel extends JPanel
 		this.ew = ew;
 		gp = ew.gamePanel;
 		
+		sendMove = false;
 		
 		setBorder(new TitledBorder(null, "Action", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setPreferredSize(new Dimension(240, 162));
 		
 		cl = new CardLayout();
 		setLayout(cl);
+		
+		ActionListener facingListener = new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				int dir = 0;
+				if (e.getSource() ==btnNe)
+					dir = 1;
+				else if (e.getSource() ==btnNw)
+					dir = 2;
+				else if (e.getSource() ==btnSw)
+					dir = 3;
+				else if (e.getSource() ==btnSe)
+					dir = 4;
+				
+				if (dir != 0)
+					doWait(dir);
+			}
+		};
 		
 		actionsPanel = new JPanel();
 		blankPanel = new JPanel();
@@ -82,7 +102,7 @@ public class UnitActionPanel extends JPanel
 		btnWaitCancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				yourTurn();
+				showActionsPanel();
 			}
 		});
 		
@@ -90,17 +110,19 @@ public class UnitActionPanel extends JPanel
 		waitPanel.add(directionsPanel, BorderLayout.CENTER);
 		directionsPanel.setLayout(new GridLayout(2, 2, 0, 0));
 		
-		btnNe = new JButton("NE");
-		directionsPanel.add(btnNe);
-		
 		btnNw = new JButton("NW");
 		directionsPanel.add(btnNw);
 		
-		btnSe = new JButton("SE");
-		directionsPanel.add(btnSe);
+		btnNe = new JButton("NE");
+		directionsPanel.add(btnNe);
+		btnNe.addActionListener(facingListener);
 		
 		btnSw = new JButton("SW");
 		directionsPanel.add(btnSw);
+		
+		btnSe = new JButton("SE");
+		directionsPanel.add(btnSe);
+		btnSe.addActionListener(facingListener);
 		
 		actPanel = new JPanel();
 		add(actPanel, "Act");
@@ -111,7 +133,7 @@ public class UnitActionPanel extends JPanel
 		btnActCancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				yourTurn();
+				showActionsPanel();
 			}
 		});
 		
@@ -124,10 +146,10 @@ public class UnitActionPanel extends JPanel
 				if (unitHasMoved)
 				{
 					btnWaitCancel.setEnabled(false);
-					doWait();
+					showWaitPanel();
 				}
 				else
-					yourTurn();
+					showActionsPanel();
 			}
 		});
 		add(actionsPanel, "Actions");
@@ -139,7 +161,7 @@ public class UnitActionPanel extends JPanel
 			public void actionPerformed(ActionEvent e)
 			{
 				if (!unitHasMoved)
-					move();
+					showMovePanel();
 				
 				else
 					undoMove();
@@ -158,7 +180,7 @@ public class UnitActionPanel extends JPanel
 		btnAct.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				act();
+				showActPanel();
 			}
 		});
 		
@@ -166,7 +188,7 @@ public class UnitActionPanel extends JPanel
 		btnWait.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				doWait();
+				showWaitPanel();
 			}
 		});
 		actionsPanel.add(btnWait);
@@ -190,9 +212,22 @@ public class UnitActionPanel extends JPanel
 		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
 		
 		
+		btnNw.addActionListener(facingListener);
+		btnSw.addActionListener(facingListener);
 	}
 	
-	public void yourTurn()
+	public void startTurn()
+	{
+		sendMove = false;
+		unitHasMoved = false;
+		unitHasActed = false;
+		btnNe.setEnabled(true);
+		btnNw.setEnabled(true);
+		btnSw.setEnabled(true);
+		btnSe.setEnabled(true);
+	}
+	
+	public void showActionsPanel()
 	{
 		if (unitHasActed)
 			btnAct.setEnabled(false);
@@ -207,30 +242,31 @@ public class UnitActionPanel extends JPanel
 		cl.show(this, "Actions");
 	}
 	
-	public void enemyTurn()
+	public void hideActionPanel()
 	{
 		cl.show(this, "Blank");
 	}
 	
-	public void move()
+	public void showMovePanel()
 	{
 		gp.beginMovementMode();
 		cl.show(this, "Move");
 	}
 	
-	public void act()
+	public void showActPanel()
 	{
 		cl.show(this, "Act");
 	}
 	
 	public void undoMove()
 	{
+		sendMove = false;
 		gp.undoMovement();
 		unitHasMoved = false;
-		yourTurn();
+		showActionsPanel();
 	}
 	
-	public void doWait()
+	public void showWaitPanel()
 	{
 		cl.show(this,  "Wait");
 	}
@@ -238,18 +274,38 @@ public class UnitActionPanel extends JPanel
 	public void cancelMovement()
 	{
 		gp.cancelMovementMode();
-		yourTurn();
+		showActionsPanel();
 	}
 	
 	public void completeMovement()
 	{
+		sendMove = true;
 		unitHasMoved = true;
 		if (unitHasActed)
 		{
 			btnWaitCancel.setEnabled(false);
-			doWait();
+			showWaitPanel();
 		}
 		else
-			yourTurn();
+			showActionsPanel();
+	}
+	
+	public void doWait(int dir)
+	{
+		try
+		{
+			if (sendMove)
+				ew.sendMove();
+			ew.sendWait(dir);
+			
+			btnNe.setEnabled(false);
+			btnNw.setEnabled(false);
+			btnSw.setEnabled(false);
+			btnSe.setEnabled(false);
+			
+			hideActionPanel();
+		}
+		catch (IOException e) { e.printStackTrace(); }
+
 	}
 }

@@ -201,6 +201,25 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
+	public void sendMove() throws IOException
+	{
+		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
+		int[] data = {gamePanel.currentUnit, au.x, au.y, au.z};
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
+	public void sendWait(int dir) throws IOException
+	{
+		int[] data = {gamePanel.currentUnit, dir};
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
 	public void sendTurnTest(int ct) throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
@@ -255,15 +274,32 @@ public class EngagementWindow extends JFrame {
 		gamePanel.currentUnit = index;
 		
 		if (gamePanel.units[index].team == playerNumber)
-			gamePanel.unitAction.yourTurn();
+		{	
+			gamePanel.unitAction.startTurn();
+			gamePanel.unitAction.showActionsPanel();
+		}
 		else
-			gamePanel.unitAction.enemyTurn();
+			gamePanel.unitAction.hideActionPanel();
 		
 		ActiveUnit au = gamePanel.units[index];
 		
 		mapPanel.selectTile(map.mapData[au.x][au.y]);
 		
 		appendToChat("<br><em><span style=\"color:gray\"><strong>" + gamePanel.units[index].unit.name + "</strong> takes their turn!");
+	}
+	
+	// MOVE: move the indicated unit using MapPanel's moveUnit method
+	public void receiveMove(int[] data)
+	{
+		ActiveUnit au = gamePanel.units[data[0]];
+		ZankMapTile dest = map.mapData[data[1]][data[2]];
+		gamePanel.mapPanel.moveUnit(au, dest);
+	}
+	
+	// WAIT: change the indicated unit's facing in the MapPanel
+	public void receiveWait(int[] data)
+	{
+		gamePanel.faceUnit(data[1]);
 	}
 }
 

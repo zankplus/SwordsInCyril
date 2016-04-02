@@ -16,6 +16,7 @@ public class ActiveGame
 	boolean finishedPrep1, finishedPrep2;
 	
 	TurnOrder turnOrder;
+	ActiveUnit[] units;
 	public int currentUnit;
 	
 	
@@ -40,6 +41,7 @@ public class ActiveGame
 	public void initializeTurnOrder()
 	{
 		turnOrder = new TurnOrder(p1Units, p2Units);
+		units = turnOrder.units;
 	}
 	
 	public ZankMessage getStartMessage()
@@ -56,6 +58,25 @@ public class ActiveGame
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
 	}
-		
+	
+	// Only use this for move actions; use a different method for knockback, since this one depletes counter
+	public void moveUnit(int unit, int x, int y, int z)
+	{
+		ActiveUnit au = units[unit];
+		au.counter -= 300;
+		au.x = x;
+		au.y = y;
+		au.z = z;
+	}
+	
+	public void waitUnit(int unit, int dir)
+	{
+		ActiveUnit au = units[unit];
+		au.counter -= 500;
+		System.out.println(au.unit.name + "-->" + au.counter);
+		au.reserve = 0;
+		au.dir = dir;
+	}
+	
 	enum GameStatus { SETUP, ONGOING, COMPLETE };
 }

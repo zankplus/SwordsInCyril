@@ -12,6 +12,7 @@ public class ActiveUnit implements Serializable
 	static final int SPEED_DOWN = 3;
 	
 	// Fields
+	public final int NORTHEAST = 1, NORTHWEST = 2, SOUTHWEST = 3, SOUTHEAST = 4;
 	public FFTAUnit unit;
 	public int x, y, z;
 	public int oldX, oldY, oldZ;
@@ -20,7 +21,7 @@ public class ActiveUnit implements Serializable
 	public int reserve;
 	public int team;
 	public int priority;	// used to decide who goes first if two units both have 1000 counter
-	public Direction dir;
+	public int dir;
 	
 	public int[] status;
 		
@@ -34,9 +35,9 @@ public class ActiveUnit implements Serializable
 		currMP = (int) unit.maxMP;
 		this.team = team;
 		if (team == 1)
-			dir = Direction.SOUTHWEST;
+			dir = SOUTHWEST;
 		else if (team == 2)
-			dir = Direction.SOUTHEAST;
+			dir = SOUTHEAST;
 		
 		counter = 0;
 		reserve = 0;
@@ -56,7 +57,7 @@ public class ActiveUnit implements Serializable
 		
 		url.append("_stand");
 		
-		if (dir == Direction.NORTHEAST || dir == Direction.NORTHWEST)
+		if (dir == NORTHEAST || dir == NORTHWEST)
 			url.append("_nw");
 		else
 			url.append("_sw");
@@ -68,7 +69,7 @@ public class ActiveUnit implements Serializable
 	
 	public boolean isSpriteReflected()
 	{
-		return (dir == Direction.SOUTHEAST || dir == Direction.NORTHEAST);
+		return (dir == SOUTHEAST || dir == NORTHEAST);
 	}
 	
 	// Returns the unit's speed as modified by the unit's current status effects 
@@ -88,14 +89,12 @@ public class ActiveUnit implements Serializable
 	public void face(String dir)
 	{
 		if (dir.equalsIgnoreCase("NW"))
-			this.dir = Direction.NORTHWEST;
+			this.dir = NORTHWEST;
 		else if (dir.equalsIgnoreCase("NE"))
-			this.dir = Direction.NORTHEAST;
+			this.dir = NORTHEAST;
 		else if (dir.equalsIgnoreCase("SW"))
-			this.dir = Direction.SOUTHWEST;
+			this.dir = SOUTHWEST;
 		else
-			this.dir = Direction.SOUTHEAST;
+			this.dir = SOUTHEAST;
 	}
 }
-
-enum Direction { NORTHEAST, NORTHWEST, SOUTHWEST, SOUTHEAST };
