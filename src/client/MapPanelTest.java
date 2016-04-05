@@ -13,6 +13,7 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -27,8 +28,11 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 
 import fftadata.ActiveUnit;
+import fftadata.EquipType;
 import fftadata.FFTAEquip;
+import fftadata.FFTASkill;
 import fftadata.FFTAUnit;
+import fftadata.Targeting;
 
 public class MapPanelTest extends JFrame {
 
@@ -73,47 +77,9 @@ public class MapPanelTest extends JFrame {
 		setContentPane(contentPane);
 		
 		GamePanel gp = new GamePanel(new EngagementWindow(null, 2, null, null, null, null));
-		gp.ew.gamePanel = gp;
-		
 		contentPane.add(gp);
 		
-		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(0), 1, 11, 7, 1);
-		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
-		units1.add(au1);
-		gp.p1Units = units1;
-		
-//		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
-		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) gp.rosterPanel.roster.getModel().getElementAt(1), 1, 8, 8, 2);
-		au2.face("SE");
-		au1.face("NW");
-		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
-		units2.add(au2);
-		gp.p2Units = units2;
-		
-		gp.mapPanel.units = units2;
-		
-//		gp.mapPanel.addUnit(au1);
-		gp.mapPanel.addUnit(au2);
-		
-		gp.beginGame();
-		
-		gp.units = new ActiveUnit[2];
-		gp.units[0] = au1; gp.units[1] = au2;
-		
-		
-		gp.currentUnit = 0;
-		
-		if (gp.units[0].team == gp.ew.playerNumber)
-			gp.unitAction.showActionsPanel();
-		else
-			gp.unitAction.hideActionPanel();
-		
-		ActiveUnit au = gp.units[0];
-		gp.mapPanel.selectTile(gp.map.mapData[au.x][au.y]);
-		
-		
-		
-		gp.unitAction.showActionsPanel();
+		gp.test();
 	}
 
 }
@@ -123,11 +89,11 @@ public class MapPanelTest extends JFrame {
 class GamePanel extends JPanel
 {
 	ZankGameMap map;
-	MapPanel mapPanel;
-	JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
-	UnitActionPanel unitAction;
-	EngagementWindowRosterPanel rosterPanel;
-	EngagementWindow ew;	// Parent frame
+	private MapPanel mapPanel;
+	private JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
+	private UnitActionPanel unitAction;
+	private EngagementWindowRosterPanel rosterPanel;
+	private EngagementWindow ew;	// Parent frame
 	
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	ActiveUnit[] units;
@@ -193,16 +159,22 @@ class GamePanel extends JPanel
 		for (ActiveUnit au : otherTeam)
 		{
 			mapPanel.addUnit(au);
-			mapPanel.units.add(au);
+			mapPanel.mpUnits.add(au);
 		}
-		
 		
 		mapPanel.beginGame();
 	}
 	
-	public void yourTurn(ActiveUnit au)
+	public void startPlayerTurn()
 	{
-		
+		unitAction.setUnit(units[currentUnit]);
+		unitAction.resetTurnVariables();
+		unitAction.showActionsPanel();
+	}
+	
+	public void startRivalTurn()
+	{
+		unitAction.hideActionPanel();
 	}
 	
 	public void beginMovementMode()
@@ -231,11 +203,91 @@ class GamePanel extends JPanel
 		repaint();
 	}
 	
+	public void beginTargetingMode(FFTASkill sk)
+	{
+		mapPanel.mode = 3;
+		mapPanel.highlightTargetableTiles(sk);
+	}
+	
 	public void faceUnit(int dir)
 	{
 		ActiveUnit au = units[currentUnit];
 		au.dir = dir;
 		mapPanel.updateSprite(au);
+	}
+	
+	public void moveUnit(ActiveUnit au, ZankMapTile dest)
+	{
+		mapPanel.moveUnit(au, dest);
+	}
+	
+	public void hideUnitPreview()
+	{
+		bottomPanel.remove(unitPreview);
+		unitPreview = blankUnitPreview;
+		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		revalidate();
+	}
+	
+	public void showUnitPreview(ActiveUnit selectedUnit)
+	{
+		bottomPanel.remove(unitPreview);
+		unitPreview = new UnitPreviewPanel(selectedUnit);
+		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		revalidate();
+	}
+	
+	public void selectTile(ZankMapTile tile)
+	{
+		mapPanel.selectTile(tile);
+	}
+	
+	public ArrayList<ActiveUnit> getYourUnits()
+	{
+		return mapPanel.mpUnits;
+	}
+	
+	public void test()
+	{
+		ew.gamePanel = this;
+		
+		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(0), 1, 11, 7, 1);
+		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
+		units1.add(au1);
+		p1Units = units1;
+		
+//		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 1, 8, 8, 2);
+		au2.face("SE");
+		au1.face("NW");
+		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
+		units2.add(au2);
+		p2Units = units2;
+		
+		mapPanel.mpUnits = units2;
+		
+//		mapPanel.addUnit(au1);
+		mapPanel.addUnit(au2);
+		
+		beginGame();
+		
+		units = new ActiveUnit[2];
+		units[0] = au1; units[1] = au2;
+		
+		
+		currentUnit = 0;
+		
+		if (units[0].team == ew.playerNumber)
+			unitAction.showActionsPanel();
+		else
+			unitAction.hideActionPanel();
+		
+		ActiveUnit au = units[0];
+		mapPanel.selectTile(map.mapData[au.x][au.y]);
+		
+		
+		
+		unitAction.showActionsPanel();
 	}
 }
 
@@ -243,16 +295,17 @@ class GamePanel extends JPanel
 // Panel representing the game map. All graphical logic should go here
 class MapPanel extends JPanel
 {
+	GamePanel gamePanel;
 	ZankGameMap map;
-	int clickX, clickY;
+	
 	boolean drawTile = false;
 	ClanBuilderRoster roster;
 	int player;
-	ArrayList<ActiveUnit> units;
+	ArrayList<ActiveUnit> mpUnits;
 	TreeSet<ForegroundObject> fgObjects;
 	ZankMapTile selectedTile;
 	ActiveUnit selectedUnit;
-	GamePanel gamePanel;
+	
 	static ForegroundObject selector = new ForegroundObject("resources/maps/selector.png", 0, 0, 0, 0, -31, false, FGObjectType.SELECTOR);
 	ArrayList<ForegroundObject> hlTiles;
 	int mode;
@@ -264,7 +317,7 @@ class MapPanel extends JPanel
 		map = MuscadetMapLoader.getMap();
 		// int targetX = 240 + 16*x - 16*y, targetY = 160 + 8*x + 8*y;
 		selectedTile = null;
-		units = new ArrayList<ActiveUnit>();
+		mpUnits = new ArrayList<ActiveUnit>();
 		hlTiles = new ArrayList<ForegroundObject>();
 		fgObjects = map.mapObjects;
 
@@ -288,82 +341,17 @@ class MapPanel extends JPanel
 					int dist = (Math.abs(e.getX() - tile.renderCenterX())) + Math.abs((e.getY() - tile.renderCenterY())) * 2;
 					if (dist <= 16)
 						selectedTile = tile;
-					
-					
 				}
 				
 				
 				// Generic selection mode
 				if (mode == 0)
-				{
 					selectTile(selectedTile);
-				}
 				
 				// Unit placement mode
 				else if (mode == 1)
 				{
-					if (selectedTile != null)
-					{
-						boolean selectedIsStartingTile = false;
-						
-						if (player == 1)
-						{
-							for (int i = 0; i < map.p1StartingTiles.length; i++)
-								if (map.p1StartingTiles[i] == selectedTile)
-									selectedIsStartingTile = true;
-						}
-						else if (player == 2)
-							for (int i = 0; i < map.p2StartingTiles.length; i++)		
-								if (map.p2StartingTiles[i] == selectedTile)
-									selectedIsStartingTile = true;
-						
-						// If a valid starting point has been selected
-						if (selectedIsStartingTile && roster.getSelectedValue() != null)
-						{
-							FFTAUnit unit = (FFTAUnit) roster.getSelectedValue();
-							
-							// If this unit has already been placed, remove that unit from the map
-							for (int i = 0; i < units.size(); i++)
-							{
-								ActiveUnit old = units.get(i);
-								if (old.unit == unit)
-								{
-									map.mapObjects.remove(map.mapData[old.x][old.y].fgobj);	// Clear the old unit's fgobject from the map
-									map.mapData[old.x][old.y].fgobj = null;					// and from its associated map tile
-									units.remove(i);	// Clear the old unit from the unit list
-									i = 6;				// Stop looping
-								}
-							}
-							
-							// If another unit is already present in this tile, remove it from the map
-							for (int i = 0; i < units.size(); i++)
-							{
-								ActiveUnit old = units.get(i);
-								if (old.x == selectedTile.x && old.y == selectedTile.y)
-								{
-									System.out.println(map.mapObjects.remove(selectedTile.fgobj));	// Clear the old unit's fgobject from the object list,
-									
-									map.mapData[old.x][old.y].fgobj = null;	// and from its associated map tile
-									units.remove(i);						// Remove the old unit from the unit list
-									i = 6;									// Stop looping
-								}
-							}
-							
-							if (units.size() < 6)
-							{
-								// It is now safe to add this unit and its fgobject to the map.
-								// Add unit to unit list
-								ActiveUnit au = new ActiveUnit(unit, selectedTile.x, selectedTile.y, selectedTile.z, player); 
-								units.add(au);
-								
-								// Add fgobject to its associated tile and to the map's object list
-								
-								addUnit(au);
-							}
-							
-							repaint();
-						}
-					}
+					placeUnit();
 				}
 				else if (mode == 2)	// movement mode
 				{
@@ -374,7 +362,6 @@ class MapPanel extends JPanel
 						System.out.println("[" + selectedTile.x + ", " + selectedTile.y + "]");
 						for (int i = 0; i < hlTiles.size(); i++)
 						{
-							System.out.println(hlTiles.get(i).x + ", " + hlTiles.get(i).y);
 							if (selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile)
 							{
 								moveUnit(gamePanel.units[gamePanel.currentUnit], selectedTile);
@@ -409,9 +396,7 @@ class MapPanel extends JPanel
 			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
 			fgObjects.add(fgo);
-		}
-
-		
+		}		
 	}
 	
 	public void beginGame()
@@ -421,34 +406,105 @@ class MapPanel extends JPanel
 		
 	}
 	
-	public void removeHighlightedTiles()
+	public void selectTile(ZankMapTile tile)
 	{
-		Iterator<ForegroundObject> itr = fgObjects.iterator();
-		while (itr.hasNext())
+		if (selectedTile != null)
+			System.out.println("Selected " + selectedTile.x + ", " + selectedTile.y + ", " + selectedTile.z);
+		this.selectedTile = tile;
+		if (selectedTile != null)
 		{
-			ForegroundObject curr = itr.next();
-			if (hlTiles.contains(curr))
-				itr.remove();
+			fgObjects.remove(selector);
+			selector.moveTo(selectedTile);
+			fgObjects.add(selector);
+			
+			int index = -1;
+			for (int i = 0; i < mpUnits.size(); i++)
+				if (mpUnits.get(i).x == selectedTile.x && mpUnits.get(i).y == selectedTile.y)
+					index = i;
+			
+	
+			
+			if (index == -1)
+			{
+				selectedUnit = null;
+				gamePanel.hideUnitPreview();
+			}
+			else
+			{
+				selectedUnit = mpUnits.get(index);
+				gamePanel.showUnitPreview(selectedUnit);
+			}
 		}
+		
 		repaint();
 	}
 	
-	// Remove units' fgobjects from the treeset
-	public void removeUnits()
+	public void placeUnit()
 	{
-		Iterator<ForegroundObject> itr = fgObjects.iterator();
-		while (itr.hasNext())
+		if (selectedTile != null)
 		{
-			ForegroundObject curr = itr.next();
-			if (curr.type == FGObjectType.UNIT)
-			{
-				map.mapData[curr.xTile][curr.yTile].fgobj = null;
-				itr.remove();
-			}
+			boolean selectedIsStartingTile = false;
 			
+			if (player == 1)
+			{
+				for (int i = 0; i < map.p1StartingTiles.length; i++)
+					if (map.p1StartingTiles[i] == selectedTile)
+						selectedIsStartingTile = true;
+			}
+			else if (player == 2)
+				for (int i = 0; i < map.p2StartingTiles.length; i++)		
+					if (map.p2StartingTiles[i] == selectedTile)
+						selectedIsStartingTile = true;
+			
+			// If a valid starting point has been selected
+			if (selectedIsStartingTile && roster.getSelectedValue() != null)
+			{
+				FFTAUnit unit = (FFTAUnit) roster.getSelectedValue();
+				
+				// If this unit has already been placed, remove that unit from the map
+				for (int i = 0; i < mpUnits.size(); i++)
+				{
+					ActiveUnit old = mpUnits.get(i);
+					if (old.unit == unit)
+					{
+						map.mapObjects.remove(map.mapData[old.x][old.y].fgobj);	// Clear the old unit's fgobject from the map
+						map.mapData[old.x][old.y].fgobj = null;					// and from its associated map tile
+						mpUnits.remove(i);	// Clear the old unit from the unit list
+						i = 6;				// Stop looping
+					}
+				}
+				
+				// If another unit is already present in this tile, remove it from the map
+				for (int i = 0; i < mpUnits.size(); i++)
+				{
+					ActiveUnit old = mpUnits.get(i);
+					if (old.x == selectedTile.x && old.y == selectedTile.y)
+					{
+						map.mapObjects.remove(selectedTile.fgobj);	// Clear the old unit's fgobject from the object list,
+						
+						map.mapData[old.x][old.y].fgobj = null;	// and from its associated map tile
+						mpUnits.remove(i);						// Remove the old unit from the unit list
+						i = 6;									// Stop looping
+					}
+				}
+				
+				if (mpUnits.size() < 6)
+				{
+					// It is now safe to add this unit and its fgobject to the map.
+					// Add unit to unit list
+					ActiveUnit au = new ActiveUnit(unit, selectedTile.x, selectedTile.y, selectedTile.z, player); 
+					mpUnits.add(au);
+					
+					// Add fgobject to its associated tile and to the map's object list
+					
+					addUnit(au);
+				}
+				
+				repaint();
+			}
 		}
 	}
-	
+
 	public void highlightWalkableTiles()
 	{
 		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
@@ -459,6 +515,58 @@ class MapPanel extends JPanel
 			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
 			fgObjects.add(fgo);
+		}
+		repaint();
+	}
+
+	public void highlightTargetableTiles(FFTASkill sk)
+	{
+		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
+		Targeting targ = sk.TARGETING;
+		int range = sk.RANGE;
+		
+		if (targ == Targeting.AS_WEAPON)
+		{
+			FFTAEquip weapon = au.unit.getWeapon();
+			System.out.println(weapon.name + " " + range);
+			range = weapon.range;
+			if (weapon.type == EquipType.SPEAR)
+				targ = Targeting.DIRECTIONAL;
+			else
+				targ = Targeting.FREE_SELECT;
+		}
+		
+		
+		// Free Select targeting
+		if (targ == Targeting.FREE_SELECT)
+		{
+			int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
+					ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
+			
+			for (int x = xmin; x <= xmax; x++)
+				for (int y = ymin; y <= ymax; y++)
+				{
+					int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
+					System.out.println(x + ", " + y + "(" + dist + ")");
+					if (map.mapData[x][y] != null && dist <= range && (dist > 0 || !sk.NOTSELF))
+					{
+						ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
+						hlTiles.add(fgo);
+						fgObjects.add(fgo);
+					}
+				}
+		}
+		repaint();
+	}
+	
+	public void removeHighlightedTiles()
+	{
+		Iterator<ForegroundObject> itr = fgObjects.iterator();
+		while (itr.hasNext())
+		{
+			ForegroundObject curr = itr.next();
+			if (hlTiles.contains(curr))
+				itr.remove();
 		}
 		repaint();
 	}
@@ -491,12 +599,22 @@ class MapPanel extends JPanel
 		tile.fgobj = null;
 	}
 	
-	public void updateSprite(ActiveUnit au)
+	// Remove units' fgobjects from the treeset
+	public void removeAllUnits()
 	{
-		moveUnit(au, map.mapData[au.x][au.y]);
-		repaint();
+		Iterator<ForegroundObject> itr = fgObjects.iterator();
+		while (itr.hasNext())
+		{
+			ForegroundObject curr = itr.next();
+			if (curr.type == FGObjectType.UNIT)
+			{
+				map.mapData[curr.xTile][curr.yTile].fgobj = null;
+				itr.remove();
+			}
+			
+		}
 	}
-	
+
 	public void moveUnit(ActiveUnit au, ZankMapTile dest)
 	{
 		au = gamePanel.units[gamePanel.currentUnit]; 
@@ -510,50 +628,23 @@ class MapPanel extends JPanel
 		addUnit(au);
 		repaint();
 	}
-	
-	public void selectTile(ZankMapTile selectedTile)
-	{
-		if (selectedTile != null)
-			System.out.println("Selected " + selectedTile.x + ", " + selectedTile.y + ", " + selectedTile.z);
-		this.selectedTile = selectedTile;
-		if (selectedTile != null)
-		{
-			fgObjects.remove(selector);
-			selector.moveTo(selectedTile);
-			fgObjects.add(selector);
-			
-			int index = -1;
-			for (int i = 0; i < units.size(); i++)
-				if (units.get(i).x == selectedTile.x && units.get(i).y == selectedTile.y)
-					index = i;
-			
 
-			
-			if (index == -1)
-			{
-				selectedUnit = null;
-				
-				gamePanel.bottomPanel.remove(gamePanel.unitPreview);
-				gamePanel.unitPreview = gamePanel.blankUnitPreview;
-				gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
-				gamePanel.revalidate();
-			}
-			else
-			{
-				selectedUnit = units.get(index);
-				
-				System.out.println(gamePanel);
-				
-				gamePanel.bottomPanel.remove(gamePanel.unitPreview);
-				gamePanel.unitPreview = new UnitPreviewPanel(selectedUnit);
-				gamePanel.bottomPanel.add(gamePanel.unitPreview, BorderLayout.WEST);
-				gamePanel.revalidate();
-			}
-		}
-		
+	public void updateSprite(ActiveUnit au)
+	{
+		moveUnit(au, map.mapData[au.x][au.y]);
 		repaint();
 	}
 	
+	public BufferedImage makeSpriteTranslucent(BufferedImage source, double alpha)
+	{
+		BufferedImage target = new BufferedImage(source.getWidth(), source.getHeight(), java.awt.Transparency.TRANSLUCENT);
+		Graphics2D g = target.createGraphics();
+		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
+		g.drawImage(source, null, 0, 0);
+		g.dispose();
+		return target;
+	}
+
 	@Override
 	protected void paintComponent(Graphics g)
 	{
@@ -569,26 +660,14 @@ class MapPanel extends JPanel
 			
 			BufferedImage target;
 			if (fgobj.type == FGObjectType.HIGHLIGHT)
-				target = makeTranslucent(fgobj.img, 0.85);
+				target = makeSpriteTranslucent(fgobj.img, 0.85);
 			else
 				target = fgobj.img;
 			
 			if (fgobj.z > 0)
 				g.drawImage(target, fgobj.x, fgobj.y, fgobj.img.getWidth() * fgobj.reflectX, fgobj.img.getHeight(), null);
-			
-			// System.out.println(fgobj.name);
 		}
 		
-	}
-	
-	public BufferedImage makeTranslucent(BufferedImage source, double alpha)
-	{
-		BufferedImage target = new BufferedImage(source.getWidth(), source.getHeight(), java.awt.Transparency.TRANSLUCENT);
-		Graphics2D g = target.createGraphics();
-		g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
-		g.drawImage(source, null, 0, 0);
-		g.dispose();
-		return target;
 	}
 }
 
@@ -641,13 +720,18 @@ class ZankGameMap
 		
 	}
 	
+	public boolean tileExists(int x, int y)
+	{
+		return 	x >= 0 && x < 15 &&
+				y >= 0 && y < 15 &&
+				mapData[x][y] != null;
+	}
+	
 	public boolean tileIsWalkable(int x, int y, ActiveUnit au)
 	{
 		try
 		{
-			return (x >= 0 && x < 15 &&
-					y >= 0 && y < 15 &&
-					mapData[x][y] != null &&
+			return (tileExists(x, y) &&
 					(mapData[x][y].unit == null || mapData[x][y].unit.team == au.team || au.unit.equips.getShoes() == FFTAEquip.FAIRY_SHOES));
 		}
 		catch(NullPointerException e) { System.err.println(x + ", " + y + " | " + mapData[x][y]); return false;}

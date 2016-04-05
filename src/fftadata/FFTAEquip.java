@@ -7,6 +7,8 @@ public enum FFTAEquip implements Serializable
 {
 	NONE			(" -",				null,					0,	0,	0,	0,	0,	0,	0,	0,	0,	Element.NULL,		0),
 	
+	UNARMED			("Unarmed",			EquipType.UNARMED,		10,	0,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		0),		
+	
 	BLOOD_SWORD		("Blood Sword",		EquipType.SWORD,		18,	0,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		1),
 	BURGLAR_SWORD	("Burglar Sword",	EquipType.SWORD,		39,	0,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		1),
 	BUSTER_SWORD	("Buster Sword",	EquipType.SWORD,		35,	5,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		1),
@@ -183,7 +185,7 @@ public enum FFTAEquip implements Serializable
 	ARTEMIS_BOW		("Artemis Bow",		EquipType.BOW,			27,	0,	0,	0,	0,	0,	0,	0,	7,	Element.NULL,		1),
 	CHAR_BOW		("Char Bow",		EquipType.BOW,			21,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		0),
 	CRESCENT_BOW	("Crescent Bow",	EquipType.BOW,			45,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		2),
-	LONGBOW			("Longbow",		EquipType.BOW,			19,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		0),
+	LONGBOW			("Longbow",			EquipType.BOW,			19,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		0),
 	MALBOW			("Malbow",			EquipType.BOW,			55,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		1),
 	MYTHRIL_BOW		("Mythril Bow",		EquipType.BOW,			32,	0,	0,	0,	0,	0,	0,	1,	5,	Element.NULL,		1),
 	NAIL_BOW		("Nail Bow",		EquipType.BOW,			29,	0,	0,	0,	0,	0,	0,	0,	5,	Element.NULL,		0),

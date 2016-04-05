@@ -202,6 +202,15 @@ public class FFTAUnit implements Serializable
 		return (int) result;
 	}
 	
+	public FFTAEquip getWeapon()
+	{
+		int index = equips.rightHand;
+		if (index == -1)
+			return FFTAEquip.UNARMED;
+		else
+			return equips.slots[index];
+	}
+	
 	public void updateDeepStats()
 	{
 		maxHP =	statBase.baseHP;

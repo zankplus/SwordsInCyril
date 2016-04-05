@@ -41,7 +41,6 @@ public class EngagementWindow extends JFrame {
 	String gameID;
 	ObjectInputStream in;
 	ObjectOutputStream out;
-	MapPanel mapPanel;
 	ZankGameMap map;
 	int playerNumber;
 	int gameMode;
@@ -142,39 +141,10 @@ public class EngagementWindow extends JFrame {
 		leftPanel.setBorder(null);
 		leftPanel.setPreferredSize(new Dimension(560, 10));
 		contentPane.add(leftPanel, BorderLayout.WEST);
-		
-//		ClanBuilderRoster roster = new ClanBuilderRoster();
-//		panel.add(roster, BorderLayout.SOUTH);
-		
 
 		gamePanel = new GamePanel(this);
-		mapPanel = gamePanel.mapPanel;
-		map = mapPanel.map;
-		mapPanel.beginPlacementMode();
-		
+		map = gamePanel.map;
 		leftPanel.add(gamePanel);
-		
-//		gamePanel = new JPanel(new BorderLayout());
-//		gamePanel.setPreferredSize(new Dimension(480, 400));
-//		leftPanel.add(gamePanel, BorderLayout.CENTER);
-//		
-//		mapPanel = new MapPanel(playerNumber);
-//		map = mapPanel.map;
-//		gamePanel.add(mapPanel, BorderLayout.CENTER);
-//		rosterPanel = new EngagementWindowRosterPanel(this);
-//		gamePanel.add(rosterPanel, BorderLayout.SOUTH);
-//		
-//		
-//		mapPanel.roster = rosterPanel.roster;
-//		
-//		mapPanel.beginPlacementMode(mapPanel.player);
-//			
-//		
-//		JPanel turnOrderPanel = new JPanel();
-//		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-//		turnOrderPanel.setPreferredSize(new Dimension(80, 10));
-//		leftPanel.add(turnOrderPanel, BorderLayout.EAST);
-//		turnOrderPanel.setLayout(new GridLayout(1, 0, 0, 0));
 	}
 	
 	public void sendChat(String content) throws IOException
@@ -195,7 +165,7 @@ public class EngagementWindow extends JFrame {
 	
 	public void sendReady() throws IOException
 	{
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, mapPanel.units);
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, gamePanel.getYourUnits());
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		out.writeObject(message);
 		out.flush();
@@ -275,15 +245,14 @@ public class EngagementWindow extends JFrame {
 		
 		if (gamePanel.units[index].team == playerNumber)
 		{	
-			gamePanel.unitAction.startTurn();
-			gamePanel.unitAction.showActionsPanel();
+			gamePanel.startPlayerTurn();
 		}
 		else
-			gamePanel.unitAction.hideActionPanel();
+			gamePanel.startRivalTurn();
 		
 		ActiveUnit au = gamePanel.units[index];
 		
-		mapPanel.selectTile(map.mapData[au.x][au.y]);
+		gamePanel.selectTile(map.mapData[au.x][au.y]);
 		
 		appendToChat("<br><em><span style=\"color:gray\"><strong>" + gamePanel.units[index].unit.name + "</strong> takes their turn!");
 	}
@@ -293,7 +262,7 @@ public class EngagementWindow extends JFrame {
 	{
 		ActiveUnit au = gamePanel.units[data[0]];
 		ZankMapTile dest = map.mapData[data[1]][data[2]];
-		gamePanel.mapPanel.moveUnit(au, dest);
+		gamePanel.moveUnit(au, dest);
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel
@@ -334,15 +303,16 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				if (ew.mapPanel.units.size() > 0)
+				ArrayList<ActiveUnit> units = ew.gamePanel.getYourUnits();
+				if (units.size() > 0)
 				{
 					try
 					{
 						ew.sendReady();
 						if (ew.playerNumber == 1)
-							ew.gamePanel.p1Units = ew.mapPanel.units;
+							ew.gamePanel.p1Units = units;
 						else if (ew.playerNumber == 2)
-							ew.gamePanel.p2Units = ew.mapPanel.units;
+							ew.gamePanel.p2Units = units;
 						
 						btnReady.setEnabled(false);
 						btnReady.setText("Waiting for other player...");

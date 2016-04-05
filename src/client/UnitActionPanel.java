@@ -6,6 +6,7 @@ import java.awt.EventQueue;
 import javax.swing.JPanel;
 
 import fftadata.ActiveUnit;
+import fftadata.FFTASkill;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
@@ -19,22 +20,28 @@ import javax.swing.JButton;
 import java.awt.CardLayout;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
+import javax.swing.JList;
+import javax.swing.border.BevelBorder;
 
 public class UnitActionPanel extends JPanel
 {
-	JPanel actionsPanel;
-	JPanel blankPanel;
 	CardLayout cl;
 	EngagementWindow ew;
 	GamePanel gp;
-	private JButton btnAct, btnWait, btnMoveCancel, btnMove, btnActCancel, btnQuickAct, btnWaitCancel,
-						btnNe, btnNw, btnSe, btnSw;
-	private JPanel movePanel, waitPanel, directionsPanel, actPanel;
+	ActiveUnit au;
+	
+	private JButton btnAct, btnWait, btnMoveCancel, btnMove, btnActCancel, btnWaitCancel,
+						btnNe, btnNw, btnSe, btnSw, btnFight, btnSkillset_1, btnSkillset_2,
+						btnItem, btnSkillCancel, btnOk;
+	private JPanel blankPanel, actionsPanel, movePanel, waitPanel, directionsPanel, actPanel,
+		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel;
 	private JLabel lblMoveInstruction; 
-	
-	
-//	ActionListener movelistener, unmoveListener, actionListener;
+	private JList skillList;
 	boolean unitHasMoved, unitHasActed, sendMove;
+	private JPanel fightPanel;
+	private JButton btnFightCancel;
+	private JLabel lblClickTheUnit;
+	
 	
 	
 	
@@ -89,13 +96,156 @@ public class UnitActionPanel extends JPanel
 			}
 		};
 		
-		actionsPanel = new JPanel();
+		
+		// Blank Panel: An empty panel displayed during the other player's turns
 		blankPanel = new JPanel();
 		add(blankPanel, "Blank");
 		
+		
+		// Actions Panel: Main menu containing Move, Act and Wait options
+		actionsPanel = new JPanel();
+		actionsPanel.setLayout(new GridLayout(3, 1, 0, 0));
+		add(actionsPanel, "Actions");
+		
+		btnMove = new JButton("Move");
+		btnMove.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				if (!unitHasMoved)
+					showMovePanel();
+				else
+					undoMove();
+			}
+		});
+		actionsPanel.add(btnMove);
+		
+		btnAct = new JButton("Act");
+		btnAct.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showActPanel();
+			}
+		});
+		actionsPanel.add(btnAct);
+		
+		btnWait = new JButton("Wait");
+		btnWait.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showWaitPanel();
+			}
+		});
+		actionsPanel.add(btnWait);
+		
+		
+		// Move Panel: Prompts the player to click a tile on the map to move to
+		movePanel = new JPanel();
+		movePanel.setLayout(new BorderLayout(0, 0));
+		add(movePanel, "Move");
+		
+		btnMoveCancel = new JButton("Cancel");
+		btnMoveCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				cancelMovement();
+			}
+		});
+		movePanel.add(btnMoveCancel, BorderLayout.SOUTH);
+		
+		lblMoveInstruction = new JLabel("Click the tile to which to move.");
+		lblMoveInstruction.setHorizontalAlignment(SwingConstants.CENTER);
+		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
+		
+		
+		// Act Panel
+		actPanel = new JPanel();
+		actPanel.setLayout(new BorderLayout(0, 0));
+		add(actPanel, "Act");
+		
+		btnActCancel = new JButton("Cancel");
+		actPanel.add(btnActCancel, BorderLayout.SOUTH);
+		btnActCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showActionsPanel();
+			}
+		});
+		
+		actInnerPanel = new JPanel();
+		actPanel.add(actInnerPanel, BorderLayout.CENTER);
+		actInnerPanel.setLayout(new BorderLayout(0, 0));
+		
+		btnFight = new JButton("<html><strong>Fight");
+		btnFight.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				showFightPanel();
+			}
+		});
+		btnFight.setPreferredSize(new Dimension(112, 23));
+		actInnerPanel.add(btnFight, BorderLayout.WEST);
+		
+		actSkillsetPanel = new JPanel();
+		actInnerPanel.add(actSkillsetPanel, BorderLayout.CENTER);
+		actSkillsetPanel.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		btnSkillset_1 = new JButton("Skillset 1");
+		actSkillsetPanel.add(btnSkillset_1);
+		
+		btnSkillset_2 = new JButton("Skillset 2");
+		actSkillsetPanel.add(btnSkillset_2);
+		
+		btnItem = new JButton("Item");
+		btnItem.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0) {
+			}
+		});
+		actSkillsetPanel.add(btnItem);
+		
+		
+		
+		// Fight Panel
+		fightPanel = new JPanel();
+		add(fightPanel, "Fight");
+		fightPanel.setLayout(new BorderLayout(0, 0));
+		
+		btnFightCancel = new JButton("Cancel");
+		fightPanel.add(btnFightCancel, BorderLayout.SOUTH);
+		btnFightCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				cancelFight();
+			}
+		});
+		
+		lblClickTheUnit = new JLabel("Click the unit to target.");
+		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
+		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
+		
+		
+		// Skill Panel
+		skillPanel = new JPanel();
+		add(skillPanel, "Skill");
+		skillPanel.setLayout(new BorderLayout(0, 0));
+		
+		btnSkillCancel = new JButton("Cancel Skill");
+		skillPanel.add(btnSkillCancel, BorderLayout.SOUTH);
+		
+		skillInnerPanel = new JPanel();
+		skillPanel.add(skillInnerPanel, BorderLayout.CENTER);
+		skillInnerPanel.setLayout(new BorderLayout(0, 0));
+		
+		btnOk = new JButton("OK");
+		skillInnerPanel.add(btnOk, BorderLayout.EAST);
+		
+		skillList = new JList();
+		skillList.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		skillInnerPanel.add(skillList, BorderLayout.CENTER);
+		
+		
+		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
 		waitPanel = new JPanel();
-		add(waitPanel, "Wait");
 		waitPanel.setLayout(new BorderLayout(0, 0));
+		add(waitPanel, "Wait");
 		
 		btnWaitCancel = new JButton("Cancel");
 		waitPanel.add(btnWaitCancel, BorderLayout.SOUTH);
@@ -112,6 +262,7 @@ public class UnitActionPanel extends JPanel
 		
 		btnNw = new JButton("NW");
 		directionsPanel.add(btnNw);
+		btnNw.addActionListener(facingListener);
 		
 		btnNe = new JButton("NE");
 		directionsPanel.add(btnNe);
@@ -119,104 +270,20 @@ public class UnitActionPanel extends JPanel
 		
 		btnSw = new JButton("SW");
 		directionsPanel.add(btnSw);
+		btnSw.addActionListener(facingListener);
 		
 		btnSe = new JButton("SE");
 		directionsPanel.add(btnSe);
 		btnSe.addActionListener(facingListener);
-		
-		actPanel = new JPanel();
-		add(actPanel, "Act");
-		actPanel.setLayout(new BorderLayout(0, 0));
-		
-		btnActCancel = new JButton("Cancel");
-		actPanel.add(btnActCancel, BorderLayout.SOUTH);
-		btnActCancel.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				showActionsPanel();
-			}
-		});
-		
-		btnQuickAct = new JButton("(Quick Act)");
-		actPanel.add(btnQuickAct, BorderLayout.CENTER);
-		btnQuickAct.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				unitHasActed = true;
-				if (unitHasMoved)
-				{
-					btnWaitCancel.setEnabled(false);
-					showWaitPanel();
-				}
-				else
-					showActionsPanel();
-			}
-		});
-		add(actionsPanel, "Actions");
-		actionsPanel.setLayout(new GridLayout(3, 1, 0, 0));
-		
-		
-		
-		ActionListener moveListener = new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				if (!unitHasMoved)
-					showMovePanel();
-				
-				else
-					undoMove();
-			}
-		};
-		
-		
-		btnMove = new JButton("Move");
-		btnMove.addActionListener(moveListener);
-		
-		
-		actionsPanel.add(btnMove);
-		
-		btnAct = new JButton("Act");
-		actionsPanel.add(btnAct);
-		btnAct.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				showActPanel();
-			}
-		});
-		
-		btnWait = new JButton("Wait");
-		btnWait.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				showWaitPanel();
-			}
-		});
-		actionsPanel.add(btnWait);
-		
-		
-		movePanel = new JPanel();
-		add(movePanel, "Move");
-		movePanel.setLayout(new BorderLayout(0, 0));
-		
-		btnMoveCancel = new JButton("Cancel");
-		btnMoveCancel.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				cancelMovement();
-			}
-		});
-		movePanel.add(btnMoveCancel, BorderLayout.SOUTH);
-		
-		lblMoveInstruction = new JLabel("Click the tile to which to move.");
-		lblMoveInstruction.setHorizontalAlignment(SwingConstants.CENTER);
-		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
-		
-		
-		btnNw.addActionListener(facingListener);
-		btnSw.addActionListener(facingListener);
 	}
 	
-	public void startTurn()
+	public void setUnit(ActiveUnit au)
+	{
+		this.au = au;
+		
+	}
+	
+	public void resetTurnVariables()
 	{
 		sendMove = false;
 		unitHasMoved = false;
@@ -266,17 +333,12 @@ public class UnitActionPanel extends JPanel
 		showActionsPanel();
 	}
 	
-	public void showWaitPanel()
-	{
-		cl.show(this,  "Wait");
-	}
-	
 	public void cancelMovement()
 	{
 		gp.cancelMovementMode();
 		showActionsPanel();
 	}
-	
+
 	public void completeMovement()
 	{
 		sendMove = true;
@@ -288,6 +350,23 @@ public class UnitActionPanel extends JPanel
 		}
 		else
 			showActionsPanel();
+	}
+
+	public void showFightPanel()
+	{
+		gp.beginTargetingMode(FFTASkill.FIGHT);
+		cl.show(this, "Fight");
+	}
+	
+	public void cancelFight()
+	{
+		gp.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
+		showActPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
+	}
+	
+	public void showWaitPanel()
+	{
+		cl.show(this,  "Wait");
 	}
 	
 	public void doWait(int dir)
@@ -303,7 +382,7 @@ public class UnitActionPanel extends JPanel
 			btnSw.setEnabled(false);
 			btnSe.setEnabled(false);
 			
-			hideActionPanel();
+//			hideActionPanel();
 		}
 		catch (IOException e) { e.printStackTrace(); }
 
