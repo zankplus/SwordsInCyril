@@ -9,7 +9,31 @@ public class ActiveUnit implements Serializable
 	static final int QUICK = 0;
 	static final int HASTE = 1;
 	static final int SLOW = 2;
-	static final int SPEED_DOWN = 3;
+	static final int SPEED_DOWN = 3;	// TODO: does Speed Down really stack with haste and slow?
+	static final int PETRIFY = 4;
+	static final int STOP = 5;
+	static final int SLEEP = 6;
+	static final int EXPERT_GUARD = 7;
+	static final int HIBERNATE = 8;
+	static final int FROG = 9;
+	static final int BLIND = 10;
+	static final int CONFUSE = 11;
+	static final int ASTRA = 12;
+	static final int BERSERK = 13;
+	static final int WATK_UP = 14;
+	static final int WATK_DOWN = 15;
+	static final int MPOW_UP = 16;
+	static final int MPOW_DOWN = 17;
+	static final int BOOST = 18;
+	static final int SHELL = 19;
+	static final int PROTECT = 20;
+	static final int DEFENSE = 21;
+	static final int WDEF_UP = 22;
+	static final int WDEF_DOWN = 23;
+	static final int MRES_UP = 24;
+	static final int MRES_DOWN = 25;
+	static final int ZOMBIE = 26;
+	
 	
 	// Fields
 	public final int NORTHEAST = 1, NORTHWEST = 2, SOUTHWEST = 3, SOUTHEAST = 4;
@@ -22,6 +46,7 @@ public class ActiveUnit implements Serializable
 	public int team;
 	public int priority;	// used to decide who goes first if two units both have 1000 counter
 	public int dir;
+	public int jp;
 	
 	public int[] status;
 		
@@ -41,6 +66,7 @@ public class ActiveUnit implements Serializable
 		
 		counter = 0;
 		reserve = 0;
+		jp = 0;
 		
 		status = new int[40];
 	}

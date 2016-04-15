@@ -29,6 +29,7 @@ import javax.swing.border.TitledBorder;
 
 import fftadata.ActiveUnit;
 import fftadata.EquipType;
+import fftadata.FFTACalc;
 import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
 import fftadata.FFTAUnit;
@@ -79,7 +80,7 @@ public class MapPanelTest extends JFrame {
 		GamePanel gp = new GamePanel(new EngagementWindow(null, 2, null, null, null, null));
 		contentPane.add(gp);
 		
-		gp.test();
+		gp.testSetup();
 	}
 
 }
@@ -98,6 +99,8 @@ class GamePanel extends JPanel
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	ActiveUnit[] units;
 	int player, currentUnit;
+	FFTASkill selectedSkill;
+	private DamagePreviewPanel damagePreview;
 	
 	public GamePanel(EngagementWindow base)
 	{
@@ -122,8 +125,7 @@ class GamePanel extends JPanel
 		mapPanel.roster = rosterPanel.roster;
 		
 		ZankGameMap map = mapPanel.map;
-		
-		
+		damagePreview = null;
 		
 		beginPlacementMode();
 	}
@@ -143,9 +145,9 @@ class GamePanel extends JPanel
 		blankUnitPreview = new JPanel();
 		blankUnitPreview.setPreferredSize(new Dimension(320, 162));
 		blankUnitPreview.setBorder(new TitledBorder(null, "Unit Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		unitPreview = blankUnitPreview;
+//		unitPreview = blankUnitPreview;
 		
-		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		bottomPanel.add(blankUnitPreview, BorderLayout.WEST);
 	
 		unitAction = new UnitActionPanel(ew);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
@@ -206,6 +208,7 @@ class GamePanel extends JPanel
 	public void beginTargetingMode(FFTASkill sk)
 	{
 		mapPanel.mode = 3;
+		selectedSkill = sk;
 		mapPanel.highlightTargetableTiles(sk);
 	}
 	
@@ -223,17 +226,22 @@ class GamePanel extends JPanel
 	
 	public void hideUnitPreview()
 	{
-		bottomPanel.remove(unitPreview);
-		unitPreview = blankUnitPreview;
-		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		bottomPanel.add(blankUnitPreview, BorderLayout.WEST);
 		revalidate();
 	}
 	
 	public void showUnitPreview(ActiveUnit selectedUnit)
 	{
-		bottomPanel.remove(unitPreview);
 		unitPreview = new UnitPreviewPanel(selectedUnit);
 		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		revalidate();
+	}
+	
+	public void showDamagePreview(ArrayList<ActiveUnit> targets)
+	{
+		damagePreview = new DamagePreviewPanel(units[currentUnit], targets, selectedSkill);
+		
+		bottomPanel.add(damagePreview, BorderLayout.WEST);
 		revalidate();
 	}
 	
@@ -247,7 +255,21 @@ class GamePanel extends JPanel
 		return mapPanel.mpUnits;
 	}
 	
-	public void test()
+	public ArrayList<Integer> getTargets(ZankMapTile selectedTile)
+	{
+		ArrayList<Integer> result = new ArrayList<Integer>();
+		
+		for (int i = 0; i < units.length; i++)
+			if (units[i].x == selectedTile.x && units[i].y == selectedTile.y)
+			{
+				result.add(i);
+				i = units.length;
+			}
+		
+		return result;
+	}
+	
+	public void testSetup()
 	{
 		ew.gamePanel = this;
 		
@@ -257,8 +279,8 @@ class GamePanel extends JPanel
 		p1Units = units1;
 		
 //		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
-		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 1, 8, 8, 2);
-		au2.face("SE");
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 1, 10, 7, 2);
+		au2.face("NW");
 		au1.face("NW");
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
 		units2.add(au2);
@@ -325,7 +347,7 @@ class MapPanel extends JPanel
 		this.addMouseListener(new MouseListener() {
 
 			@Override
-			public void mouseClicked(MouseEvent e) { }
+			public void mouseClicked(MouseEvent e)	{ }
 			@Override
 			public void mouseEntered(MouseEvent arg0) {	}
 			@Override
@@ -333,7 +355,7 @@ class MapPanel extends JPanel
 			
 			@Override
 			public void mousePressed(MouseEvent e)
-			{
+			{ 
 				// Select the clicked tile
 				selectedTile = null;
 				for (ZankMapTile tile : map.tileList)
@@ -353,7 +375,9 @@ class MapPanel extends JPanel
 				{
 					placeUnit();
 				}
-				else if (mode == 2)	// movement mode
+				
+				// Movement mode
+				else if (mode == 2)
 				{
 					if (e.getClickCount() == 1)
 						selectTile(selectedTile);
@@ -372,10 +396,32 @@ class MapPanel extends JPanel
 						}
 					}
 				}
+				
+				// Targeting mode
+				else if (mode == 3)
+				{
+					selectTile(selectedTile);
+					
+					for (int i = 0; i < hlTiles.size(); i++)
+						if (selectedTile != null && selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile)
+						{
+							ArrayList<Integer> targetIDs = gamePanel.getTargets(selectedTile);
+							ArrayList<ActiveUnit> targets = new ArrayList<ActiveUnit>();
+							for (Integer j : targetIDs)
+								targets.add(gamePanel.units[j]);
+							
+							if (targets.size() > 0)
+							{
+								gamePanel.showDamagePreview(targets);
+							}
+							
+							i = hlTiles.size();
+						}
+				}
 			}
-
+			
 			@Override
-			public void mouseReleased(MouseEvent arg0) {}
+			public void mouseReleased(MouseEvent arg0)	{ }
 			
 		});
 	}
@@ -421,9 +467,7 @@ class MapPanel extends JPanel
 			for (int i = 0; i < mpUnits.size(); i++)
 				if (mpUnits.get(i).x == selectedTile.x && mpUnits.get(i).y == selectedTile.y)
 					index = i;
-			
-	
-			
+				
 			if (index == -1)
 			{
 				selectedUnit = null;
@@ -543,6 +587,7 @@ class MapPanel extends JPanel
 			int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
 					ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
 			
+			hlTiles.clear();
 			for (int x = xmin; x <= xmax; x++)
 				for (int y = ymin; y <= ymax; y++)
 				{

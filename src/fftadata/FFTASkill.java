@@ -305,6 +305,10 @@ public enum FFTASkill implements Serializable
 	public final Targeting TARGETING;
 	public final int RANGE;
 	public final boolean NOTSELF;
+	public final int dmgType;	// 1 = physical, 2 = magical
+	public final int cost;
+	public final int power;
+	public final Element element;
 	
 	FFTASkill(String name, Targeting targeting, int range, boolean notSelf)
 	{
@@ -312,5 +316,10 @@ public enum FFTASkill implements Serializable
 		TARGETING = targeting;
 		RANGE = range;
 		NOTSELF = notSelf;
+		
+		dmgType = 1;
+		cost = 0;
+		power = -1;
+		element = null;
 	}
 }

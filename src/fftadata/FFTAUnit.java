@@ -115,6 +115,81 @@ public class FFTAUnit implements Serializable
 		return (int) result;
 	}
 	
+	public int getWAtkEquipBonus()
+	{
+		int result = 0;
+		FFTAEquip[] slots = equips.slots;
+		
+		if (equips.arms != -1) result += slots[equips.arms	].wAtk;
+		if (equips.body != -1) result += slots[equips.body	].wAtk;
+		if (equips.feet != -1) result += slots[equips.feet	].wAtk;
+		if (equips.head != -1) result += slots[equips.head	].wAtk;
+		if (equips.rightHand != -1) result += slots[equips.rightHand ].wAtk;
+		
+		if (equips.leftHand != -1 && slots[equips.leftHand].type == EquipType.SHIELD)
+			result += slots[equips.rightHand ].wAtk;
+		
+		for (int i = 0; i < 5; i++)
+			if (slots[i] != null && slots[i].type == EquipType.ACCESSORY)
+				result += slots[i].wAtk;
+		
+		return result;
+	}
+	
+	public int getWAtkEquipBonusLeft()
+	{
+		int result = 0;
+		FFTAEquip[] slots = equips.slots;
+		
+		if (equips.arms != -1) result += slots[equips.arms	].wAtk;
+		if (equips.body != -1) result += slots[equips.body	].wAtk;
+		if (equips.feet != -1) result += slots[equips.feet	].wAtk;
+		if (equips.head != -1) result += slots[equips.head	].wAtk;
+		if (equips.leftHand != -1) result += slots[equips.leftHand ].wAtk;
+		
+		for (int i = 0; i < 5; i++)
+			if (slots[i] != null && slots[i].type == EquipType.ACCESSORY)
+				result += slots[i].wAtk;
+		
+		return result;
+	}
+	
+	public int getWDefEquipBonus()
+	{
+		int result = 0;
+		FFTAEquip[] slots = equips.slots;
+		
+		for (int i = 0; i < 5; i++)
+			if (slots[i] != null)
+				result += slots[i].wDef;
+		
+		return result;
+	}
+	
+	public int getMPowEquipBonus()
+	{
+		int result = 0;
+		FFTAEquip[] slots = equips.slots;
+		
+		for (int i = 0; i < 5; i++)
+			if (slots[i] != null)
+				result += slots[i].mPow;
+		
+		return result;
+	}
+	
+	public int getMResEquipBonus()
+	{
+		int result = 0;
+		FFTAEquip[] slots = equips.slots;
+		
+		for (int i = 0; i < 5; i++)
+			if (slots[i] != null)
+				result += slots[i].mRes;
+		
+		return result;
+	}
+	
 	public int getTotalLeftWAtk()
 	{
 		return 0;
