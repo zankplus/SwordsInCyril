@@ -47,6 +47,7 @@ public class ActiveUnit implements Serializable
 	public int priority;	// used to decide who goes first if two units both have 1000 counter
 	public int dir;
 	public int jp;
+	public int id;
 	
 	public int[] status;
 		

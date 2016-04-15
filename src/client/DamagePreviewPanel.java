@@ -91,7 +91,7 @@ public class DamagePreviewPanel extends JPanel
 					else
 						t = 0;
 						
-					g.drawImage(sprite, t + 2, 0, 32*r, 64, null);
+					g.drawImage(sprite, t + 2, 2, 32*r, 64, null);
 				} catch(IOException e) { System.out.println("Couldn't find sprite! : " + au.getSpriteURL()); }
 				
 			}
@@ -315,7 +315,7 @@ public class DamagePreviewPanel extends JPanel
 						r = -1;
 					else
 						t = 0;
-					g.drawImage(sprite, t, 0, 32*r, 64, null);
+					g.drawImage(sprite, t, 2, 32*r, 64, null);
 
 				}
 			};

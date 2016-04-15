@@ -2,6 +2,7 @@ package client;
 
 import java.awt.AlphaComposite;
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
@@ -91,7 +92,9 @@ class GamePanel extends JPanel
 {
 	ZankGameMap map;
 	private MapPanel mapPanel;
-	private JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview;
+	private JPanel bottomPanel, turnOrderPanel, leftPanel, blankUnitPreview, unitPreview, previewDeck, damagePreview;
+	private CardLayout deck;
+	private UnitPreviewPanel[] previews;
 	private UnitActionPanel unitAction;
 	private EngagementWindowRosterPanel rosterPanel;
 	private EngagementWindow ew;	// Parent frame
@@ -100,7 +103,6 @@ class GamePanel extends JPanel
 	ActiveUnit[] units;
 	int player, currentUnit;
 	FFTASkill selectedSkill;
-	private DamagePreviewPanel damagePreview;
 	
 	public GamePanel(EngagementWindow base)
 	{
@@ -142,12 +144,15 @@ class GamePanel extends JPanel
 		bottomPanel = new JPanel(new BorderLayout());
 		add(bottomPanel, BorderLayout.SOUTH);
 		
+		deck = new CardLayout();
+		previewDeck = new JPanel(deck);
+		
 		blankUnitPreview = new JPanel();
 		blankUnitPreview.setPreferredSize(new Dimension(320, 162));
 		blankUnitPreview.setBorder(new TitledBorder(null, "Unit Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-//		unitPreview = blankUnitPreview;
+		previewDeck.add(blankUnitPreview, "Blank");
 		
-		bottomPanel.add(blankUnitPreview, BorderLayout.WEST);
+		bottomPanel.add(previewDeck, BorderLayout.WEST);
 	
 		unitAction = new UnitActionPanel(ew);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
@@ -165,6 +170,19 @@ class GamePanel extends JPanel
 		}
 		
 		mapPanel.beginGame();
+	}
+	
+	public void setupPreviews()
+	{
+		previews = new UnitPreviewPanel[units.length];
+		for (int i = 0; i < units.length; i++)
+		{
+			previews[i] = new UnitPreviewPanel(units[i]);
+			previewDeck.add(previews[i], String.valueOf(i));
+		}
+		
+		damagePreview = new JPanel();
+		previewDeck.add(damagePreview, "Damage Preview");
 	}
 	
 	public void startPlayerTurn()
@@ -226,28 +244,33 @@ class GamePanel extends JPanel
 	
 	public void hideUnitPreview()
 	{
-		bottomPanel.add(blankUnitPreview, BorderLayout.WEST);
+		deck.show(previewDeck, "Blank");
 		revalidate();
 	}
 	
 	public void showUnitPreview(ActiveUnit selectedUnit)
 	{
-		unitPreview = new UnitPreviewPanel(selectedUnit);
-		bottomPanel.add(unitPreview, BorderLayout.WEST);
+		deck.show(previewDeck, String.valueOf(selectedUnit.id));
 		revalidate();
 	}
 	
 	public void showDamagePreview(ArrayList<ActiveUnit> targets)
 	{
+		previewDeck.remove(damagePreview);
 		damagePreview = new DamagePreviewPanel(units[currentUnit], targets, selectedSkill);
-		
-		bottomPanel.add(damagePreview, BorderLayout.WEST);
+		previewDeck.add(damagePreview, "Damage Preview");
+		deck.last(previewDeck);
 		revalidate();
 	}
 	
 	public void selectTile(ZankMapTile tile)
 	{
 		mapPanel.selectTile(tile);
+	}
+	
+	public void selectTile()
+	{
+		mapPanel.selectTile(mapPanel.selectedTile);
 	}
 	
 	public ArrayList<ActiveUnit> getYourUnits()
@@ -308,6 +331,10 @@ class GamePanel extends JPanel
 		mapPanel.selectTile(map.mapData[au.x][au.y]);
 		
 		
+		for (int i = 0; i < units.length; i++)
+			units[i].id = i;
+		
+		setupPreviews();
 		
 		unitAction.showActionsPanel();
 	}

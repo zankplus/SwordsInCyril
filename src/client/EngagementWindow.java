@@ -227,13 +227,20 @@ public class EngagementWindow extends JFrame {
 		ActiveUnit[] aus = new ActiveUnit[gamePanel.p1Units.size() + gamePanel.p2Units.size()];
 		
 		for (int i = 0; i < gamePanel.p1Units.size(); i++)
+		{
 			aus[i] = gamePanel.p1Units.get(i);
+			aus[i].id = i;
+			System.out.println(i + " " + aus[i].unit.name);
+		}
 		
 		for (int i = 0; i < gamePanel.p2Units.size(); i++)
-			aus[i + gamePanel.p1Units.size()] =gamePanel.p2Units.get(i);
+		{
+			aus[i + gamePanel.p1Units.size()] = gamePanel.p2Units.get(i);
+			aus[i + gamePanel.p1Units.size()].id = i + gamePanel.p1Units.size();
+		}
 		
 		gamePanel.units = aus;
-		
+		gamePanel.setupPreviews();
 		gamePanel.beginGame();
 		repaint();
 	}

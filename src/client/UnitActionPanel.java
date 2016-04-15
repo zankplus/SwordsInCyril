@@ -152,7 +152,7 @@ public class UnitActionPanel extends JPanel
 		});
 		movePanel.add(btnMoveCancel, BorderLayout.SOUTH);
 		
-		lblMoveInstruction = new JLabel("Click the tile to which to move.");
+		lblMoveInstruction = new JLabel("<html>Double-click the tile to which to move.");
 		lblMoveInstruction.setHorizontalAlignment(SwingConstants.CENTER);
 		movePanel.add(lblMoveInstruction, BorderLayout.CENTER);
 		
@@ -217,7 +217,7 @@ public class UnitActionPanel extends JPanel
 			}
 		});
 		
-		lblClickTheUnit = new JLabel("Click the unit to target.");
+		lblClickTheUnit = new JLabel("<html>Click the unit to target.<br>Double-click to confirm action.");
 		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
 		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
 		
@@ -361,6 +361,7 @@ public class UnitActionPanel extends JPanel
 	public void cancelFight()
 	{
 		gp.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
+		gp.selectTile();
 		showActPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
