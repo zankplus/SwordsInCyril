@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import fftadata.ActiveUnit;
+import fftadata.FFTASkill;
 import server.ActiveGame.GameStatus;
 import zank.*;
 
@@ -208,7 +209,6 @@ public class ActiveUser extends Thread
 												ag.player2.messageQueue.put(zm);
 												
 												// Initialize turn order
-												
 												ag.initializeTurnOrder();
 												
 												ag.advanceTurn();
@@ -226,6 +226,19 @@ public class ActiveUser extends Thread
 											ag.moveUnit(data[0], data[1], data[2], data[3]);
 											ag.player1.messageQueue.put(msg);
 											ag.player2.messageQueue.put(msg);
+										}
+										else if (action.type == ZankGameActionType.ACT)
+										{
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
+											int[] data = (int[]) action.data;
+											System.out.println("run: target = " + data[0]);
+											
+											int[] targets = new int[data.length - 1];
+											for (int i = 0; i < targets.length; i++)
+												targets[i] = data[i];
+											FFTASkill sk = FFTASkill.values[data[data.length - 1]];
+											ag.executeSkill(targets, sk);
 										}
 										else if (action.type == ZankGameActionType.WAIT)
 										{

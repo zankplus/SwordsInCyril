@@ -183,6 +183,9 @@ class GamePanel extends JPanel
 		
 		damagePreview = new JPanel();
 		previewDeck.add(damagePreview, "Damage Preview");
+		
+		for (int i = 0; i < units.length; i++)
+			System.out.println(i + " " + units[i].unit.name);
 	}
 	
 	public void startPlayerTurn()
@@ -221,6 +224,12 @@ class GamePanel extends JPanel
 		ZankMapTile old = map.mapData[au.oldX][au.oldY];
 		mapPanel.moveUnit(au, old);
 		repaint();
+	}
+	
+	public void commitAction(ArrayList<Integer> targets)
+	{
+		System.out.println("commitAction: " + currentUnit + " acting, " + targets.get(0) + " receiving");
+		unitAction.doAct(targets, selectedSkill);
 	}
 	
 	public void beginTargetingMode(FFTASkill sk)
@@ -290,6 +299,20 @@ class GamePanel extends JPanel
 			}
 		
 		return result;
+	}
+	
+	public void applyDamage(int targ, int dmg)
+	{
+		ActiveUnit target = units[targ];
+		target.currHP -= dmg;
+		
+		if (target.currHP <= 0)
+		{
+			target.currHP = 0;
+		}
+		
+		
+		previews[targ].updateStats();
 	}
 	
 	public void testSetup()
@@ -440,6 +463,9 @@ class MapPanel extends JPanel
 							if (targets.size() > 0)
 							{
 								gamePanel.showDamagePreview(targets);
+								
+								if (e.getClickCount() == 2)
+									gamePanel.commitAction(targetIDs);
 							}
 							
 							i = hlTiles.size();
@@ -689,6 +715,9 @@ class MapPanel extends JPanel
 
 	public void moveUnit(ActiveUnit au, ZankMapTile dest)
 	{
+		System.out.println("Moving " + au.unit.name + " from " + au.x + ", " + au.y + ", " + au.z + " to " +
+				dest.x + ", " + dest.y + ", " + dest.z);
+		
 		au = gamePanel.units[gamePanel.currentUnit]; 
 		removeUnit(au);
 		au.oldX = au.x;

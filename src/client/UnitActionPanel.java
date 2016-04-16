@@ -15,6 +15,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import javax.swing.JButton;
 import java.awt.CardLayout;
@@ -288,6 +289,7 @@ public class UnitActionPanel extends JPanel
 		sendMove = false;
 		unitHasMoved = false;
 		unitHasActed = false;
+		btnWaitCancel.setEnabled(true);
 		btnNe.setEnabled(true);
 		btnNw.setEnabled(true);
 		btnSw.setEnabled(true);
@@ -365,8 +367,38 @@ public class UnitActionPanel extends JPanel
 		showActPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
+	public void doAct(ArrayList<Integer> targets, FFTASkill sk)
+	{
+		unitHasActed = true;
+		
+		try
+		{
+			if (unitHasMoved)
+			{
+				ew.sendMove();
+				sendMove = false;
+				showWaitPanel();
+			}
+			else
+				showActionsPanel();
+			
+			// Clear away the tile highlights and return to the actions menu
+			gp.cancelMovementMode();
+			
+			// Reselect the current unit to remind the active player that further action is required of them
+			gp.selectTile(gp.map.mapData[gp.units[gp.currentUnit].x][gp.units[gp.currentUnit].y]);
+			
+			System.out.println("doAct: target = " + targets.get(0));
+			ew.sendAction(targets, sk);
+		}
+		catch (IOException e) { e.printStackTrace(); }
+	}
+	
 	public void showWaitPanel()
 	{
+		if (unitHasMoved && unitHasActed)
+			btnWaitCancel.setEnabled(false);
+		
 		cl.show(this,  "Wait");
 	}
 	

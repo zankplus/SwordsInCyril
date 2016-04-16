@@ -32,6 +32,8 @@ public class UnitPreviewPanel extends JPanel
 	
 	ActiveUnit au;
 	FFTAUnit unit;
+	private JLabel lblCurrHP;
+	private JLabel lblCurrMP;
 	
 	public UnitPreviewPanel()
 	{
@@ -72,7 +74,7 @@ public class UnitPreviewPanel extends JPanel
 		lblHP.setHorizontalAlignment(SwingConstants.CENTER);
 		basicStatsAlignmentPanel.add(lblHP);
 		
-		JLabel lblCurrHP = new JLabel("" + au.currHP);
+		lblCurrHP = new JLabel("" + au.currHP);
 		lblCurrHP.setHorizontalAlignment(SwingConstants.CENTER);
 		basicStatsAlignmentPanel.add(lblCurrHP);
 		
@@ -86,7 +88,7 @@ public class UnitPreviewPanel extends JPanel
 		lblMP.setHorizontalAlignment(SwingConstants.CENTER);
 		basicStatsAlignmentPanel.add(lblMP);
 		
-		JLabel lblCurrMP = new JLabel("" + au.currMP);
+		lblCurrMP = new JLabel("" + au.currMP);
 		lblCurrMP.setHorizontalAlignment(SwingConstants.CENTER);
 		basicStatsAlignmentPanel.add(lblCurrMP);
 		
@@ -220,6 +222,13 @@ public class UnitPreviewPanel extends JPanel
 		
 	}
 
+	public void updateStats()
+	{
+		lblCurrHP.setText("" + au.currHP);
+		lblCurrMP.setText("" + au.currMP);
+		revalidate();
+	}
+	
 	/**
 	 * Create the panel.
 	 */

@@ -155,6 +155,19 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 								ew.receiveMove((int[]) action.data);
 							}
 							
+							// ACT: the server has indicated that a unit has taken an action
+							else if (action.type.equals(ZankGameActionType.ACT))
+							{
+								ew.receiveAct((int[]) action.data);
+							}
+							
+							// HIT: the server has indicated that a unit in combat has taken damage
+							else if (action.type.equals(ZankGameActionType.HIT))
+							{
+								ew.receiveHit((int[]) action.data);
+							}
+							
+							
 							// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
 							else if (action.type.equals(ZankGameActionType.WAIT))
 							{

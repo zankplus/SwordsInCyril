@@ -24,6 +24,7 @@ import javax.swing.UIManager;
 import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
+import fftadata.FFTASkill;
 import zank.*;
 
 import javax.swing.JButton;
@@ -181,6 +182,21 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
+	public void sendAction(ArrayList<Integer> targets, FFTASkill sk) throws IOException
+	{
+		int[] data = new int[targets.size() + 1];
+		for (int i = 0; i < targets.size(); i++)
+			data[i] = targets.get(i);
+		data[data.length - 1] = sk.ordinal();
+		
+		System.out.println("sendAction: target = " + data[0]);
+		
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
 	public void sendWait(int dir) throws IOException
 	{
 		int[] data = {gamePanel.currentUnit, dir};
@@ -240,8 +256,9 @@ public class EngagementWindow extends JFrame {
 		}
 		
 		gamePanel.units = aus;
-		gamePanel.setupPreviews();
 		gamePanel.beginGame();
+		gamePanel.setupPreviews();
+		System.out.println("Finished setting up previews, now beginning game");
 		repaint();
 	}
 	
@@ -270,6 +287,37 @@ public class EngagementWindow extends JFrame {
 		ActiveUnit au = gamePanel.units[data[0]];
 		ZankMapTile dest = map.mapData[data[1]][data[2]];
 		gamePanel.moveUnit(au, dest);
+	}
+	
+	// ACT: announce in chat that the active unit has taken the indicated action
+	public void receiveAct(int[] data)
+	{
+		System.out.println("receiveAct: target = " + data[0]);
+		
+		FFTASkill sk = FFTASkill.values[data[data.length - 1]];
+		if (sk == FFTASkill.FIGHT)
+			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
+				"</strong> attacks <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");
+		else
+			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
+					"</strong> uses " + sk.NAME + " on <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");
+		System.out.println("Received " + sk.NAME);
+	}
+	
+	// HIT: apply the amount of damage specified and announce the results in chat
+	public void receiveHit(int[] data)
+	{
+		System.out.println("receiveHit: target = " + data[0]);
+		
+		if (data[1] == 1)
+		{
+			appendToChat("<br><em><span style=\"color:gray\">......<strong>" + gamePanel.units[data[0]].unit.name +
+					"</strong> takes <strong><span style=\"color:red\">" + data[2] + "</strong> damage!");
+			gamePanel.applyDamage(data[0], data[2]);
+		}
+		else
+			appendToChat("<br><em><span style=\"color:gray\">......The attack misses <strong>" +
+					gamePanel.units[data[0]].unit.name + "</strong>!");
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel

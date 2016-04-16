@@ -309,6 +309,7 @@ public enum FFTASkill implements Serializable
 	public final int cost;
 	public final int power;
 	public final Element element;
+	public static final FFTASkill values[] = values();
 	
 	FFTASkill(String name, Targeting targeting, int range, boolean notSelf)
 	{

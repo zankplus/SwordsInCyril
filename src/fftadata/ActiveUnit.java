@@ -39,7 +39,7 @@ public class ActiveUnit implements Serializable
 	public final int NORTHEAST = 1, NORTHWEST = 2, SOUTHWEST = 3, SOUTHEAST = 4;
 	public FFTAUnit unit;
 	public int x, y, z;
-	public int oldX, oldY, oldZ;
+	public int oldX, oldY, oldZ, oldDir;
 	public int currHP, currMP;
 	public int counter;
 	public int reserve;

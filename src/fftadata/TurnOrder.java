@@ -26,12 +26,16 @@ public ActiveUnit[] units;
 		
 		for (ActiveUnit au : units)
 		{
-			au.counter += au.getTickSpeed();
-			au.counter += au.reserve;
-			au.reserve = 0;
+			if (au.currHP > 0)
+			{
+				au.counter += au.getTickSpeed();
+				au.counter += au.reserve;
+				au.reserve = 0;
+				
+				if (au.counter > max.counter)
+					max = au;		
+			}
 			
-			if (au.counter > max.counter)
-				max = au;		
 		}
 		
 		if (max.counter >= 1000)
@@ -42,15 +46,13 @@ public ActiveUnit[] units;
 			
 			for (ActiveUnit au : units)
 			{
-				int res = Math.min(baseReserve, au.counter);
-				
-				au.counter -= res;
-				au.reserve = res;
-				
-						
+				if (au.currHP > 0)
+				{
+					int res = Math.min(baseReserve, au.counter);
+					au.counter -= res;
+					au.reserve = res;
+				}
 			}
-			
-			
 		}
 					
 		System.out.print("\t");
