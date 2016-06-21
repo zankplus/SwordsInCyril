@@ -26,6 +26,7 @@ public class ActiveUser extends Thread
 	public LinkedBlockingQueue<ZankMessage> messageQueue;
 	public ActiveGame game = null;
 	
+	
 	public ActiveUser(Socket connection)
 	{
 		this.connection = connection;
@@ -50,7 +51,6 @@ public class ActiveUser extends Thread
 		{
 			boolean done = false;
 			ZankMessage msg;
-			int c;
 			
 			while (!done)
 			{
@@ -239,6 +239,7 @@ public class ActiveUser extends Thread
 												targets[i] = data[i];
 											FFTASkill sk = FFTASkill.values[data[data.length - 1]];
 											ag.executeSkill(targets, sk);
+											ag.victoryCheck();
 										}
 										else if (action.type == ZankGameActionType.WAIT)
 										{
@@ -247,6 +248,17 @@ public class ActiveUser extends Thread
 											ag.player1.messageQueue.put(msg);
 											ag.player2.messageQueue.put(msg);
 											ag.advanceTurn();
+										}
+										else if (action.type == ZankGameActionType.EXIT)
+										{
+											ag.leaveRoom(msg.user);
+											if (ag.userList.size() == 0)
+												ChatServer.gameList.remove(ag);
+											
+											System.out.println("Closed game " + ag.id); 
+											System.out.println("List of active games:");
+											for (int i = 0; i < ChatServer.gameList.size(); i++)
+												System.out.println("  " + ChatServer.gameList.get(i));
 										}
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); }

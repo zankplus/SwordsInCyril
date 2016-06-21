@@ -36,7 +36,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 		try
 		{
 			// Prepare socket and i/o streams
-			socket = new Socket("158.69.221.75", 55555);
+			socket = new Socket("158.69.197.70", 55555);
 			client.socket = socket;
 			
 			out = new ObjectOutputStream(new BufferedOutputStream(client.socket.getOutputStream()));
@@ -172,6 +172,18 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							else if (action.type.equals(ZankGameActionType.WAIT))
 							{
 								ew.receiveWait((int[]) action.data);
+							}
+							
+							// GAMEOVER: the server has declared the outcome of the battle
+							else if (action.type.equals(ZankGameActionType.GAMEOVER))
+							{
+								ew.receiveGameOver((boolean[]) action.data);
+							}
+							
+							// EXIT: Another player has left the room
+							else if (action.type.equals(ZankGameActionType.EXIT))
+							{
+								ew.receiveExit((String) action.data);
 							}
 						}
 						else

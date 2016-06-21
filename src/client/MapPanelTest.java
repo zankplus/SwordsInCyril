@@ -282,6 +282,18 @@ class GamePanel extends JPanel
 		mapPanel.selectTile(mapPanel.selectedTile);
 	}
 	
+	// Returns true if the unit who is active belongs to this client's team
+	public boolean isYourTurn()
+	{
+		return units[currentUnit].team == player;
+	}
+	
+	// Calls UnitActionPanel's finishAct() method to bring up the appropriate menu to finish the current unit's turn
+	public void finishAct()
+	{
+		unitAction.finishAct();
+	}
+	
 	public ArrayList<ActiveUnit> getYourUnits()
 	{
 		return mapPanel.mpUnits;
@@ -305,12 +317,10 @@ class GamePanel extends JPanel
 	{
 		ActiveUnit target = units[targ];
 		target.currHP -= dmg;
+		mapPanel.updateSprite(target);
 		
 		if (target.currHP <= 0)
-		{
 			target.currHP = 0;
-		}
-		
 		
 		previews[targ].updateStats();
 	}
@@ -605,7 +615,7 @@ class MapPanel extends JPanel
 	public void highlightWalkableTiles()
 	{
 		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
-		
+		hlTiles.clear();
 		ArrayList<ZankMapTile> reachableTiles = map.getReachableTiles(au);
 		for (ZankMapTile tile : reachableTiles)
 		{
@@ -718,7 +728,7 @@ class MapPanel extends JPanel
 		System.out.println("Moving " + au.unit.name + " from " + au.x + ", " + au.y + ", " + au.z + " to " +
 				dest.x + ", " + dest.y + ", " + dest.z);
 		
-		au = gamePanel.units[gamePanel.currentUnit]; 
+		// au = gamePanel.units[gamePanel.currentUnit]; 
 		removeUnit(au);
 		au.oldX = au.x;
 		au.oldY = au.y;

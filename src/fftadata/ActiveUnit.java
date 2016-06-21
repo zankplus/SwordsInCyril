@@ -82,7 +82,12 @@ public class ActiveUnit implements Serializable
 		else if (team == 2)
 			url.append("_enemy");
 		
-		url.append("_stand");
+		if (currHP > unit.maxHP / 2)
+			url.append("_stand");
+		else if (currHP > 0)
+			url.append("_kneel");
+		else
+			url.append("_dead");
 		
 		if (dir == NORTHEAST || dir == NORTHWEST)
 			url.append("_nw");

@@ -32,9 +32,6 @@ public class ZankClient
 	public ChatWindow chatWindow;
 	public ClanBuilder clanBuilder;
 
-	
-	
-	
 	public ZankClient()
 	{
 		message = null;
@@ -42,9 +39,6 @@ public class ZankClient
 		loginWindow = new LoginWindow(this);
 		EngagementWindow gameWindow = null;
 	}
-	
-	
-	
 	
 	public void sendChallenge(String user) throws IOException
 	{

@@ -12,6 +12,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import java.awt.Dimension;
@@ -43,8 +44,13 @@ public class EngagementWindow extends JFrame {
 	ObjectInputStream in;
 	ObjectOutputStream out;
 	ZankGameMap map;
+	ZankGameAction action;
+	ZankMessage message;
+	
 	int playerNumber;
-	int gameMode;
+	
+	boolean gameOver;
+	
 	EngagementWindowRosterPanel rosterPanel;
 	GamePanel gamePanel;
 
@@ -81,6 +87,7 @@ public class EngagementWindow extends JFrame {
 		this.gameID = id;
 		this.in = in;
 		this.out = out;
+		gameOver = false;
 		
 		// Set up window
 		ImageIcon img = new ImageIcon("resources/misc/appicon2.png");
@@ -91,7 +98,31 @@ public class EngagementWindow extends JFrame {
 			setTitle("[" + "///" + "] " + player.username + " vs " + opponent.username );
 		} catch (NullPointerException e) { setTitle("Testin' mode"); }
 		
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		// Closing
+		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+		JFrame ew = this;
+		addWindowListener(new java.awt.event.WindowAdapter() {
+			public void windowClosing(java.awt.event.WindowEvent evt)
+			{
+				// If the engagement is still in progress, prompt the user to confirm the window's closing
+				if (!gameOver)
+				{
+					int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
+							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
+					if (output == JOptionPane.YES_OPTION)
+					{
+						try {
+							sendExit();
+						} catch (IOException e) { e.printStackTrace(); }
+						ew.dispose();
+					}
+				}
+				else
+					ew.dispose();
+			}
+		});
+		
+		
 		setBounds(100, 100, 900, 600);
 		contentPane = new JPanel();
 		contentPane.setBorder(null);
@@ -191,8 +222,8 @@ public class EngagementWindow extends JFrame {
 		
 		System.out.println("sendAction: target = " + data[0]);
 		
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		out.writeObject(message);
 		out.flush();
 	}
@@ -200,16 +231,24 @@ public class EngagementWindow extends JFrame {
 	public void sendWait(int dir) throws IOException
 	{
 		int[] data = {gamePanel.currentUnit, dir};
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		out.writeObject(message);
 		out.flush();
 	}
 	
 	public void sendTurnTest(int ct) throws IOException
 	{
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		out.writeObject(message);
+		out.flush();
+	}
+	
+	public void sendExit() throws IOException
+	{
+		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		out.writeObject(message);
 		out.flush();
 	}
@@ -324,6 +363,63 @@ public class EngagementWindow extends JFrame {
 	public void receiveWait(int[] data)
 	{
 		gamePanel.faceUnit(data[1]);
+	}
+	
+	// LOSE: announce the winner's victory (or a draw, if both teams have 'lost') in chat.
+	// If the current turn belongs to one of this unit's clients, and the game isn't over, bring up the facing panel.
+	public void receiveGameOver(boolean[] data)
+	{
+		// Determine which player is p1 and which is p2
+		String p1name, p2name;
+		if (playerNumber == 1)
+		{
+			p1name = player.username;
+			p2name = opponent.username;
+		}
+		else
+		{
+			p2name = player.username;
+			p1name = opponent.username;
+		}
+		
+		// If data[0] and data[1] are both true, the match has ended in a tie
+		if (data[0] && data[1])
+		{
+			gameOver = true;
+			setTitle(getTitle() + " - tie game!");
+			appendToChat("<br><em><strong>The engagement has ended in a <span style=" +
+					"\"text-decoration: underline; color:yellow\">tie</span></strong>");
+		}
+		
+		// If data[0] is true, player *1* has LOST and player *2* has WON
+		else if (data[0])
+		{
+			gameOver = true;
+			setTitle(getTitle() + " - " + p2name + " wins!");
+			appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:blue\">" +
+					p2name + "</span> has won the engagement!</strong>");
+		}
+		
+		// If data[1] is true, player *2* has LOST and player *1* has WON
+		else if (data[1])
+		{
+			gameOver = true;
+			setTitle(getTitle() + " - " + p1name + " wins!"); 
+			appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:red\">" +
+					p1name + "</span> has won the engagement!</strong>");
+		}
+		
+		// If neither data[0] nor [1] is true, something weird has happened.
+		else
+		{
+			if (gamePanel.isYourTurn())
+				gamePanel.finishAct();
+		}
+	}
+	
+	public void receiveExit(String username)
+	{
+		appendToChat("<br><em><strong>" + username + " has left the room.</strong>");
 	}
 }
 

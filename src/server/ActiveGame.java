@@ -1,5 +1,6 @@
 package server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -11,6 +12,7 @@ public class ActiveGame
 {
 	String id;
 	ActiveUser player1, player2;
+	ArrayList<ActiveUser> userList;
 	GameStatus status;
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	boolean finishedPrep1, finishedPrep2;
@@ -36,6 +38,46 @@ public class ActiveGame
 		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
+		
+		// Initialize user list
+		userList = new ArrayList<ActiveUser>();
+		
+		// Both players join the game
+		joinRoom(p1);
+		joinRoom(p2);
+	}
+	
+	public void joinRoom(ActiveUser user)
+	{
+		userList.add(user);
+	}
+	
+	public void leaveRoom(ActiveUser user)
+	{
+		// Remove user from the list
+		userList.remove(user);
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
+		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+		
+		try
+		{
+			for (int i = 0; i < userList.size(); i++)
+				userList.get(i).messageQueue.put(zm);
+		} catch (InterruptedException e) { e.printStackTrace(); }
+		
+
+	}
+	
+	// leaveRoom(String): Find the ActiveUser with the username listed and call leaveRoom() on them
+	public void leaveRoom(String username)
+	{
+		ActiveUser user = null;
+		for (int i = 0; i < userList.size(); i++)
+			if (userList.get(i).nickname.equals(username))
+				user = userList.get(i);
+		
+		if (user != null)
+			leaveRoom(user);
 	}
 	
 	public void initializeTurnOrder()
@@ -137,6 +179,33 @@ public class ActiveGame
 			au.counter = 0;
 			au.reserve = 0;
 		}
+	}
+	
+	// Check both teams' HP scores and status to see if either size has lost
+	public void victoryCheck() throws InterruptedException
+	{
+		// Assume both teams have lost by default. If any unit on a team is alive and well,
+		// change the loss flag to true.
+		boolean p1lose = true, p2lose = true;
+		
+		// Team 1
+		for (int i = 0; i < p1Units.size(); i++)
+			if (p1Units.get(i).currHP > 0)
+				p1lose = false;
+		
+		// Team 2
+		for (int i = 0; i < p2Units.size(); i++)
+			if (p2Units.get(i).currHP > 0)
+				p2lose = false;
+		
+		if (p1lose || p2lose)
+			status = GameStatus.COMPLETE;
+		
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.GAMEOVER, id, null, null, new boolean[]{p1lose, p2lose});
+		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+		player1.messageQueue.put(zm);
+		player2.messageQueue.put(zm);			
+
 	}
 	
 	enum GameStatus { SETUP, ONGOING, COMPLETE };

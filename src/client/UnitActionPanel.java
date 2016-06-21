@@ -373,14 +373,12 @@ public class UnitActionPanel extends JPanel
 		
 		try
 		{
+			hideActionPanel();
 			if (unitHasMoved)
 			{
 				ew.sendMove();
 				sendMove = false;
-				showWaitPanel();
 			}
-			else
-				showActionsPanel();
 			
 			// Clear away the tile highlights and return to the actions menu
 			gp.cancelMovementMode();
@@ -392,6 +390,14 @@ public class UnitActionPanel extends JPanel
 			ew.sendAction(targets, sk);
 		}
 		catch (IOException e) { e.printStackTrace(); }
+	}
+	
+	public void finishAct()
+	{
+		if (unitHasMoved)
+			showWaitPanel();
+		else
+			showActionsPanel();
 	}
 	
 	public void showWaitPanel()
