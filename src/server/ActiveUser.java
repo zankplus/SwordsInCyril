@@ -234,10 +234,18 @@ public class ActiveUser extends Thread
 											int[] data = (int[]) action.data;
 											System.out.println("run: target = " + data[0]);
 											
-											int[] targets = new int[data.length - 1];
+											// Send intermediate facing
+											int x = data[data.length - 2], y = data[data.length - 1];
+											int[] waitData = {ag.currentUnit, ag.intermediateFacing(ag.currentUnit, x, y)}; 
+											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
+											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
+											ag.player1.messageQueue.put(waitmsg);
+											ag.player2.messageQueue.put(waitmsg);
+											
+											int[] targets = new int[data.length - 3];
 											for (int i = 0; i < targets.length; i++)
 												targets[i] = data[i];
-											FFTASkill sk = FFTASkill.values[data[data.length - 1]];
+											FFTASkill sk = FFTASkill.values[data[data.length - 3]];
 											ag.executeSkill(targets, sk);
 											ag.victoryCheck();
 										}

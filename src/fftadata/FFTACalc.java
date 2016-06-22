@@ -168,6 +168,8 @@ public class FFTACalc
 		else // if (skill.dmgType == 2)
 			atk = (int) attacker.unit.mPow; 
 		
+		System.out.println(attacker.unit.name + "'s base WAtk: " + atk);
+		
 		// 2. Attacker's Support check 
 		if (attacker.unit.support == FFTASupport.WATK_PLUS && dmgType == PHYSICAL)
 			atk = atk * 307 / 256;
@@ -177,6 +179,8 @@ public class FFTACalc
 			atk = atk * 332 / 256;
 		else if (attacker.unit.support == FFTASupport.DOUBLEHAND && skill == FFTASkill.FIGHT)
 			atk = atk * 307 / 256;
+		
+		System.out.println("After support: " + atk);
 		
 		// 3. Attacker's status check
 		if (attacker.status[ActiveUnit.BERSERK] != 0 && dmgType == PHYSICAL)
@@ -204,6 +208,9 @@ public class FFTACalc
 			else if (dmgType == MAGICAL)
 				atk += attacker.unit.getMPowEquipBonus();
 		}
+		
+		System.out.println("WAtk Equip Bonus: " + attacker.unit.getWAtkEquipBonus());
+		System.out.println("After bonuses: " + atk);
 		
 		// 5. Atk cap
 		atk = Math.min(999, atk);

@@ -125,9 +125,10 @@ public class FFTAUnit implements Serializable
 		if (equips.feet != -1) result += slots[equips.feet	].wAtk;
 		if (equips.head != -1) result += slots[equips.head	].wAtk;
 		if (equips.rightHand != -1) result += slots[equips.rightHand ].wAtk;
+			else result += job.unarmedPower; 
 		
-		if (equips.leftHand != -1 && slots[equips.leftHand].type == EquipType.SHIELD)
-			result += slots[equips.rightHand ].wAtk;
+//		if (equips.leftHand != -1 && slots[equips.leftHand].type == EquipType.SHIELD)
+//			result += slots[equips.rightHand ].wAtk;
 		
 		for (int i = 0; i < 5; i++)
 			if (slots[i] != null && slots[i].type == EquipType.ACCESSORY)

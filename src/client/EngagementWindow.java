@@ -221,12 +221,14 @@ public class EngagementWindow extends JFrame {
 		out.flush();
 	}
 	
-	public void sendAction(ArrayList<Integer> targets, FFTASkill sk) throws IOException
+	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
 	{
-		int[] data = new int[targets.size() + 1];
+		int[] data = new int[targets.size() + 3];
 		for (int i = 0; i < targets.size(); i++)
 			data[i] = targets.get(i);
-		data[data.length - 1] = sk.ordinal();
+		data[data.length - 3] = sk.ordinal();
+		data[data.length - 2] = x;
+		data[data.length - 1] = y;
 		
 		System.out.println("sendAction: target = " + data[0]);
 		
@@ -341,7 +343,7 @@ public class EngagementWindow extends JFrame {
 	{
 		System.out.println("receiveAct: target = " + data[0]);
 		
-		FFTASkill sk = FFTASkill.values[data[data.length - 1]];
+		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
 		if (sk == FFTASkill.FIGHT)
 			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
 				"</strong> attacks <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");

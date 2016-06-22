@@ -208,5 +208,30 @@ public class ActiveGame
 
 	}
 	
-	enum GameStatus { SETUP, ONGOING, COMPLETE };
+	enum GameStatus { SETUP, ONGOING, COMPLETE }
+
+	public int intermediateFacing(int unitNumber, int x2, int y2)
+	{
+		ActiveUnit unit = units[unitNumber];
+		int x1 = unit.x, y1 = unit.y;
+		
+		int d_x = x2 - x1, d_y = y2 - y1; 
+		
+		if (Math.abs(d_x) > Math.abs(d_y))
+		{
+			if (d_x > 0)
+				unit.dir = 3;
+			else if (d_x < 0)
+				unit.dir = 1;
+		}
+		else if (Math.abs(d_y) > Math.abs(d_x))
+		{
+			if (d_y > 0)
+				unit.dir = 4;
+			else if (d_y < 0)
+				unit.dir = 2;
+		}
+		
+		return unit.dir;
+	}
 }

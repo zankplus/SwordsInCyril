@@ -367,7 +367,7 @@ public class UnitActionPanel extends JPanel
 		showActPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
-	public void doAct(ArrayList<Integer> targets, FFTASkill sk)
+	public void doAct(ArrayList<Integer> targets, FFTASkill sk, int x, int y)
 	{
 		unitHasActed = true;
 		
@@ -387,7 +387,7 @@ public class UnitActionPanel extends JPanel
 			gp.selectTile(gp.map.mapData[gp.units[gp.currentUnit].x][gp.units[gp.currentUnit].y]);
 			
 			System.out.println("doAct: target = " + targets.get(0));
-			ew.sendAction(targets, sk);
+			ew.sendAction(targets, sk, x, y);
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}

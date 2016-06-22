@@ -229,7 +229,7 @@ class GamePanel extends JPanel
 	public void commitAction(ArrayList<Integer> targets)
 	{
 		System.out.println("commitAction: " + currentUnit + " acting, " + targets.get(0) + " receiving");
-		unitAction.doAct(targets, selectedSkill);
+		unitAction.doAct(targets, selectedSkill, mapPanel.selectedTile.x, mapPanel.selectedTile.y);
 	}
 	
 	public void beginTargetingMode(FFTASkill sk)
@@ -237,6 +237,29 @@ class GamePanel extends JPanel
 		mapPanel.mode = 3;
 		selectedSkill = sk;
 		mapPanel.highlightTargetableTiles(sk);
+	}
+	
+	public void faceTowardTile(ActiveUnit unit, ZankMapTile tile)
+	{
+		int x1 = unit.x, y1 = unit.y;
+		int x2 = tile.x, y2 = tile.y;
+		
+		int d_x = x2 - x1, d_y = y2 - y1; 
+		
+		if (d_x > d_y)
+		{
+			if (d_x > 0)
+				unit.face("SW");
+			else if (d_y < 0)
+				unit.face("NE");
+		}
+		else if (d_y > d_x)
+		{
+			if (d_y > 0)
+				unit.face("SE");
+			else if (d_y < 0)
+				unit.face("NW");
+		}
 	}
 	
 	public void faceUnit(int dir)
@@ -335,7 +358,7 @@ class GamePanel extends JPanel
 		p1Units = units1;
 		
 //		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
-		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(2), 1, 10, 7, 2);
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(5), 1, 10, 7, 2);
 		au2.face("NW");
 		au1.face("NW");
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
@@ -632,6 +655,7 @@ class MapPanel extends JPanel
 		Targeting targ = sk.TARGETING;
 		int range = sk.RANGE;
 		
+		hlTiles.clear();
 		
 		if (targ == Targeting.AS_WEAPON)
 		{
@@ -651,7 +675,6 @@ class MapPanel extends JPanel
 			int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
 					ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
 			
-			hlTiles.clear();
 			for (int x = xmin; x <= xmax; x++)
 				for (int y = ymin; y <= ymax; y++)
 				{
@@ -677,6 +700,7 @@ class MapPanel extends JPanel
 					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 					hlTiles.add(fgo);
 					fgObjects.add(fgo);
+					System.out.println("added " + x + ", " + y);
 				}
 			}
 			
@@ -689,6 +713,7 @@ class MapPanel extends JPanel
 					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 					hlTiles.add(fgo);
 					fgObjects.add(fgo);
+					System.out.println("added " + x + ", " + y);
 				}
 			}
 		}
