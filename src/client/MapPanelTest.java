@@ -329,13 +329,13 @@ class GamePanel extends JPanel
 	{
 		ew.gamePanel = this;
 		
-		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(0), 1, 11, 7, 1);
+		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(3), 1, 11, 7, 1);
 		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
 		units1.add(au1);
 		p1Units = units1;
 		
 //		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
-		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 1, 10, 7, 2);
+		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(2), 1, 10, 7, 2);
 		au2.face("NW");
 		au1.face("NW");
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
@@ -353,14 +353,14 @@ class GamePanel extends JPanel
 		units[0] = au1; units[1] = au2;
 		
 		
-		currentUnit = 0;
+		currentUnit = 1;
 		
-		if (units[0].team == ew.playerNumber)
+		if (units[currentUnit].team == ew.playerNumber)
 			unitAction.showActionsPanel();
 		else
 			unitAction.hideActionPanel();
 		
-		ActiveUnit au = units[0];
+		ActiveUnit au = units[currentUnit];
 		mapPanel.selectTile(map.mapData[au.x][au.y]);
 		
 		
@@ -632,11 +632,12 @@ class MapPanel extends JPanel
 		Targeting targ = sk.TARGETING;
 		int range = sk.RANGE;
 		
+		
 		if (targ == Targeting.AS_WEAPON)
 		{
 			FFTAEquip weapon = au.unit.getWeapon();
-			System.out.println(weapon.name + " " + range);
 			range = weapon.range;
+			System.out.println(weapon.name + " " + range);
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;
 			else
@@ -663,6 +664,33 @@ class MapPanel extends JPanel
 						fgObjects.add(fgo);
 					}
 				}
+		}
+		
+		else if (targ == Targeting.DIRECTIONAL)
+		{
+			// Add targets in same x-dimension
+			int y = au.y;
+			for (int x = au.x + range; x >= au.x - range; x--)
+			{	
+				if (x < 15 && x >= 0 && x != au.x && map.mapData[x][y] != null)
+				{
+					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
+					hlTiles.add(fgo);
+					fgObjects.add(fgo);
+				}
+			}
+			
+			// Add targets in same y-dimension
+			int x = au.x;
+			for (y = au.y + range; y >= au.y - range; y--)
+			{	
+				if (y < 15 && y >= 0 && y != au.y && map.mapData[x][y] != null)
+				{
+					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
+					hlTiles.add(fgo);
+					fgObjects.add(fgo);
+				}
+			}
 		}
 		repaint();
 	}

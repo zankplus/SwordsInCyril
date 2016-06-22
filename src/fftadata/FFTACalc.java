@@ -282,22 +282,26 @@ public class FFTACalc
 		
 		// b. Retrieve target's resistance
 		EquipSet equips = defender.unit.equips;
-		int resistance = 6;	//	0=placeholder	1=weak	2=norm	3=half	4=null	5=absb
+		int resistance = 0;	//	0=placeholder	1=weak	2=norm	3=half	4=null	5=absb
 		int elemIndex = element.ordinal();
 		
 		if (element != Element.NULL)
 		{
 			for (int i = 0; i < 5; i++)
 			{
-				for (int j = 0; j < equips.slots.length; j++)
-					if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex][3])
+				for (int j = 0; j < equips.slots[i].effects.length; j++)
+				{
+					if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][3])
 						resistance = Math.max(resistance, 1);
-					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex][2])
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][2])
 						resistance = Math.max(resistance, 3);
-					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex][1])
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][1])
 						resistance = Math.max(resistance, 4);
-					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex][0])
-						resistance = Math.max(resistance, 5);		
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][0])
+						resistance = Math.max(resistance, 5);
+					
+					System.out.println("res: " + resistance);
+				}
 			}
 		}
 	
@@ -311,18 +315,20 @@ public class FFTACalc
 		{
 			for (int i = 0; i < 5; i++)
 				for (int j = 0; j < equips.slots[i].effects.length; j++)
-					if (equips.slots[i].effects[j] == ItemEffect.enhnEffs[elemIndex])
+					if (equips.slots[i].effects[j] == ItemEffect.enhnEffs[elemIndex - 1])
 						enhanced++;
 						
 			// Preserving the enhancement stacking glitch
 			if (element == Element.FIRE || element == Element.WIND || element == Element.EARTH)
 				enhanced = Math.min(enhanced, 1);
 		}
-		resistance += enhanced;
+		resistance = Math.max(resistance - enhanced, 1);
 		
 		// d. Geomancy check
 		if (attacker.unit.support == FFTASupport.GEOMANCY)
-			resistance --;
+			resistance = Math.max(resistance - 1, 1);
+		
+		System.out.println("resistance: " + resistance);
 		
 		// e. Mission item check
 		// -- Not currently implemented --

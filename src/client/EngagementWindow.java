@@ -111,14 +111,22 @@ public class EngagementWindow extends JFrame {
 							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
 					if (output == JOptionPane.YES_OPTION)
 					{
+						// Notify the server of user's leaving the room
 						try {
 							sendExit();
 						} catch (IOException e) { e.printStackTrace(); }
 						ew.dispose();
 					}
 				}
+				
+				// If the engagement is over, simply notify the server of the exit and close the window
 				else
+				{
+					try {
+						sendExit();
+					} catch (IOException e) { e.printStackTrace(); }
 					ew.dispose();
+				}
 			}
 		});
 		
