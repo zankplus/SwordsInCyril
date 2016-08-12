@@ -157,11 +157,9 @@ public class ActiveUser extends Thread
 							
 							else if (command.equals(ZankMessageType.GAME))
 							{
-								ActiveGame ag = null;
 								ZankGameAction action = (ZankGameAction) msg.data;
-								for (ActiveGame i : ChatServer.gameList)
-									if (i.id.equals( action.gameID ))
-										ag = i;
+								ActiveGame ag = ChatServer.findGame(action.gameID);
+								
 								if (ag != null)
 								{
 									try
@@ -260,7 +258,7 @@ public class ActiveUser extends Thread
 										else if (action.type == ZankGameActionType.EXIT)
 										{
 											ag.leaveRoom(msg.user);
-											if (ag.userList.size() == 0)
+											if (ag.userlist.size() == 0)
 												ChatServer.gameList.remove(ag);
 											
 											System.out.println("Closed game " + ag.id); 
@@ -283,7 +281,7 @@ public class ActiveUser extends Thread
 					if (!messageQueue.isEmpty() && !done)
 					{
 						ZankMessage m = messageQueue.take();
-//						System.out.print("\r\nOUT:\t" + m);
+						System.out.print("\r\nOUT: " + nickname + "\t" + m);
 						out.writeObject(m);
 						out.flush();
 					}

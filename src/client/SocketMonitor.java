@@ -36,42 +36,43 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 		try
 		{
 			// Prepare socket and i/o streams
-			socket = new Socket("158.69.197.70", 55555);
+			socket = new Socket("149.56.102.52", 55555);
 			client.socket = socket;
 			
+			// Initialize object output stream from socket's output stream
 			out = new ObjectOutputStream(new BufferedOutputStream(client.socket.getOutputStream()));
 			out.flush();
+			
+			// Let the client have a copy of the reference, too
 			client.out = out;
 			
+			// Show user that connection succeeded
 			client.loginWindow.connectSuccess();
 			
-			
-
-			try { Thread.sleep(250); } catch (InterruptedException e) {}
-			
-			
+			// Pause for a sec?
+			// try { Thread.sleep(150); } catch (InterruptedException e) {}
 		}
-		catch (IOException e) { client.loginWindow.connectFailed(); return null;	}
-		
+		catch (IOException e)
+		{
+			// If anything goes wrong, show that connection failed and end the method
+			client.loginWindow.connectFailed();
+			return null;
+		}
 		
 		// Watch for incoming messages and deal with them accordingly
 		try
 		{
 			boolean done = false;
-			System.out.println("in it");
 			in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-			System.out.println("to win it!");
+			System.out.println("Watching for incoming messages.");
 			while (!done)
 			{
 				ZankMessage msg = null;
 				ZankUser zu = client.zu;
 				ChatWindow cw = client.chatWindow;
 				
-				
-				System.out.println("trying to read object");
 				while ((msg = (ZankMessage) in.readObject()) != null)
 				{
-					System.out.println("read object!");
 					try
 					{
 						System.out.println("IN:\t" + msg);
@@ -84,14 +85,12 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 						{
 							cw.receiveChat(user, (String) msg.data);
 						}
-						
-						
+												
 						// LOGIN: another user has logged in to the server
 						else if (type.equals(ZankMessageType.LOGIN))
 						{
 							cw.receiveLogin(user);
 						}
-						
 						
 						// LOGIN: a user has logged out of the server
 						else if (type.equals(ZankMessageType.LOGOUT))
@@ -99,13 +98,11 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							cw.receiveLogout(msg.user);
 						}	
 						
-						
 						// ONLINE: the server has notified the client of which users are online
 						else if (type.equals(ZankMessageType.ONLINE))
 						{
 							cw.receiveOnline((String) msg.data);
 						}
-						
 						
 						// CHALLENGE: another user has issued a challenge to the client
 						else if (type.equals(ZankMessageType.CHALLENGE))
@@ -166,8 +163,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							{
 								ew.receiveHit((int[]) action.data);
 							}
-							
-							
+								
 							// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
 							else if (action.type.equals(ZankGameActionType.WAIT))
 							{
@@ -199,8 +195,13 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 				// TODO: idk do something about this
 				cw.appendToChat("<br><span style=\"color:red\"><em>* you have been disconnected from the server");					
 			}
+		} catch (IOException e)
+		{
+			System.err.println(e); 
+		} catch (ClassNotFoundException e) 
+		{	
+			System.err.println(e);	
 		}
-		catch (IOException e) { System.err.println(e); } catch (ClassNotFoundException e) {	System.err.println(e);	}
 		
 		return null;
 	}

@@ -191,24 +191,33 @@ public class EngagementWindow extends JFrame {
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendForfeit() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
 		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendReady() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, gamePanel.getYourUnits());
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendMove() throws IOException
@@ -217,8 +226,11 @@ public class EngagementWindow extends JFrame {
 		int[] data = {gamePanel.currentUnit, au.x, au.y, au.z};
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
@@ -234,8 +246,12 @@ public class EngagementWindow extends JFrame {
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendWait(int dir) throws IOException
@@ -243,24 +259,36 @@ public class EngagementWindow extends JFrame {
 		int[] data = {gamePanel.currentUnit, dir};
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendTurnTest(int ct) throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendExit() throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		out.writeObject(message);
-		out.flush();
+		
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void appendToChat(String s)

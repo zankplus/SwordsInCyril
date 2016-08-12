@@ -44,16 +44,22 @@ public class ZankClient
 	{
 		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.username, user);
 		System.out.println("OUT:\t" + message);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void sendEngage(String user) throws IOException
 	{
 		message = new ZankMessage(ZankMessageType.ENGAGE, zu.username, user);
 		System.out.println("OUT:\t" + message);
-		out.writeObject(message);
-		out.flush();
+		synchronized(out)
+		{
+			out.writeObject(message);
+			out.flush();
+		}
 	}
 	
 	public void launchEngagementWindow(ZankGameAction startMsg)

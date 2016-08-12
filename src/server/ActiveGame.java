@@ -2,6 +2,8 @@ package server;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import fftadata.*;
@@ -12,7 +14,7 @@ public class ActiveGame
 {
 	String id;
 	ActiveUser player1, player2;
-	ArrayList<ActiveUser> userList;
+	List<ActiveUser> userlist;
 	GameStatus status;
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	boolean finishedPrep1, finishedPrep2;
@@ -35,12 +37,12 @@ public class ActiveGame
 		id = pID.toString();
 		player1 = p1;
 		player2 = p2;
-		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
+//		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
 		
 		// Initialize user list
-		userList = new ArrayList<ActiveUser>();
+		userlist = Collections.synchronizedList(new ArrayList<ActiveUser>());
 		
 		// Both players join the game
 		joinRoom(p1);
@@ -49,20 +51,23 @@ public class ActiveGame
 	
 	public void joinRoom(ActiveUser user)
 	{
-		userList.add(user);
+		userlist.add(user);
 	}
 	
 	public void leaveRoom(ActiveUser user)
 	{
 		// Remove user from the list
-		userList.remove(user);
+		userlist.remove(user);
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		
 		try
 		{
-			for (int i = 0; i < userList.size(); i++)
-				userList.get(i).messageQueue.put(zm);
+			synchronized(userlist)
+			{
+				for (int i = 0; i < userlist.size(); i++)
+					userlist.get(i).messageQueue.put(zm);
+			}
 		} catch (InterruptedException e) { e.printStackTrace(); }
 		
 
@@ -72,9 +77,13 @@ public class ActiveGame
 	public void leaveRoom(String username)
 	{
 		ActiveUser user = null;
-		for (int i = 0; i < userList.size(); i++)
-			if (userList.get(i).nickname.equals(username))
-				user = userList.get(i);
+		
+		synchronized(userlist)
+		{
+			for (int i = 0; i < userlist.size(); i++)
+				if (userlist.get(i).nickname.equals(username))
+					user = userlist.get(i);
+		}
 		
 		if (user != null)
 			leaveRoom(user);
@@ -118,7 +127,7 @@ public class ActiveGame
 	{
 		ActiveUnit au = units[unit];
 		au.counter -= 500;
-		System.out.println(au.unit.name + "-->" + au.counter);
+//		System.out.println(au.unit.name + "-->" + au.counter);
 		au.reserve = 0;
 		au.dir = dir;
 	}
@@ -233,5 +242,14 @@ public class ActiveGame
 		}
 		
 		return unit.dir;
+	}
+	
+	public void sendToAll(ZankMessage msg) throws InterruptedException
+	{
+		synchronized(userlist)
+		{
+			for (ActiveUser user : userlist)
+					user.messageQueue.put(msg);
+		}
 	}
 }

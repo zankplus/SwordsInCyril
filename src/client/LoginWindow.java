@@ -235,8 +235,12 @@ public class LoginWindow extends JFrame {
 	{
 		ZankMessage msg = new ZankMessage(ZankMessageType.LOGIN, zUser.username, null);
 		
-		client.out.writeObject(msg);
-		client.out.flush();
+		synchronized(client.out)
+		{
+			client.out.writeObject(msg);
+			client.out.flush();
+		}
+			
 		System.out.println("OUT:\t" + msg);
 	}
 }

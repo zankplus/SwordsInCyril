@@ -2,6 +2,8 @@ package server;
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.*;
 
 import zank.*;
@@ -9,15 +11,15 @@ import zank.*;
 public class ChatServer
 {
 	private ExecutorService pool;
-	protected static ArrayList<ActiveUser> userList;
-	protected static ArrayList<ActiveGame> gameList;
+	protected static List<ActiveUser> userList;
+	protected static List<ActiveGame> gameList;
 	protected static LinkedBlockingQueue<ZankMessage> masterMessageQueue;
 
 	public ChatServer()
 	{
 		pool = Executors.newFixedThreadPool(10);
-		userList = new ArrayList<ActiveUser>();
-		gameList = new ArrayList<ActiveGame>();
+		userList = Collections.synchronizedList(new ArrayList<ActiveUser>());
+		gameList = Collections.synchronizedList(new ArrayList<ActiveGame>());
 		masterMessageQueue = new LinkedBlockingQueue<ZankMessage>();
 	}
 	
@@ -42,9 +44,23 @@ public class ChatServer
 	
 	public static ActiveUser findUser(String name)
 	{
-		for (ActiveUser u : userList)
-			if (u.nickname.equals(name))
-				return u;
+		synchronized(userList)
+		{
+			for (ActiveUser u : userList)
+				if (u.nickname.equals(name))
+					return u;
+		}
+		return null;
+	}
+	
+	public static ActiveGame findGame(String id)
+	{
+		synchronized(gameList)
+		{
+			for (ActiveGame ag : gameList)
+				if (ag.id.equals( id ))
+					return ag;
+		}
 		return null;
 	}
 	
@@ -69,15 +85,34 @@ public class ChatServer
 					try
 					{
 						ZankMessage message = masterMessageQueue.take();
-						for (int i = 0; i < userList.size(); i++)
-						{	
-						    synchronized (userList)
-						    {
-						    	userList.get(i).messageQueue.put(message);
-						    }
+						
+						// If it's a Game message, send it to everyone in the specified room
+						if (message.type == ZankMessageType.GAME)
+						{
+							ZankGameAction action = (ZankGameAction) message.data;
+							ActiveGame ag = findGame(action.gameID);
+							
+							if (ag != null)
+								ag.sendToAll(message);
 						}
+						
+						else if (message.type == ZankMessageType.CHALLENGE)
+						{
+							ActiveUser dest = findUser((String) message.data);
+							if (dest != null)
+								dest.messageQueue.put(message);
+						}
+						
+						// Otherwise, send the message to everyone
+						else
+							synchronized(userList)
+							{
+								for (int i = 0; i < userList.size(); i++)
+									userList.get(i).messageQueue.put(message);
+							}
+							
 					}
-					catch (InterruptedException e) { System.err.println("MessageHandler interrupted"); }
+					catch (InterruptedException e) { e.printStackTrace(); }
 					
 					if (masterMessageQueue.isEmpty())
 						yield();
