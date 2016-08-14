@@ -11,15 +11,15 @@ import zank.*;
 public class ChatServer
 {
 	private ExecutorService pool;
-	protected static List<ActiveUser> userList;
-	protected static List<ActiveGame> gameList;
+	protected static List<ActiveUser> userlist;
+	protected static List<ActiveGame> gamelist;
 	protected static LinkedBlockingQueue<ZankMessage> masterMessageQueue;
 
 	public ChatServer()
 	{
 		pool = Executors.newFixedThreadPool(10);
-		userList = Collections.synchronizedList(new ArrayList<ActiveUser>());
-		gameList = Collections.synchronizedList(new ArrayList<ActiveGame>());
+		userlist = Collections.synchronizedList(new ArrayList<ActiveUser>());
+		gamelist = Collections.synchronizedList(new ArrayList<ActiveGame>());
 		masterMessageQueue = new LinkedBlockingQueue<ZankMessage>();
 	}
 	
@@ -35,7 +35,7 @@ public class ChatServer
 			{
 				Socket connection = server.accept();
 				ActiveUser user = new ActiveUser(connection);
-				synchronized (userList) { userList.add(user); }
+				synchronized (userlist) { userlist.add(user); }
 				pool.submit(user);
 			}
 		}
@@ -44,9 +44,9 @@ public class ChatServer
 	
 	public static ActiveUser findUser(String name)
 	{
-		synchronized(userList)
+		synchronized(userlist)
 		{
-			for (ActiveUser u : userList)
+			for (ActiveUser u : userlist)
 				if (u.nickname.equals(name))
 					return u;
 		}
@@ -55,9 +55,9 @@ public class ChatServer
 	
 	public static ActiveGame findGame(String id)
 	{
-		synchronized(gameList)
+		synchronized(gamelist)
 		{
-			for (ActiveGame ag : gameList)
+			for (ActiveGame ag : gamelist)
 				if (ag.id.equals( id ))
 					return ag;
 		}
@@ -89,6 +89,7 @@ public class ChatServer
 						// If it's a Game message, send it to everyone in the specified room
 						if (message.type == ZankMessageType.GAME)
 						{
+							System.out.println("does this ever actually get used lol");
 							ZankGameAction action = (ZankGameAction) message.data;
 							ActiveGame ag = findGame(action.gameID);
 							
@@ -96,19 +97,21 @@ public class ChatServer
 								ag.sendToAll(message);
 						}
 						
+						// If it's a CHALLENGE, send it only to the recipient
 						else if (message.type == ZankMessageType.CHALLENGE)
 						{
+							System.out.println("does this either?");
 							ActiveUser dest = findUser((String) message.data);
 							if (dest != null)
 								dest.messageQueue.put(message);
 						}
 						
-						// Otherwise, send the message to everyone
+						// Anything else, send it to everyone
 						else
-							synchronized(userList)
+							synchronized(userlist)
 							{
-								for (int i = 0; i < userList.size(); i++)
-									userList.get(i).messageQueue.put(message);
+								for (int i = 0; i < userlist.size(); i++)
+									userlist.get(i).messageQueue.put(message);
 							}
 							
 					}

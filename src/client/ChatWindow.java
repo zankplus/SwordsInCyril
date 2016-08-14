@@ -2,6 +2,7 @@ package client;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -14,6 +15,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -24,6 +26,8 @@ import javax.swing.JSplitPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
+import javax.swing.border.EmptyBorder;
 import javax.swing.text.html.HTMLDocument;
 
 import zank.ZankMessage;
@@ -258,5 +262,112 @@ public class ChatWindow extends JFrame {
 	public void receiveEngage(String user1, String user2)
 	{
 		appendToChat("<br><i><span style=\"color:gray\">* " + user1 + " and " + user2 + " are engaging!");
+	}
+}
+
+class ChallengeeDialog extends JDialog
+{
+	private final JPanel contentPanel = new JPanel();
+	Socket socket;
+	String user; 
+		
+	public ChallengeeDialog(String user, ZankClient gui)
+	{
+		this.user = user;
+		setModal(true);
+		setBounds(100, 100, 200, 125);
+		setLocationRelativeTo(gui.chatWindow);
+		getContentPane().setLayout(new BorderLayout());
+		contentPanel.setLayout(new FlowLayout());
+		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		getContentPane().add(contentPanel, BorderLayout.CENTER);
+		JLabel lblChallenge = new JLabel(user + " has challenged you!!");
+		contentPanel.add(lblChallenge);
+		JPanel buttonPane = new JPanel();
+		buttonPane.setLayout(new FlowLayout(FlowLayout.CENTER));
+		getContentPane().add(buttonPane, BorderLayout.SOUTH);
+		
+		JButton okButton = new JButton("OK");
+		okButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0)
+			{
+				try {
+					gui.sendEngage(user);
+				} catch (IOException e) {
+					System.out.println("Couldn't challenge user " + user);
+				}
+				dispose();
+			}
+		});
+		okButton.setHorizontalAlignment(SwingConstants.LEFT);
+		okButton.setActionCommand("OK");
+		buttonPane.add(okButton);
+		getRootPane().setDefaultButton(okButton);
+
+		JButton cancelButton = new JButton("Not OK");
+		cancelButton.setActionCommand("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0)
+			{
+				dispose();
+			}
+		});
+		buttonPane.add(cancelButton);
+			
+		setVisible(true);
+	}
+}
+
+class ChallengerDialog extends JDialog
+{
+	private final JPanel contentPanel = new JPanel();
+	Socket socket;
+	String user; 
+		
+	public ChallengerDialog(String user, ZankClient client)
+	{
+		this.user = user;
+		setModal(true);
+		
+		setBounds(100, 100, 200, 125);
+		setLocationRelativeTo(client.chatWindow);
+		getContentPane().setLayout(new BorderLayout());
+		contentPanel.setLayout(new FlowLayout());
+		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
+		getContentPane().add(contentPanel, BorderLayout.CENTER);
+		JLabel lblChallenge = new JLabel("Challenge " + user + " ???");
+		contentPanel.add(lblChallenge);
+		JPanel buttonPane = new JPanel();
+		buttonPane.setLayout(new FlowLayout(FlowLayout.CENTER));
+		getContentPane().add(buttonPane, BorderLayout.SOUTH);
+		
+		JButton okButton = new JButton("OK");
+		okButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0)
+			{
+				try {
+					client.sendChallenge(user);
+				} catch (IOException e) {
+					System.out.println("Couldn't challenge user " + user);
+				}
+				dispose();
+			}
+		});
+		okButton.setHorizontalAlignment(SwingConstants.LEFT);
+		okButton.setActionCommand("OK");
+		buttonPane.add(okButton);
+		getRootPane().setDefaultButton(okButton);
+
+		JButton cancelButton = new JButton("Not OK");
+		cancelButton.setActionCommand("Cancel");
+		cancelButton.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0)
+			{
+				dispose();
+			}
+		});
+		buttonPane.add(cancelButton);
+			
+		setVisible(true);
 	}
 }

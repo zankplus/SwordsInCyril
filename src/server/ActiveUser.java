@@ -65,27 +65,23 @@ public class ActiveUser extends Thread
 						{
 							msg = (ZankMessage) in.readObject();
 							
-//							System.out.print("\r\nIN:\t" + msg);
-							
-							// String[] tokens = line.toString().split("\\s+");
 							String username = msg.user;
 							ZankMessageType command = msg.type;
 								
 							// Special handlers for different message types
 							if (command.equals(ZankMessageType.LOGIN) && nickname == null)
-							{
-								// System.out.print("\r\n* " + username + " has entered the room");
+							{								
 								if (nickname == null)
 								{
 									nickname = username;
-									synchronized(ChatServer.userList)
+									synchronized(ChatServer.userlist)
 									{
 										// Send notification of login to all other users
 										StringBuilder toNotify = new StringBuilder();
-										for (int i = 0; i < ChatServer.userList.size(); i++)
+										for (int i = 0; i < ChatServer.userlist.size(); i++)
 										{
 											
-											String currNick = ChatServer.userList.get(i).nickname;
+											String currNick = ChatServer.userlist.get(i).nickname;
 											if (currNick != null && !currNick.equals(nickname))
 												toNotify.append(" " + currNick);
 										}
@@ -98,14 +94,14 @@ public class ActiveUser extends Thread
 							
 							else if (command.equals(ZankMessageType.LOGOUT))
 							{
-								// System.out.print("\r\n* " + username + " has left the room");
+//								System.out.print("\r\n* " + username + " has left the room");
 								done = true;
 								ChatServer.masterMessageQueue.put(msg);
 							}
 							
 							else if (command.equals(ZankMessageType.CHAT))
 							{
-								// System.out.print("\r\n" + username + ": " + (String) msg.data);
+//								 System.out.print("\r\n" + username + ": " + (String) msg.data);
 								ChatServer.masterMessageQueue.put(msg);
 							}
 							
@@ -113,7 +109,7 @@ public class ActiveUser extends Thread
 							{
 								String challenged = (String) msg.data;
 								ActiveUser challengedUser = null;
-								for (ActiveUser user : ChatServer.userList)
+								for (ActiveUser user : ChatServer.userlist)
 									if (user.nickname.equals(challenged))
 									{
 										challengedUser = user;
@@ -145,7 +141,7 @@ public class ActiveUser extends Thread
 									System.out.println("player 2 = " + player2.nickname);
 									
 									game = new ActiveGame(player1, player2);
-									ChatServer.gameList.add(game);
+									ChatServer.gamelist.add(game);
 									ZankMessage startMessage = game.getStartMessage();
 									player1.messageQueue.put(startMessage);
 									player2.messageQueue.put(startMessage);										
@@ -162,6 +158,7 @@ public class ActiveUser extends Thread
 								
 								if (ag != null)
 								{
+									ag.gameLock.lock();
 									try
 									{
 										if (action.type == ZankGameActionType.CHAT || action.type == ZankGameActionType.START)
@@ -259,15 +256,16 @@ public class ActiveUser extends Thread
 										{
 											ag.leaveRoom(msg.user);
 											if (ag.userlist.size() == 0)
-												ChatServer.gameList.remove(ag);
+												ChatServer.gamelist.remove(ag);
 											
 											System.out.println("Closed game " + ag.id); 
 											System.out.println("List of active games:");
-											for (int i = 0; i < ChatServer.gameList.size(); i++)
-												System.out.println("  " + ChatServer.gameList.get(i));
+											for (int i = 0; i < ChatServer.gamelist.size(); i++)
+												System.out.println("  " + ChatServer.gamelist.get(i));
 										}
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); }
+									ag.gameLock.unlock();
 								}
 							}
 							else
@@ -293,7 +291,7 @@ public class ActiveUser extends Thread
 			// Close/cleanup
 			if (connection != null) connection.close();
 			if (in != null) in.close();
-			synchronized (ChatServer.userList) { ChatServer.userList.remove(this); }
+			synchronized (ChatServer.userlist) { ChatServer.userlist.remove(this); }
 		}
 		catch (IOException e) { System.err.println("\rAcceptance error: " + e.getMessage()); }
 		catch (InterruptedException e) { System.err.println("\rFailed to add message to queue. "); }

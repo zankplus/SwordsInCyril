@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.*;
 
 import fftadata.*;
 import zank.*;
@@ -22,7 +23,7 @@ public class ActiveGame
 	TurnOrder turnOrder;
 	ActiveUnit[] units;
 	public int currentUnit;
-	
+	Lock gameLock;
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2)
 	{
@@ -47,6 +48,9 @@ public class ActiveGame
 		// Both players join the game
 		joinRoom(p1);
 		joinRoom(p2);
+		
+		// Initialize lock
+		gameLock = new ReentrantLock();
 	}
 	
 	public void joinRoom(ActiveUser user)

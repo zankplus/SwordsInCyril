@@ -105,7 +105,6 @@ public class ZankClient
 		
 	}
 	
-	
 	public void launchSocketMonitor()
 	{
 		SocketMonitor dispatch = new SocketMonitor(this);
