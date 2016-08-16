@@ -144,6 +144,7 @@ public class LoginWindow extends JFrame {
 		btnLogin.setPreferredSize(new Dimension(90, 23));
 		btnLogin.setBounds(86, 175, 105, 23);
 		btnLogin.setOpaque(false);
+		getRootPane().setDefaultButton(btnLogin);
 		btnLogin.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{

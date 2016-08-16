@@ -107,7 +107,7 @@ public class EngagementWindow extends JFrame {
 				// If the engagement is still in progress, prompt the user to confirm the window's closing
 				if (!gameOver)
 				{
-					int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
+					/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
 							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
 					if (output == JOptionPane.YES_OPTION)
 					{
@@ -116,7 +116,14 @@ public class EngagementWindow extends JFrame {
 							sendExit();
 						} catch (IOException e) { e.printStackTrace(); }
 						ew.dispose();
-					}
+					}*/
+					
+					// Temporarily do not show warning dialog
+					try {
+						sendExit();
+					} catch (IOException e) { e.printStackTrace(); }
+					ew.dispose();
+					
 				}
 				
 				// If the engagement is over, simply notify the server of the exit and close the window
@@ -146,14 +153,14 @@ public class EngagementWindow extends JFrame {
 		rightPanel.setLayout(new BorderLayout(0, 0));
 		
 		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+		// scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 		rightPanel.add(scrollPane, BorderLayout.CENTER);
 		
 		chat = new JTextPane();
 		chat.setContentType("text/html");
 		chat.setText("<html><body style=\"font-family:verdana; font-size:11pt\">");
-		
+		chat.setEditable(false);
 		chat.setFont(new Font("Tahoma", Font.PLAIN, 11));
 		scrollPane.setViewportView(chat);
 		
@@ -296,6 +303,7 @@ public class EngagementWindow extends JFrame {
 		try {
 			HTMLDocument doc = (HTMLDocument) chat.getDocument();
 			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
+			chat.setCaretPosition(doc.getLength());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -344,14 +352,16 @@ public class EngagementWindow extends JFrame {
 	{
 		gamePanel.currentUnit = index;
 		
-		if (gamePanel.units[index].team == playerNumber)
+		// Decide which panel to show
+		if (gamePanel.units[index].team == playerNumber)	// Show the action panel if it's your turn
 		{	
 			gamePanel.startPlayerTurn();
 		}
 		else
-			gamePanel.startRivalTurn();
+			gamePanel.startRivalTurn();	// Show the blank panel if it's not
 		
 		ActiveUnit au = gamePanel.units[index];
+		gamePanel.startOfTurnEffects();
 		
 		gamePanel.selectTile(map.mapData[au.x][au.y]);
 		
@@ -378,23 +388,27 @@ public class EngagementWindow extends JFrame {
 		else
 			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
 					"</strong> uses " + sk.NAME + " on <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");
+		
+		gamePanel.expendMP(sk);
 		System.out.println("Received " + sk.NAME);
 	}
 	
 	// HIT: apply the amount of damage specified and announce the results in chat
 	public void receiveHit(int[] data)
 	{
-		System.out.println("receiveHit: target = " + data[0]);
+		System.out.println("Hit details: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
 		
 		if (data[1] == 1)
 		{
 			appendToChat("<br><em><span style=\"color:gray\">......<strong>" + gamePanel.units[data[0]].unit.name +
-					"</strong> takes <strong><span style=\"color:red\">" + data[2] + "</strong> damage!");
+					"</strong> takes <strong><span style=\"color:red\">" + data[2] + "</strong> damage! (" +
+					+ data[3] + "%)");
 			gamePanel.applyDamage(data[0], data[2]);
 		}
 		else
 			appendToChat("<br><em><span style=\"color:gray\">......The attack misses <strong>" +
-					gamePanel.units[data[0]].unit.name + "</strong>!");
+					gamePanel.units[data[0]].unit.name + "</strong>! (" + data[3] + "%)");
+
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel

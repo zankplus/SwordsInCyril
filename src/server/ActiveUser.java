@@ -279,7 +279,15 @@ public class ActiveUser extends Thread
 					if (!messageQueue.isEmpty() && !done)
 					{
 						ZankMessage m = messageQueue.take();
-						System.out.print("\r\nOUT: " + nickname + "\t" + m);
+						System.out.println("OUT: " + nickname + "\t" + m);
+						
+						if (m.type == ZankMessageType.GAME && ((ZankGameAction) m.data).type == ZankGameActionType.HIT)
+						{
+							int[] x = (int[]) (((ZankGameAction) m.data).data);
+							System.out.println("SENT HIT: " + x[0] + " " + x[1] + " " + x[2] + " " + x[3]);							
+						}
+						
+						
 						out.writeObject(m);
 						out.flush();
 					}

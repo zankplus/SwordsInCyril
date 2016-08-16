@@ -65,11 +65,12 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 			boolean done = false;
 			in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
 			System.out.println("Watching for incoming messages.");
+			ChatWindow cw = client.chatWindow;
 			while (!done)
 			{
 				ZankMessage msg = null;
 				ZankUser zu = client.zu;
-				ChatWindow cw = client.chatWindow;
+				
 				
 				while ((msg = (ZankMessage) in.readObject()) != null)
 				{
@@ -161,6 +162,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							// HIT: the server has indicated that a unit in combat has taken damage
 							else if (action.type.equals(ZankGameActionType.HIT))
 							{
+								System.out.println("Received HIT: " + action);
 								ew.receiveHit((int[]) action.data);
 							}
 								

@@ -14,7 +14,6 @@ import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TreeSet;
@@ -22,6 +21,7 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
@@ -33,6 +33,7 @@ import fftadata.EquipType;
 import fftadata.FFTACalc;
 import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
+import fftadata.FFTASupport;
 import fftadata.FFTAUnit;
 import fftadata.Targeting;
 
@@ -212,7 +213,9 @@ class GamePanel extends JPanel
 	
 	public void commitAction(ArrayList<Integer> targets)
 	{
-		System.out.println("commitAction: " + currentUnit + " acting, " + targets.get(0) + " receiving");
+		for (int i = 0; i < targets.size(); i++)
+			System.out.println("commitAction: " + currentUnit + " acting, " + targets.get(i) + " receiving");
+		
 		unitAction.doAct(targets, selectedSkill, mapPanel.selectedTile.x, mapPanel.selectedTile.y);
 	}
 	
@@ -334,7 +337,11 @@ class GamePanel extends JPanel
 		if (targ == Targeting.FREE_SELECT)
 			for (int i = 0; i < units.length; i++)
 			{
-				if (Math.abs(units[i].x - selectedTile.x) + Math.abs(units[i].y - selectedTile.y) <= radius)
+				int dist = Math.abs(units[i].x - selectedTile.x) + Math.abs(units[i].y - selectedTile.y);
+				
+				if (dist == 0)
+					result.add(0, i);
+				else if (dist <= radius)
 					result.add(i);
 			}
 
@@ -349,15 +356,20 @@ class GamePanel extends JPanel
 			for (int i = 0; i < units.length; i++)
 			{
 				int dx2 = units[i].x - user.x, dy2 = units[i].y - user.y;
-				int dist = Math.abs(dx2) + Math.abs(dy2);
 				if (dx2 != 0) dx2 = dx2 / Math.abs(dx2);
 				if (dy2 != 0) dy2 = dy2 / Math.abs(dy2);
 				
 				
-				if ((dx == dx2) && (dy == dy2) && (dx2 == 0 ^ dy2 == 0))	// aligned in x-dimension
+				if ((dx == dx2) && (dy == dy2) && (dx2 == 0 ^ dy2 == 0))	// aligned in one dimension or the other
 				{
-					System.out.println("Adding " + units[i].unit.name + " (" + dx2 + ", " + dy2 + ")");
-					result.add(i);
+					int sdist = Math.abs(units[i].x - selectedTile.x) + Math.abs(units[i].y - selectedTile.y);
+					if (sdist == 0)
+						result.add(0, i);
+					else if (sdist <= range)
+					{
+						System.out.println("Targeting " + units[i].unit.name + " - " + sdist);
+						result.add(i);
+					}
 				}
 			}
 			
@@ -365,6 +377,28 @@ class GamePanel extends JPanel
 		
 		
 		return result;
+	}
+	
+	public void startOfTurnEffects()
+	{
+		ActiveUnit au = units[currentUnit];
+		au.currMP = Math.min(au.currMP + 5, (int) au.unit.maxMP);
+		previews[currentUnit].updateStats();
+	}
+	
+	public void expendMP(FFTASkill sk)
+	{
+		int cost = sk.COST;
+		if (units[currentUnit].unit.support == FFTASupport.HALF_MP)
+			cost /= 2;
+		else if (units[currentUnit].unit.support == FFTASupport.TURBO_MP)
+			cost *= 2;
+		units[currentUnit].currMP -= cost;
+		if (units[currentUnit].currMP < 0)
+			JOptionPane.showMessageDialog(this, "fucker " + units[currentUnit].unit.name + "'s got negative MP");
+		
+		previews[currentUnit].updateStats();
+		
 	}
 	
 	public void applyDamage(int targ, int dmg)
@@ -384,8 +418,11 @@ class GamePanel extends JPanel
 		ew.gamePanel = this;
 		
 		ActiveUnit au1 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(3), 1, 8, 8, 1);
+		ActiveUnit au3 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(4), 1, 9, 7, 1);
 		ArrayList<ActiveUnit> units1 = new ArrayList<ActiveUnit>();
+		units1.add(au3);
 		units1.add(au1);
+		
 		p1Units = units1;
 		
 //		ActiveUnit au2 = new ActiveUnit( (FFTAUnit) rosterPanel.roster.getModel().getElementAt(1), 11, 1, 6, 2);
@@ -394,6 +431,7 @@ class GamePanel extends JPanel
 		au1.face("NW");
 		ArrayList<ActiveUnit> units2 = new ArrayList<ActiveUnit>();
 		units2.add(au2);
+		
 		p2Units = units2;
 		
 		mapPanel.mpUnits = units2;
@@ -403,11 +441,12 @@ class GamePanel extends JPanel
 		
 		beginGame();
 		
-		units = new ActiveUnit[2];
-		units[0] = au1; units[1] = au2;
+		units = new ActiveUnit[3];
+		units[0] = au1; units[1] = au2; units[2] = au3;
 		
 		
 		currentUnit = 1;
+		unitAction.setUnit(units[currentUnit]);
 		
 		if (units[currentUnit].team == ew.playerNumber)
 			unitAction.showActionsPanel();

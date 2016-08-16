@@ -196,7 +196,6 @@ public class DamagePreviewPanel extends JPanel
 		bottomLeftPanel.add(btnPrev, BorderLayout.EAST);
 		
 		JPanel bottomRightPanel = new JPanel();
-		bottomRightPanel.setBackground(new Color(248, 192, 192));
 		bottomRightPanel.setPreferredSize(new Dimension(100, 10));
 		southPanel.add(bottomRightPanel, BorderLayout.EAST);
 		bottomRightPanel.setLayout(new BorderLayout(0, 0));
@@ -251,6 +250,8 @@ public class DamagePreviewPanel extends JPanel
 			btnPrev.setEnabled(false);
 		}
 		
+		// Fix bottomRightPanel bgcolor
+		bottomRightPanel.setBackground(targetCards[currentCard].getBackground());
 	}
 
 	/**
@@ -377,6 +378,10 @@ public class DamagePreviewPanel extends JPanel
 			JLabel lblTargetCurrJP = new JLabel("<html><strong>" + target.jp);
 			lblTargetCurrJP.setHorizontalAlignment(SwingConstants.CENTER);
 			targetJPPanel.add(lblTargetCurrJP);
+			
+			JLabel lblReaction = new JLabel(""+target.unit.reaction);
+			lblReaction.setHorizontalAlignment(SwingConstants.CENTER);
+			targetStatPanel.add(lblReaction);
 		}
 	}
 }

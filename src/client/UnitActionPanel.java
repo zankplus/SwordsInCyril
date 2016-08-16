@@ -4,9 +4,17 @@ import java.awt.Dimension;
 import java.awt.EventQueue;
 
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
+import javax.swing.ScrollPaneConstants;
 
 import fftadata.ActiveUnit;
+import fftadata.FFTACommand;
+import fftadata.FFTAEquip;
+import fftadata.FFTAJob;
 import fftadata.FFTASkill;
+import fftadata.FFTASupport;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
@@ -17,12 +25,17 @@ import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import java.awt.CardLayout;
+import java.awt.Color;
+import java.awt.Component;
+
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 import javax.swing.JList;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.EmptyBorder;
 
 public class UnitActionPanel extends JPanel
 {
@@ -37,14 +50,12 @@ public class UnitActionPanel extends JPanel
 	private JPanel blankPanel, actionsPanel, movePanel, waitPanel, directionsPanel, actPanel,
 		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel;
 	private JLabel lblMoveInstruction; 
-	private JList skillList;
+	private SkillPanel skillPanel1, skillPanel2, alchItemPanel;
 	boolean unitHasMoved, unitHasActed, sendMove;
 	private JPanel fightPanel;
 	private JButton btnFightCancel;
 	private JLabel lblClickTheUnit;
-	
-	
-	
+	String prevCard;
 	
 	/**
 	 * Create the panel.
@@ -179,29 +190,17 @@ public class UnitActionPanel extends JPanel
 		btnFight = new JButton("<html><strong>Fight");
 		btnFight.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				showFightPanel();
+				prevCard = "Act";
+				showSkillUsePanel(FFTASkill.FIGHT);
 			}
 		});
 		btnFight.setPreferredSize(new Dimension(112, 23));
-		actInnerPanel.add(btnFight, BorderLayout.WEST);
+		actInnerPanel.add(btnFight, BorderLayout.CENTER);
 		
 		actSkillsetPanel = new JPanel();
-		actInnerPanel.add(actSkillsetPanel, BorderLayout.CENTER);
+		actSkillsetPanel.setPreferredSize(new Dimension(100, 10));
+		actInnerPanel.add(actSkillsetPanel, BorderLayout.EAST);
 		actSkillsetPanel.setLayout(new GridLayout(0, 1, 0, 0));
-		
-		btnSkillset_1 = new JButton("Skillset 1");
-		actSkillsetPanel.add(btnSkillset_1);
-		
-		btnSkillset_2 = new JButton("Skillset 2");
-		actSkillsetPanel.add(btnSkillset_2);
-		
-		btnItem = new JButton("Item");
-		btnItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent arg0) {
-			}
-		});
-		actSkillsetPanel.add(btnItem);
-		
 		
 		
 		// Fight Panel
@@ -224,7 +223,7 @@ public class UnitActionPanel extends JPanel
 		
 		
 		// Skill Panel
-		skillPanel = new JPanel();
+		/*skillPanel = new JPanel();
 		add(skillPanel, "Skill");
 		skillPanel.setLayout(new BorderLayout(0, 0));
 		
@@ -240,7 +239,7 @@ public class UnitActionPanel extends JPanel
 		
 		skillList = new JList();
 		skillList.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		skillInnerPanel.add(skillList, BorderLayout.CENTER);
+		skillInnerPanel.add(skillList, BorderLayout.CENTER);*/
 		
 		
 		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
@@ -281,7 +280,54 @@ public class UnitActionPanel extends JPanel
 	public void setUnit(ActiveUnit au)
 	{
 		this.au = au;
+		UnitActionPanel thisRef = this;	// reference to 'this', which is hidden from inside of action listener definitions
 		
+		// Wipe the old actSkillsetPanel
+		actSkillsetPanel.removeAll();
+		
+		// Add first skillset button
+		btnSkillset_1 = new JButton("" + au.unit.job.command);
+		actSkillsetPanel.add(btnSkillset_1);
+		btnSkillset_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent arg0)
+			{
+				prevCard = "Skillset 1";
+				cl.show(thisRef, "Skillset 1");
+			}
+		});
+		add(new SkillPanel(au.unit.job.command), "Skillset 1");
+		
+		// Add second skillset button
+		if (au.unit.secondary != FFTACommand.NONE)
+		{
+			btnSkillset_2 = new JButton("" + au.unit.secondary);
+			actSkillsetPanel.add(btnSkillset_2);
+			btnSkillset_2.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0)
+				{
+					prevCard = "Skillset 2";
+					cl.show(thisRef, "Skillset 2");
+				}
+			});
+			add(new SkillPanel(au.unit.secondary), "Skillset 2");
+		}
+		
+		// Add Item skillset button, if the user is an alchemist
+		if (au.unit.job == FFTAJob.ALCHEMIST && au.unit.secondary != FFTACommand.ITEM)
+		{
+			btnItem = new JButton("Item");
+			actSkillsetPanel.add(btnItem);
+			btnItem.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0)
+				{
+					prevCard = "AlchItem";
+					cl.show(thisRef,  "AlchItem");
+				}
+			});
+			
+			add(new SkillPanel(FFTACommand.ITEM), "AlchItem");
+		}
+		actSkillsetPanel.revalidate();
 	}
 	
 	public void resetTurnVariables()
@@ -327,6 +373,11 @@ public class UnitActionPanel extends JPanel
 		cl.show(this, "Act");
 	}
 	
+	public void showPrevPanel()
+	{
+		cl.show(this, prevCard);
+	}
+	
 	public void undoMove()
 	{
 		sendMove = false;
@@ -354,9 +405,9 @@ public class UnitActionPanel extends JPanel
 			showActionsPanel();
 	}
 
-	public void showFightPanel()
+	public void showSkillUsePanel(FFTASkill sk)
 	{
-		gp.beginTargetingMode(FFTASkill.FIGHT);
+		gp.beginTargetingMode(sk);
 		cl.show(this, "Fight");
 	}
 	
@@ -364,7 +415,7 @@ public class UnitActionPanel extends JPanel
 	{
 		gp.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
 		gp.selectTile();
-		showActPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
+		showPrevPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
 	public void doAct(ArrayList<Integer> targets, FFTASkill sk, int x, int y)
@@ -386,7 +437,7 @@ public class UnitActionPanel extends JPanel
 			// Reselect the current unit to remind the active player that further action is required of them
 			gp.selectTile(gp.map.mapData[gp.units[gp.currentUnit].x][gp.units[gp.currentUnit].y]);
 			
-			System.out.println("doAct: target = " + targets.get(0));
+			// Send the action
 			ew.sendAction(targets, sk, x, y);
 		}
 		catch (IOException e) { e.printStackTrace(); }
@@ -425,5 +476,104 @@ public class UnitActionPanel extends JPanel
 		}
 		catch (IOException e) { e.printStackTrace(); }
 
+	}
+	
+	private class SkillPanel extends JPanel
+	{
+		public SkillPanel(FFTACommand skillset)
+		{
+			setLayout(new BorderLayout(0, 0));
+			
+			// Initialize 'Cancel' button 
+			JButton btnSkillCancel = new JButton("Cancel Skill");
+			btnSkillCancel.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent arg0) {
+					showActPanel();
+				}
+			});
+			add(btnSkillCancel, BorderLayout.SOUTH);
+			
+			// Initialize inner panel (for skill list and select button)
+			JPanel skillInnerPanel = new JPanel();add(skillInnerPanel, BorderLayout.CENTER);
+			skillInnerPanel.setLayout(new BorderLayout(0, 0));
+			add(skillInnerPanel, BorderLayout.CENTER);
+		
+			// Initialize scroll pane
+			JScrollPane skillScrollPane = new JScrollPane();
+			skillScrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+			
+			// Initialize skill list and set its cell renderer
+			JList<FFTASkill> skillList = new JList<FFTASkill>();
+			skillList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+			class SkillCellRenderer implements ListCellRenderer<FFTASkill>
+			{
+
+				@Override
+				public Component getListCellRendererComponent(JList<? extends FFTASkill> list, FFTASkill sk, int index, boolean isSelected, boolean hasCellFocus)
+				{
+					String label = sk.NAME;
+					
+					int mpCost = sk.COST;
+					if (au.unit.support == FFTASupport.HALF_MP)
+						mpCost /= 2;
+					else if (au.unit.support == FFTASupport.TURBO_MP)
+						mpCost *= 2;
+					
+					if (sk.COST > 0)
+						label += " (" + mpCost + " MP)";
+
+					if (!sk.IMPLEMENTED)
+						label = "<html><strike>" + label;
+					
+					JLabel result = new JLabel(label); 
+					result.setBorder(new EmptyBorder(1, 2, 1, 0));
+					result.setOpaque(true);
+					
+					result.setEnabled(FFTASkill.canUseSkill(sk, au));
+
+					
+					if (isSelected)
+					{
+			            result.setBackground(Color.BLUE);
+			            result.setForeground(Color.WHITE);
+			        }
+					else {
+			            result.setBackground(Color.WHITE);
+			            result.setForeground(Color.BLACK);
+			        }
+					
+					return result;
+				}
+
+			}
+			skillList.setCellRenderer(new SkillCellRenderer());
+			
+			// Create and populate list model and assign it to the list
+			FFTASkill[] skills = skillset.SKILLS;
+			DefaultListModel<FFTASkill> skListModel = new DefaultListModel<FFTASkill>();
+			for (FFTASkill sk : skills)
+				skListModel.addElement(sk);
+			skillList.setModel(skListModel);
+			
+			// Add the list to the scroll pane and the scroll pane to the panel
+			skillInnerPanel.add(skillScrollPane, BorderLayout.CENTER);
+			skillScrollPane.add(skillList);
+			skillScrollPane.setViewportView(skillList);
+			
+			// Initialize 'Select' button
+			JButton btnSelect = new JButton("Select");
+			btnSelect.setPreferredSize(new Dimension(75, 1));
+			btnSelect.addActionListener(new ActionListener() {
+				public void actionPerformed(ActionEvent e)
+				{
+					FFTASkill sk = skillList.getSelectedValue();
+					if (sk != null && FFTASkill.canUseSkill(sk, au))
+					{
+						showSkillUsePanel(sk);
+					}
+				}
+			});
+			skillInnerPanel.add(btnSelect, BorderLayout.EAST);
+		}
 	}
 }

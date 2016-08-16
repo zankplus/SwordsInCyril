@@ -21,7 +21,8 @@ class EquipCellRenderer implements ListCellRenderer<FFTAEquip>
 		if (isSelected) {
             result.setBackground(Color.BLUE);
             result.setForeground(Color.WHITE);
-        } else {
+        }
+		else {
             result.setBackground(Color.WHITE);
             result.setForeground(Color.BLACK);
         }

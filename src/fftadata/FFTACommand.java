@@ -40,8 +40,8 @@ public enum FFTACommand implements Serializable
 	 CORNER				("Corner",			new FFTASkill[]{FFTASkill.SHADOWBIND,	FFTASkill.LAST_BREATH,	FFTASkill.APHONIA,		FFTASkill.NIGHTMARE,	FFTASkill.AGUE,			FFTASkill.ROCKSEAL,		FFTASkill.OBLIVION,		FFTASkill.ULTIMA_MASHER}),
 	 SHARPSHOOT			("Sharpshoot",		new FFTASkill[]{FFTASkill.DOUBLESHOT,	FFTASkill.BESO_TOXICO,	FFTASkill.DEATH_SICKLE,	FFTASkill.CONCEAL,		FFTASkill.DOOM_ARCHER,	FFTASkill.AIM_ARMOR,	FFTASkill.AIM_WEAPON,	FFTASkill.AIM_WALLET});
 	
-	final String NAME;
-	final FFTASkill[] SKILLS;
+	public final String NAME;
+	public final FFTASkill[] SKILLS;
 	
 	FFTACommand(String name, FFTASkill[] skills)
 	{

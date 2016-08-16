@@ -168,19 +168,19 @@ public class FFTACalc
 		else // if (skill.dmgType == 2)
 			atk = (int) attacker.unit.mPow; 
 		
-		System.out.println(attacker.unit.name + "'s base WAtk: " + atk);
+		// System.out.println(attacker.unit.name + "'s base WAtk: " + atk);
 		
 		// 2. Attacker's Support check 
 		if (attacker.unit.support == FFTASupport.WATK_PLUS && dmgType == PHYSICAL)
 			atk = atk * 307 / 256;
 		else if (attacker.unit.support == FFTASupport.MPOW_PLUS && dmgType == MAGICAL)
 			atk = atk * 307 / 256;
-		else if (attacker.unit.support == FFTASupport.TURBO_MP && skill.cost > 0)
+		else if (attacker.unit.support == FFTASupport.TURBO_MP && skill.COST > 0)
 			atk = atk * 332 / 256;
 		else if (attacker.unit.support == FFTASupport.DOUBLEHAND && skill == FFTASkill.FIGHT)
 			atk = atk * 307 / 256;
 		
-		System.out.println("After support: " + atk);
+		// System.out.println("After support: " + atk);
 		
 		// 3. Attacker's status check
 		if (attacker.status[ActiveUnit.BERSERK] != 0 && dmgType == PHYSICAL)
@@ -209,8 +209,8 @@ public class FFTACalc
 				atk += attacker.unit.getMPowEquipBonus();
 		}
 		
-		System.out.println("WAtk Equip Bonus: " + attacker.unit.getWAtkEquipBonus());
-		System.out.println("After bonuses: " + atk);
+		// System.out.println("WAtk Equip Bonus: " + attacker.unit.getWAtkEquipBonus());
+		// System.out.println("After bonuses: " + atk);
 		
 		// 5. Atk cap
 		atk = Math.min(999, atk);
@@ -271,10 +271,17 @@ public class FFTACalc
 		
 		// 12. Get ability's Power stat
 		int power;
-		if (skill.power == -1)
+		if (skill.POWER == -1)
+		{
 			power = attacker.unit.getFightPower();
+			System.out.println("Power of EqAtk: " + power);
+		}
 		else
-			power = skill.power;
+		{
+			power = skill.POWER;
+			System.out.println("Power of " + skill.NAME + ": " + power);
+		}
+		
 			
 		// 13. Apply Power bonus
 		dmg = Math.max(dmg * power / 100, 1);
@@ -282,7 +289,7 @@ public class FFTACalc
 		// 14. Elemental check
 		// a. Get attack element
 		Element element;
-		if (skill.element == null)
+		if (skill.element == Element.AS_WEAPON)
 			element = attacker.unit.getWeapon().element;
 		else
 			element = skill.element;
@@ -307,7 +314,7 @@ public class FFTACalc
 					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][0])
 						resistance = Math.max(resistance, 5);
 					
-					System.out.println("res: " + resistance);
+					// System.out.println("res: " + resistance);
 				}
 			}
 		}
@@ -335,7 +342,7 @@ public class FFTACalc
 		if (attacker.unit.support == FFTASupport.GEOMANCY)
 			resistance = Math.max(resistance - 1, 1);
 		
-		System.out.println("resistance: " + resistance);
+		// System.out.println("resistance: " + resistance);
 		
 		// e. Mission item check
 		// -- Not currently implemented --

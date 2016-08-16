@@ -97,7 +97,7 @@ public ActiveUnit[] units;
 				// 2. Check for units with 1000 counter. 
 				for (int i = 0; i < units.length; i++)
 					if (units[i].counter >= 1000)
-						if (result == -1 || units[i].priority < units[result].priority)	// lowest priority wins
+						if ((result == -1 || units[i].priority < units[result].priority) && units[i].currHP > 0)	// lowest priority wins. also, don't let dead people take turns
 						{
 							result = i;							
 						}

@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.*;
 
+import javax.swing.JOptionPane;
+
 import fftadata.*;
 import zank.*;
 
@@ -111,6 +113,7 @@ public class ActiveGame
 	public void advanceTurn() throws InterruptedException
 	{
 		currentUnit = turnOrder.getNext();
+		units[currentUnit].currMP = Math.min(units[currentUnit].currMP + 5, (int) units[currentUnit].unit.maxMP);  
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null, currentUnit);
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
@@ -138,17 +141,30 @@ public class ActiveGame
 	
 	public void executeSkill(int[] targets, FFTASkill sk) throws InterruptedException
 	{
-		int dmg, hitRate, success;
-		int[] data = new int[3];
+		int dmg, hitRate;
+		ActiveUnit au = units[currentUnit];
 		
-		if (sk == FFTASkill.FIGHT)
+		int cost = sk.COST;
+		if (units[currentUnit].unit.support == FFTASupport.HALF_MP)
+			cost /= 2;
+		else if (units[currentUnit].unit.support == FFTASupport.TURBO_MP)
+			cost *= 2;
+		units[currentUnit].currMP -= cost;
+		if (units[currentUnit].currMP < 0)
+			System.out.println("!!!!!!!!!!!!!!!!!!!!! fucker " + units[currentUnit].unit.name + "'s got negative MP");
+		else
+			System.out.println(units[currentUnit].unit.name + " has " + units[currentUnit].currMP + " MP remaining");
+		
+		// if (sk == FFTASkill.FIGHT)
 			for (int i = 0; i < targets.length; i++)
 			{
-				ActiveUnit au = units[currentUnit];
+				int[] data = new int[4];
+				System.out.println("target: " + units[targets[i]].unit.name);
 				ActiveUnit target = units[targets[i]];
 				data[0] = targets[i];
 				
 				hitRate = FFTACalc.getATypeHitRate(au, target, sk);
+				data[3] = hitRate;
 				int rand = (int) (100 * Math.random());
 				
 				if (rand < hitRate)
@@ -173,10 +189,17 @@ public class ActiveGame
 					// Add damage to message array
 					data[2] = dmg;
 				}
+				else
+					data[1] = 0;	// Indicate miss
 				
 				// Send the message
+				// System.out.println("HIT: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
 				ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, data);
 				ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+				
+				int[] x = (int[]) (((ZankGameAction) zm.data).data);
+				System.out.println("TO QUEUE: " + x[0] + " " + x[1] + " " + x[2] + " " + x[3]);
+				
 				player1.messageQueue.put(zm);
 				player2.messageQueue.put(zm);
 
