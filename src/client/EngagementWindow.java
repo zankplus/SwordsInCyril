@@ -26,6 +26,8 @@ import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
+import fftadata.SkillEffect;
+import fftadata.SkillEffectResult;
 import zank.*;
 
 import javax.swing.JButton;
@@ -393,22 +395,25 @@ public class EngagementWindow extends JFrame {
 		System.out.println("Received " + sk.NAME);
 	}
 	
-	// HIT: apply the amount of damage specified and announce the results in chat
-	public void receiveHit(int[] data)
+	// HIT: apply the effects of skills specified and announce the results in chat
+	public void receiveHit(SkillEffectResult[] results)
 	{
-		System.out.println("Hit details: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
+		System.out.println("results: " + results.length);
+		for (int j = 0; j < results.length; j++)
+			if (results[j] == null)
+				System.out.println("null result");
+			else
+				System.out.println(results[j].effect);
 		
-		if (data[1] == 1)
+		// System.out.println("Hit details: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
+		SkillEffectResult result;
+		for (int i = 0; i < results.length; i++)
 		{
-			appendToChat("<br><em><span style=\"color:gray\">......<strong>" + gamePanel.units[data[0]].unit.name +
-					"</strong> takes <strong><span style=\"color:red\">" + data[2] + "</strong> damage! (" +
-					+ data[3] + "%)");
-			gamePanel.applyDamage(data[0], data[2]);
-		}
-		else
-			appendToChat("<br><em><span style=\"color:gray\">......The attack misses <strong>" +
-					gamePanel.units[data[0]].unit.name + "</strong>! (" + data[3] + "%)");
+			result = results[i];
 
+			String report = gamePanel.applyEffect(result);
+			appendToChat(report);
+		}
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel

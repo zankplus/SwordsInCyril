@@ -264,7 +264,7 @@ public class ActiveUser extends Thread
 												System.out.println("  " + ChatServer.gamelist.get(i));
 										}
 									}
-									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); }
+									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); e.printStackTrace(); }
 									ag.gameLock.unlock();
 								}
 							}
@@ -281,19 +281,12 @@ public class ActiveUser extends Thread
 						ZankMessage m = messageQueue.take();
 						System.out.println("OUT: " + nickname + "\t" + m);
 						
-						if (m.type == ZankMessageType.GAME && ((ZankGameAction) m.data).type == ZankGameActionType.HIT)
-						{
-							int[] x = (int[]) (((ZankGameAction) m.data).data);
-							System.out.println("SENT HIT: " + x[0] + " " + x[1] + " " + x[2] + " " + x[3]);							
-						}
-						
-						
 						out.writeObject(m);
 						out.flush();
 					}
 					sleep(50);
 				}
-				catch (IOException e) { done = true; System.out.print("\r\n  [Unexpected IOException.] "); }
+				catch (IOException e) { done = true; e.printStackTrace(); }
 			}
 
 			// Close/cleanup

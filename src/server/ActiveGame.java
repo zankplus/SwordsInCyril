@@ -102,6 +102,9 @@ public class ActiveGame
 		
 		for (int i = 0; i < units.length; i++)
 			System.out.println(i + " " + units[i].unit.name);
+		
+		// Offer unit list to skill effect handlers
+		SkillEffect.setUnitList(units);
 	}
 	
 	public ZankMessage getStartMessage()
@@ -141,80 +144,48 @@ public class ActiveGame
 	
 	public void executeSkill(int[] targets, FFTASkill sk) throws InterruptedException
 	{
-		int dmg, hitRate;
 		ActiveUnit au = units[currentUnit];
+		expendMP(sk);
 		
-		int cost = sk.COST;
+		// For each target, apply all effects sequentially
+		for (int i = 0; i < targets.length; i++)
+		{
+			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length];
+			
+			for (int j = 0; j < sk.EFFECTS.length; j++)
+			{
+				// Make new result
+				SkillEffectResult result = new SkillEffectResult(currentUnit, targets[i], sk, j);
+				
+				// Refer to old result (or null if none exists)
+				SkillEffectResult prevResult;
+				if (j > 0)
+					prevResult = results[j - 1];
+				else
+					prevResult = null;
+				
+				// Resolve the current skill effect
+				results[j] = sk.EFFECTS[j].handler.resolveEffect(result, prevResult);
+				System.out.println("effect " + j + ": " + results[j]);
+			}
+
+			// Send the message
+			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
+			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+			
+			player1.messageQueue.put(zm);
+			player2.messageQueue.put(zm);
+		}
+	}
+	
+	public void expendMP(FFTASkill sk)
+	{
+		int cost = sk.MP_COST;
 		if (units[currentUnit].unit.support == FFTASupport.HALF_MP)
 			cost /= 2;
 		else if (units[currentUnit].unit.support == FFTASupport.TURBO_MP)
 			cost *= 2;
 		units[currentUnit].currMP -= cost;
-		if (units[currentUnit].currMP < 0)
-			System.out.println("!!!!!!!!!!!!!!!!!!!!! fucker " + units[currentUnit].unit.name + "'s got negative MP");
-		else
-			System.out.println(units[currentUnit].unit.name + " has " + units[currentUnit].currMP + " MP remaining");
-		
-		// if (sk == FFTASkill.FIGHT)
-			for (int i = 0; i < targets.length; i++)
-			{
-				int[] data = new int[4];
-				System.out.println("target: " + units[targets[i]].unit.name);
-				ActiveUnit target = units[targets[i]];
-				data[0] = targets[i];
-				
-				hitRate = FFTACalc.getATypeHitRate(au, target, sk);
-				data[3] = hitRate;
-				int rand = (int) (100 * Math.random());
-				
-				if (rand < hitRate)
-				{
-					data[1] = 1;	// Indicates that the attack landed
-					
-					dmg = FFTACalc.getDamage(au, target, sk);
-					int variance = dmg / 10;
-					dmg += (int) (2 * variance * Math.random()) - variance;
-					
-					// Critical check
-					rand = (int) (100 * Math.random());
-					if (rand < 5)
-						dmg = dmg * 3 / 2;
-					
-					// Cap again
-					dmg = Math.min(Math.max(dmg, 0), 999);
-					
-					// Apply changes server-side
-					applyDamage(target, dmg);
-					
-					// Add damage to message array
-					data[2] = dmg;
-				}
-				else
-					data[1] = 0;	// Indicate miss
-				
-				// Send the message
-				// System.out.println("HIT: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
-				ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, data);
-				ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-				
-				int[] x = (int[]) (((ZankGameAction) zm.data).data);
-				System.out.println("TO QUEUE: " + x[0] + " " + x[1] + " " + x[2] + " " + x[3]);
-				
-				player1.messageQueue.put(zm);
-				player2.messageQueue.put(zm);
-
-			}
-	}
-	
-	public void applyDamage(ActiveUnit au, int dmg)
-	{
-		au.currHP -= dmg;
-		if (au.currHP <= 0)
-		{
-			au.currHP = 0;
-			au.counter = 0;
-			au.reserve = 0;
-		}
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost

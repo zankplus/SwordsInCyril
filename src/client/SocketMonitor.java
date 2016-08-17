@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import javax.swing.SwingWorker;
 
 import fftadata.ActiveUnit;
+import fftadata.SkillEffectResult;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
 import zank.ZankMessage;
@@ -163,7 +164,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							else if (action.type.equals(ZankGameActionType.HIT))
 							{
 								System.out.println("Received HIT: " + action);
-								ew.receiveHit((int[]) action.data);
+								ew.receiveHit((SkillEffectResult[]) action.data);
 							}
 								
 							// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn

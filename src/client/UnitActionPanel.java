@@ -513,13 +513,13 @@ public class UnitActionPanel extends JPanel
 				{
 					String label = sk.NAME;
 					
-					int mpCost = sk.COST;
+					int mpCost = sk.MP_COST;
 					if (au.unit.support == FFTASupport.HALF_MP)
 						mpCost /= 2;
 					else if (au.unit.support == FFTASupport.TURBO_MP)
 						mpCost *= 2;
 					
-					if (sk.COST > 0)
+					if (sk.MP_COST > 0)
 						label += " (" + mpCost + " MP)";
 
 					if (!sk.IMPLEMENTED)

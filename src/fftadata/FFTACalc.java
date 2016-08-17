@@ -160,10 +160,9 @@ public class FFTACalc
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
 		int atk = 0;
-		int dmgType = skill.dmgType;
 		
 		// 1. Get base Attack power
-		if (dmgType == 1)
+		if (skill.IS_PHYSICAL)
 			atk = (int) attacker.unit.wAtk;
 		else // if (skill.dmgType == 2)
 			atk = (int) attacker.unit.mPow; 
@@ -171,11 +170,11 @@ public class FFTACalc
 		// System.out.println(attacker.unit.name + "'s base WAtk: " + atk);
 		
 		// 2. Attacker's Support check 
-		if (attacker.unit.support == FFTASupport.WATK_PLUS && dmgType == PHYSICAL)
+		if (attacker.unit.support == FFTASupport.WATK_PLUS && skill.IS_PHYSICAL)
 			atk = atk * 307 / 256;
-		else if (attacker.unit.support == FFTASupport.MPOW_PLUS && dmgType == MAGICAL)
+		else if (attacker.unit.support == FFTASupport.MPOW_PLUS && !skill.IS_PHYSICAL)
 			atk = atk * 307 / 256;
-		else if (attacker.unit.support == FFTASupport.TURBO_MP && skill.COST > 0)
+		else if (attacker.unit.support == FFTASupport.TURBO_MP && skill.MP_COST > 0)
 			atk = atk * 332 / 256;
 		else if (attacker.unit.support == FFTASupport.DOUBLEHAND && skill == FFTASkill.FIGHT)
 			atk = atk * 307 / 256;
@@ -183,19 +182,19 @@ public class FFTACalc
 		// System.out.println("After support: " + atk);
 		
 		// 3. Attacker's status check
-		if (attacker.status[ActiveUnit.BERSERK] != 0 && dmgType == PHYSICAL)
+		if (attacker.status[ActiveUnit.BERSERK] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 307 / 256;
 		if (attacker.status[ActiveUnit.FROG] != 0)
 			atk = atk * 25 / 256;
-		if (attacker.status[ActiveUnit.BOOST] != 0 && dmgType == PHYSICAL)
+		if (attacker.status[ActiveUnit.BOOST] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 384 / 256;
-		if (attacker.status[ActiveUnit.WATK_UP] != 0 && dmgType == PHYSICAL)
+		if (attacker.status[ActiveUnit.WATK_UP] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 281 / 256;
-		if (attacker.status[ActiveUnit.WATK_DOWN] != 0 && dmgType == PHYSICAL)
+		if (attacker.status[ActiveUnit.WATK_DOWN] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 230 / 256;
-		if (attacker.status[ActiveUnit.MPOW_UP] != 0 && dmgType == MAGICAL)
+		if (attacker.status[ActiveUnit.MPOW_UP] != 0 && !skill.IS_PHYSICAL)
 			atk = atk * 281 / 256;
-		if (attacker.status[ActiveUnit.MPOW_DOWN] != 0 && dmgType == MAGICAL)
+		if (attacker.status[ActiveUnit.MPOW_DOWN] != 0 && !skill.IS_PHYSICAL)
 			atk = atk * 230 / 256;
 		
 		
@@ -203,9 +202,9 @@ public class FFTACalc
 		// 4. Attacker's equipment check
 		if (attacker.status[ActiveUnit.FROG] == 0)
 		{
-			if (dmgType == PHYSICAL)
+			if (skill.IS_PHYSICAL)
 				atk += attacker.unit.getWAtkEquipBonus();
-			else if (dmgType == MAGICAL)
+			else if (!skill.IS_PHYSICAL)
 				atk += attacker.unit.getMPowEquipBonus();
 		}
 		
@@ -217,20 +216,20 @@ public class FFTACalc
 
 		// 6. Get base Defense power
 		int def;
-		if (dmgType == PHYSICAL)
+		if (skill.IS_PHYSICAL)
 			def = (int) defender.unit.wDef;
 		else
 			def = (int) defender.unit.mRes;
 		
 		// 7. Target's Support check
-		if (defender.unit.support == FFTASupport.WDEF_PLUS && dmgType == PHYSICAL)
+		if (defender.unit.support == FFTASupport.WDEF_PLUS && skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
 		// 8. Target's status check
-		if (defender.status[ActiveUnit.SHELL] != 0 && dmgType == MAGICAL)
+		if (defender.status[ActiveUnit.SHELL] != 0 && !skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[ActiveUnit.PROTECT] != 0 && dmgType == PHYSICAL)
+		if (defender.status[ActiveUnit.PROTECT] != 0 && skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
 		if (defender.status[ActiveUnit.PETRIFY] != 0)
@@ -242,24 +241,24 @@ public class FFTACalc
 		if (defender.status[ActiveUnit.DEFENSE] != 0)
 			def = def * 358 / 256;
 		
-		if (defender.status[ActiveUnit.MRES_UP] != 0 && dmgType == MAGICAL)
+		if (defender.status[ActiveUnit.MRES_UP] != 0 && !skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[ActiveUnit.MRES_DOWN] != 0 && dmgType == MAGICAL)
+		if (defender.status[ActiveUnit.MRES_DOWN] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
-		if (defender.status[ActiveUnit.WDEF_UP] != 0 && dmgType == PHYSICAL)
+		if (defender.status[ActiveUnit.WDEF_UP] != 0 && !skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[ActiveUnit.WDEF_DOWN] != 0 && dmgType == PHYSICAL)
+		if (defender.status[ActiveUnit.WDEF_DOWN] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
 		// 9. Target's equipment check
 		if (defender.status[ActiveUnit.FROG] == 0)	
 		{
-			if (dmgType == PHYSICAL)
+			if (skill.IS_PHYSICAL)
 				def += defender.unit.getWDefEquipBonus();
-			else if (dmgType == MAGICAL)
+			else if (!skill.IS_PHYSICAL)
 				def += defender.unit.getMResEquipBonus();
 		}
 		
@@ -289,10 +288,10 @@ public class FFTACalc
 		// 14. Elemental check
 		// a. Get attack element
 		Element element;
-		if (skill.element == Element.AS_WEAPON)
+		if (skill.ELEMENT == Element.AS_WEAPON)
 			element = attacker.unit.getWeapon().element;
 		else
-			element = skill.element;
+			element = skill.ELEMENT;
 		
 		// b. Retrieve target's resistance
 		EquipSet equips = defender.unit.equips;

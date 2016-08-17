@@ -35,6 +35,8 @@ import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
 import fftadata.FFTASupport;
 import fftadata.FFTAUnit;
+import fftadata.SkillEffect;
+import fftadata.SkillEffectResult;
 import fftadata.Targeting;
 
 class MapPanelTest extends JFrame {
@@ -153,6 +155,8 @@ class GamePanel extends JPanel
 			mapPanel.addUnit(au);
 			mapPanel.mpUnits.add(au);
 		}
+		
+		SkillEffect.setUnitList(units);
 		
 		mapPanel.beginGame();
 	}
@@ -318,7 +322,7 @@ class GamePanel extends JPanel
 		
 		// Obtain the skill's targeting type
 		Targeting targ = sk.TARGETING;
-		int range = sk.RANGE, radius = sk.RADIUS, vertical = sk.VERTICAL;
+		int range = sk.H_RANGE, radius = sk.H_RADIUS, vertical = sk.V_RADIUS;
 		
 		// If the skill inherits its targeting type from the weapon, replace it with that
 		// weapon's targeting type
@@ -388,7 +392,7 @@ class GamePanel extends JPanel
 	
 	public void expendMP(FFTASkill sk)
 	{
-		int cost = sk.COST;
+		int cost = sk.MP_COST;
 		if (units[currentUnit].unit.support == FFTASupport.HALF_MP)
 			cost /= 2;
 		else if (units[currentUnit].unit.support == FFTASupport.TURBO_MP)
@@ -399,6 +403,22 @@ class GamePanel extends JPanel
 		
 		previews[currentUnit].updateStats();
 		
+	}
+	
+	public String applyEffect(SkillEffectResult result)
+	{
+		String report;
+		// Apply skill effect to target, store result string in report
+		report = result.effect.handler.applyEffect(result);
+		
+		// Update target sprite to reflect any changes in HP
+		mapPanel.updateSprite(units[result.target]);
+		
+		// Update preview panels to reflect any stat changes
+		previews[result.target].updateStats();
+		
+		// Return report to engagement window so it can print results in chat
+		return report;
 	}
 	
 	public void applyDamage(int targ, int dmg)
@@ -740,7 +760,7 @@ class MapPanel extends JPanel
 	{
 		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
 		Targeting targ = sk.TARGETING;
-		int range = sk.RANGE;
+		int range = sk.H_RANGE;
 		
 		hlTiles.clear();
 		
@@ -767,7 +787,7 @@ class MapPanel extends JPanel
 				{
 					int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
 					System.out.println(x + ", " + y + "(" + dist + ")");
-					if (map.mapData[x][y] != null && dist <= range && (dist > 0 || !sk.NOTSELF))
+					if (map.mapData[x][y] != null && dist <= range && (dist > 0 || sk.SELF_TARGET))
 					{
 						ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 						hlTiles.add(fgo);
