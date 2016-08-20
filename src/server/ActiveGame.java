@@ -23,8 +23,7 @@ public class ActiveGame
 	boolean finishedPrep1, finishedPrep2;
 	
 	TurnOrder turnOrder;
-	ActiveUnit[] units;
-	public int currentUnit;
+	GameState state;
 	Lock gameLock;
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2)
@@ -98,13 +97,7 @@ public class ActiveGame
 	public void initializeTurnOrder()
 	{
 		turnOrder = new TurnOrder(p1Units, p2Units);
-		units = turnOrder.units;
-		
-		for (int i = 0; i < units.length; i++)
-			System.out.println(i + " " + units[i].unit.name);
-		
-		// Offer unit list to skill effect handlers
-		SkillEffect.setUnitList(units);
+		state = new GameState(turnOrder.units);
 	}
 	
 	public ZankMessage getStartMessage()
@@ -115,9 +108,9 @@ public class ActiveGame
 	
 	public void advanceTurn() throws InterruptedException
 	{
-		currentUnit = turnOrder.getNext();
-		units[currentUnit].currMP = Math.min(units[currentUnit].currMP + 5, (int) units[currentUnit].unit.maxMP);  
-		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null, currentUnit);
+		state.currentUnit = turnOrder.getNext();
+		currentUnit().currMP = Math.min(currentUnit().currMP + 5, (int) currentUnit().unit.maxMP);  
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null, state.currentUnit);
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
@@ -126,7 +119,7 @@ public class ActiveGame
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
 	public void moveUnit(int unit, int x, int y, int z)
 	{
-		ActiveUnit au = units[unit];
+		ActiveUnit au = state.units[unit];
 		au.counter -= 300;
 		au.x = x;
 		au.y = y;
@@ -135,7 +128,7 @@ public class ActiveGame
 	
 	public void waitUnit(int unit, int dir)
 	{
-		ActiveUnit au = units[unit];
+		ActiveUnit au = state.units[unit];
 		au.counter -= 500;
 //		System.out.println(au.unit.name + "-->" + au.counter);
 		au.reserve = 0;
@@ -144,18 +137,16 @@ public class ActiveGame
 	
 	public void executeSkill(int[] targets, FFTASkill sk) throws InterruptedException
 	{
-		ActiveUnit au = units[currentUnit];
-		expendMP(sk);
+		state.expendMP(sk);
 		
 		// For each target, apply all effects sequentially
 		for (int i = 0; i < targets.length; i++)
 		{
 			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length];
-			
 			for (int j = 0; j < sk.EFFECTS.length; j++)
 			{
 				// Make new result
-				SkillEffectResult result = new SkillEffectResult(currentUnit, targets[i], sk, j);
+				SkillEffectResult result = new SkillEffectResult(state.currentUnit, targets[i], sk, j);
 				
 				// Refer to old result (or null if none exists)
 				SkillEffectResult prevResult;
@@ -164,9 +155,11 @@ public class ActiveGame
 				else
 					prevResult = null;
 				
-				// Resolve the current skill effect
+				// Determine the results of the current effect
 				results[j] = sk.EFFECTS[j].handler.resolveEffect(result, prevResult);
-				System.out.println("effect " + j + ": " + results[j]);
+				
+				// Apply those results
+				sk.EFFECTS[j].handler.applyEffect(results[j]);
 			}
 
 			// Send the message
@@ -176,16 +169,6 @@ public class ActiveGame
 			player1.messageQueue.put(zm);
 			player2.messageQueue.put(zm);
 		}
-	}
-	
-	public void expendMP(FFTASkill sk)
-	{
-		int cost = sk.MP_COST;
-		if (units[currentUnit].unit.support == FFTASupport.HALF_MP)
-			cost /= 2;
-		else if (units[currentUnit].unit.support == FFTASupport.TURBO_MP)
-			cost *= 2;
-		units[currentUnit].currMP -= cost;
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost
@@ -219,7 +202,7 @@ public class ActiveGame
 
 	public int intermediateFacing(int unitNumber, int x2, int y2)
 	{
-		ActiveUnit unit = units[unitNumber];
+		ActiveUnit unit = state.units[unitNumber];
 		int x1 = unit.x, y1 = unit.y;
 		
 		int d_x = x2 - x1, d_y = y2 - y1; 
@@ -249,5 +232,10 @@ public class ActiveGame
 			for (ActiveUser user : userlist)
 					user.messageQueue.put(msg);
 		}
+	}
+	
+	public ActiveUnit currentUnit()
+	{
+		return state.units[state.currentUnit];
 	}
 }

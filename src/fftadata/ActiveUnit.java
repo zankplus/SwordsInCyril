@@ -82,7 +82,7 @@ public class ActiveUnit implements Serializable
 		else if (team == 2)
 			url.append("_enemy");
 		
-		if (currHP > unit.maxHP / 2)
+		if (currHP > unit.maxHP / 4)
 			url.append("_stand");
 		else if (currHP > 0)
 			url.append("_kneel");
@@ -129,4 +129,27 @@ public class ActiveUnit implements Serializable
 		else
 			this.dir = SOUTHEAST;
 	}
+	
+	public void face(int dir)
+	{
+		this.dir = dir;
+	}
+	
+	public FFTASkill getFightSkill()
+	{
+		if (unit.getWeapon() == FFTAEquip.BLOOD_STRINGS || unit.getWeapon() == FFTAEquip.BLOOD_SWORD)
+			return FFTASkill.DRAIN_WEAPON;
+		
+		return FFTASkill.FIGHT;
+	}
+	
+//	public int getDir()
+//	{
+//		return dir;
+//	}
+//	
+//	public int getID()
+//	{
+//		return id;
+//	}
 }

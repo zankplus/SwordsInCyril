@@ -273,10 +273,10 @@ public class DamagePreviewPanel extends JPanel
 					targets.add(au3);
 					targets.add(au4);
 					
-					MapPanelTest frame = new MapPanelTest();
-					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
-					frame.pack();
-					frame.setVisible(true);
+//					MapPanelTest frame = new MapPanelTest();
+//					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
+//					frame.pack();
+//					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -293,8 +293,10 @@ public class DamagePreviewPanel extends JPanel
 		public TargetPanel(ActiveUnit target)
 		{
 			this.target = target;
+			
+			//TODO: replace this with a dedicated damage preview stats message
 			hit = FFTACalc.getATypeHitRate(au, target, sk);
-			dmg = FFTACalc.getDamage(au, target, sk);
+			dmg = FFTACalc.getDamage(au, target, sk, false, false, false, true);
 			
 			if (target.team == au.team)
 				setBackground(new Color(192, 192, 248));

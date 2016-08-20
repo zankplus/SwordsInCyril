@@ -4,14 +4,32 @@ import java.io.Serializable;
 
 public enum SkillEffect implements Serializable
 {
-	DAMAGE_1X(new SkillEffectHandler() { 		public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-		{ 	return Damage1X(result, prev);	}	public String applyEffect(SkillEffectResult result)
-		{	return applyDamage(result);		}	});
+	HEALING_1X										(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return Healing1X(result);			}		public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);		}		}),
+	
+	DAMAGE_1X										(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return Damage1X(result);			}		public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);			}		}),
+	
+	DAMAGE_1X_CAPPED								(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return Damage1XCapped(result);		}		public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);			}		}),
+	
+	FIGHT_DAMAGE									(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return FightDamage(result);			}		public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);			}		}),
+	
+	FIGHT_DAMAGE_CAPPED								(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return FightDamageCapped(result);	}		public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);			}		}),
+	
+	EFF1DEP_DRAIN									(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
+	{ 	return Eff1DepDrain(result, prev);	}		public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);		}		});
 	
 	
-	
-	
-	static ActiveUnit[] units;
+	static GameState state;
 	public final SkillEffectHandler handler;
 	
 	SkillEffect(SkillEffectHandler handler)
@@ -25,55 +43,36 @@ public enum SkillEffect implements Serializable
 		String applyEffect(SkillEffectResult result); // clientside
 	}
 	
-	public static void setUnitList(ActiveUnit[] unitList)
+	public static void setGameState(GameState gameState)
 	{
-		units = unitList;
+		state = gameState;
 	}
-	
-	public static void applyDamage(ActiveUnit au, int dmg)
+		
+	// Server-side effect handlers
+	public static SkillEffectResult GenericDamageEffect(SkillEffectResult result,
+			boolean canCrit, boolean capToTargetHP, boolean healing, boolean neverMiss)
 	{
-		au.currHP -= dmg;
-		if (au.currHP <= 0)
-		{
-			au.currHP = 0;
-			au.counter = 0;
-			au.reserve = 0;
-		}
-	}
-	
-	public static SkillEffectResult Damage1X(SkillEffectResult result, SkillEffectResult prev)
-	{
-		ActiveUnit user = units[result.user];
-		ActiveUnit target = units[result.target];
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
 		FFTASkill skill = result.skill;
 		
-		int hitRate, dmg;
-		
-		hitRate = FFTACalc.getATypeHitRate(user, target, skill);
+		int hitRate;
+		if (neverMiss)
+			hitRate = 100;
+		else
+			hitRate = FFTACalc.getATypeHitRate(user, target, skill);
 		result.hitChance = hitRate;
 		
 		int rand = (int) (100 * Math.random());
 		if (rand < hitRate)
 		{
-			result.success = true;
+			// Calc damage
+			int dmg = FFTACalc.getDamage(user, target, skill, healing, canCrit, capToTargetHP, false);
+			result.critical = FFTACalc.wasCritical;
 			
-			dmg = FFTACalc.getDamage(user, target, skill);
-			int variance = dmg / 10;
-			dmg += (int) (2 * variance * Math.random()) - variance;
-			
-			// Critical check
-			rand = (int) (100 * Math.random());
-			if (rand < 5)
-				dmg = dmg * 3 / 2;
-			
-			// Cap again
-			dmg = Math.min(Math.max(dmg, 0), 999);
-			
-			// Apply changes server-side
-			applyDamage(target, dmg);
-			
-			// Add damage to message array
+			// Save results
 			result.damage = dmg;
+			result.success = true;
 		}
 		else
 			result.success = false;
@@ -81,26 +80,83 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
+	public static SkillEffectResult Healing1X(SkillEffectResult result)
+	{
+		return GenericDamageEffect(result, false, false, true, true);
+	}
+	
+	public static SkillEffectResult FightDamage(SkillEffectResult result)
+	{
+		return GenericDamageEffect(result, true, false, false, false);
+	}
+	
+	public static SkillEffectResult FightDamageCapped(SkillEffectResult result)
+	{
+		return GenericDamageEffect(result, true, true, false, false);
+	}
+	
+	public static SkillEffectResult Damage1X(SkillEffectResult result)
+	{
+		return GenericDamageEffect(result, false, true, false, false);
+	}
+	
+	public static SkillEffectResult Damage1XCapped(SkillEffectResult result)
+	{
+		return GenericDamageEffect(result, false, true, false, false);
+	}
+	
+	public static SkillEffectResult Eff1DepDrain(SkillEffectResult result, SkillEffectResult prev)
+	{
+		result.target = result.user;
+		if (prev.success)
+		{
+			state.applyHealing(result.target, prev.damage);
+			result.damage = prev.damage;
+			result.success = true;
+		}
+		return result;
+	}
+	
+	// Client-side effect handlers
 	public static String applyDamage(SkillEffectResult result)
 	{
 		String report = "";
 		
-		ActiveUnit target = units[result.target];
+		if (result.damage < 0)
+		{
+			result.damage = -result.damage;
+			return applyHealing(result);
+		}
+		
+		ActiveUnit target = state.units[result.target];
 		if (result.success)
 		{
-			target.currHP -= result.damage;
-
-			if (target.currHP <= 0)
-				target.currHP = 0;
-
-			report = "<br><em><span style=\"color:gray\">......<strong>" + units[result.target].unit.name +
-					"</strong> takes <strong><span style=\"color:red\">" + result.damage + "</strong> damage! (" +
-					+ result.hitChance + "%)";
+			state.applyDamage(result.target, result.damage);
+			report = "<br><em><span style=\"color:gray\">......<strong>";
+			if (result.critical)
+				report += "<span style=\"color:red\">CRITICAL HIT!</span> ";  
+			
+			report += target.unit.name + "</strong> takes <strong><span style=\"color:red\">" + 
+					result.damage + "</strong> damage! (" + result.hitChance + "%)";
 		}
 		else
 			report = "<br><em><span style=\"color:gray\">......The attack misses <strong>" +
-					units[result.target].unit.name + "</strong>! (" + result.hitChance + "%)";
+					target.unit.name + "</strong>! (" + result.hitChance + "%)";
 				
+		return report;
+	}
+	
+	public static String applyHealing(SkillEffectResult result)
+	{
+		String report = "";
+		
+		ActiveUnit target = state.units[result.target];
+		if (result.success)
+		{
+			state.applyHealing(result.target, result.damage);
+			report = "<br><em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong> recovers <strong><span style=\"color:green\">" + result.damage + "</strong> HP!";
+		}
 		return report;
 	}
 }

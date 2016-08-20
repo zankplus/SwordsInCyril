@@ -27,7 +27,7 @@ public class ZankClient
 	
 	public ZankClient self = this;
 	
-	public EngagementWindow gameWindow = null;
+	public Engagement game = null;
 	public LoginWindow loginWindow;
 	public ChatWindow chatWindow;
 	public ClanBuilder clanBuilder;
@@ -79,9 +79,10 @@ public class ZankClient
 			playerNumber = 2;
 		}
 		
-		gameWindow = new EngagementWindow(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, in, out);
-		gameWindow.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
-		gameWindow.setVisible(true);	
+		
+		game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, in, out);
+		game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
+		game.window.setVisible(true);	
 	}
 	
 	public void launchClanBuilder()

@@ -236,10 +236,10 @@ public class UnitPreviewPanel extends JPanel
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MapPanelTest frame = new MapPanelTest();
-					frame.getContentPane().add(new UnitPreviewPanel());
-					frame.pack();
-					frame.setVisible(true);
+//					MapPanelTest frame = new MapPanelTest();
+//					frame.getContentPane().add(new UnitPreviewPanel());
+//					frame.pack();
+//					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
