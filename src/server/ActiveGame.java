@@ -156,7 +156,7 @@ public class ActiveGame
 					prevResult = null;
 				
 				// Determine the results of the current effect
-				results[j] = sk.EFFECTS[j].handler.resolveEffect(result, prevResult);
+				results[j] = sk.EFFECTS[j].handler.resolveEffect(result, prevResult, false);
 				
 				// Apply those results
 				sk.EFFECTS[j].handler.applyEffect(results[j]);

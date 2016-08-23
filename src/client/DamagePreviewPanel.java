@@ -12,6 +12,8 @@ import fftadata.FFTACalc;
 import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
 import fftadata.FFTAUnit;
+import fftadata.SkillEffectResult;
+
 import java.awt.Dimension;
 
 import javax.swing.border.BevelBorder;
@@ -287,16 +289,19 @@ public class DamagePreviewPanel extends JPanel
 	class TargetPanel extends JPanel
 	{
 		ActiveUnit target;
-		int dmg, hit;
+		String dmg, hit;
 		BufferedImage sprite;
 		
 		public TargetPanel(ActiveUnit target)
 		{
 			this.target = target;
 			
-			//TODO: replace this with a dedicated damage preview stats message
-			hit = FFTACalc.getATypeHitRate(au, target, sk);
-			dmg = FFTACalc.getDamage(au, target, sk, false, false, false, true);
+			SkillEffectResult result = sk.EFFECTS[0].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			hit = String.valueOf(result.hitChance);
+			if (result.damage < 0)
+				dmg = "+ " + Math.abs(result.damage);
+			else
+				dmg = String.valueOf(result.damage);
 			
 			if (target.team == au.team)
 				setBackground(new Color(192, 192, 248));

@@ -46,6 +46,8 @@ public class GameState
 			au.counter = 0;
 			au.reserve = 0;
 		}
+		
+		System.out.println(au.unit.name + ": " + au.currHP + " HP");
 	}
 	
 	public void applyHealing(int targ, int hp)
@@ -54,6 +56,8 @@ public class GameState
 		au.currHP += hp;
 		if (au.currHP > au.unit.maxHP)
 			au.currHP = (int) au.unit.maxHP;
+		
+		System.out.println(au.unit.name + ": " + au.currHP + " HP");
 	}
 	
 	// Because this function is only called by the click handler when selecting a space it has
@@ -84,12 +88,16 @@ public class GameState
 		if (targ == Targeting.FREE_SELECT)
 			for (int i = 0; i < units.length; i++)
 			{
-				int dist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
-				
-				if (dist == 0)
-					result.add(0, i);
-				else if (dist <= radius)
-					result.add(i);
+				if ((units[i].currHP > 0 && sk.TARGET_LIVE) ||
+					(units[i].currHP == 0 && sk.TARGET_DEAD))
+				{
+					int dist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
+					
+					if (dist == 0)
+						result.add(0, i);
+					else if (dist <= radius)
+						result.add(i);
+				}
 			}
 
 		else if (targ == Targeting.DIRECTIONAL)
@@ -102,20 +110,24 @@ public class GameState
 			
 			for (int i = 0; i < units.length; i++)
 			{
-				int dx2 = units[i].x - user.x, dy2 = units[i].y - user.y;
-				if (dx2 != 0) dx2 = dx2 / Math.abs(dx2);
-				if (dy2 != 0) dy2 = dy2 / Math.abs(dy2);
-				
-				
-				if ((dx == dx2) && (dy == dy2) && (dx2 == 0 ^ dy2 == 0))	// aligned in one dimension or the other
+				if ((units[i].currHP > 0 && sk.TARGET_LIVE) ||
+						(units[i].currHP == 0 && sk.TARGET_DEAD))
 				{
-					int sdist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
-					if (sdist == 0)
-						result.add(0, i);
-					else if (sdist <= range)
+					int dx2 = units[i].x - user.x, dy2 = units[i].y - user.y;
+					if (dx2 != 0) dx2 = dx2 / Math.abs(dx2);
+					if (dy2 != 0) dy2 = dy2 / Math.abs(dy2);
+					
+					
+					if ((dx == dx2) && (dy == dy2) && (dx2 == 0 ^ dy2 == 0))	// aligned in one dimension or the other
 					{
-						System.out.println("Targeting " + units[i].unit.name + " - " + sdist);
-						result.add(i);
+						int sdist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
+						if (sdist == 0)
+							result.add(0, i);
+						else if (sdist <= range)
+						{
+							System.out.println("Targeting " + units[i].unit.name + " - " + sdist);
+							result.add(i);
+						}
 					}
 				}
 			}

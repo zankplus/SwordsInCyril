@@ -51,7 +51,8 @@ public class FFTACalc
 			return 4;
 	}
 	
-	public static int getATypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill)
+	public static int getATypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
+									  double hitFactor)
 	{
 		int hitRate = 0;
 		
@@ -101,6 +102,16 @@ public class FFTACalc
 			
 			// 8. Work out Hit rate
 			hitRate = 100 - evade;
+			
+			// 9. Apply hit factor
+			hitRate *= hitFactor;
+			
+			// 10. Thief Armlets check
+			
+			// 11. Cap again
+			hitRate = Math.max(hitRate, 0);
+			hitRate = Math.min(hitRate, 100);
+			
 		}
 		// 9. Unknown sanity checks?
 		// ? ? ? ? ? ? ? ? ? ? ? ? ?
@@ -160,7 +171,8 @@ public class FFTACalc
 	}
 	
 	public static int getDamage(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
-			boolean healing, boolean canCrit, boolean capToTargetHP, boolean preview)
+			double damageFactor, boolean healing, boolean canCrit, boolean capToTargetHP,
+			boolean preview)
 	{
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
@@ -183,8 +195,6 @@ public class FFTACalc
 			atk = atk * 332 / 256;
 		else if (attacker.unit.support == FFTASupport.DOUBLEHAND && skill == FFTASkill.FIGHT)
 			atk = atk * 307 / 256;
-		
-		// System.out.println("After support: " + atk);
 		
 		// 3. Attacker's status check
 		if (attacker.status[ActiveUnit.BERSERK] != 0 && skill.IS_PHYSICAL)
@@ -397,13 +407,20 @@ public class FFTACalc
 			if (skill == FFTASkill.FIGHT && weapon.effects[i] == ItemEffect.HEAL_HP)
 				dmg = -dmg;
 		
-		// 17. Cap damage
+		// 17. Damage factor
+		dmg = (int) (dmg * damageFactor);
+		
+		// 18. Cap damage
 		dmg = Math.max(-999, dmg);
 		dmg = Math.min(999, dmg);
 		
-		// 17b. Cap to target's HP, if applicable
-				if (capToTargetHP)
-					dmg = Math.min(dmg, defender.currHP);
+		// 18b. Cap to target's HP, if applicable
+		if (capToTargetHP)
+			dmg = Math.min(dmg, defender.currHP);
+		
+		// 19. If healing, damage is negative
+		if (healing)
+			dmg = -dmg;
 		
 		return dmg;
 	}

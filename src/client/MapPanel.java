@@ -122,8 +122,16 @@ public class MapPanel extends JPanel
 							ArrayList<Integer> targetIDs = game.getTargets(selectedTile.x, selectedTile.y,
 									window.selectedSkill, game.currentUnit());
 							ArrayList<ActiveUnit> targets = new ArrayList<ActiveUnit>();
+							
+							
+							ActiveUnit au;
 							for (Integer j : targetIDs)
+							{
+								au = game.getUnits()[j];
+								if ((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
+									 au.currHP == 0 && window.selectedSkill.TARGET_DEAD)
 								targets.add(game.getUnits()[j]);
+							}
 							
 							if (targets.size() > 0)
 							{
@@ -493,7 +501,7 @@ class ZankGameMap
 		return reachableTiles;
 	}
 	
-	public void getReachableTiles(ArrayList<ZankMapTile> reachableTiles, ZankMapTile curr, int move, ActiveUnit au)
+	private void getReachableTiles(ArrayList<ZankMapTile> reachableTiles, ZankMapTile curr, int move, ActiveUnit au)
 	{
 		
 		FFTAEquip shoes = au.unit.equips.getShoes();
@@ -535,7 +543,8 @@ class ZankGameMap
 		try
 		{
 			return (tileExists(x, y) &&
-					(mapData[x][y].unit == null || mapData[x][y].unit.team == au.team || au.unit.equips.getShoes() == FFTAEquip.FAIRY_SHOES));
+					(mapData[x][y].unit == null || mapData[x][y].unit.team == au.team || 
+					mapData[x][y].unit.currHP == 0 || au.unit.equips.getShoes() == FFTAEquip.FAIRY_SHOES));
 		}
 		catch(NullPointerException e) { System.err.println(x + ", " + y + " | " + mapData[x][y]); return false;}
 		

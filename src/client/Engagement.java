@@ -172,7 +172,7 @@ public class Engagement
 	// CHAT: append the message to the engagement chat and move the caret to the bottom
 	public void receiveChat(String user, String msg)
 	{
-		window.appendToChat("<br><b>" + user + "</b>: " + msg);
+		window.appendToChat("<b>" + user + "</b>: " + msg);
 		System.out.println("chat ew: " + window);
 	}
 	
@@ -226,7 +226,7 @@ public class Engagement
 		window.updateUnitPreview(au.id);
 		
 		window.selectTile(map.mapData[au.x][au.y]);
-		window.appendToChat("<br><em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
+		window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 	}
 	
 	// MOVE: move the indicated unit using MapPanel's moveUnit method
@@ -244,10 +244,10 @@ public class Engagement
 		
 		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
 		if (sk == FFTASkill.FIGHT)
-			window.appendToChat("<br><em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
+			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
 				"</strong> attacks <strong>" + state.units[data[0]].unit.name + "</strong>!");
 		else
-			window.appendToChat("<br><em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
+			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
 					"</strong> uses " + sk.NAME + " on <strong>" + state.units[data[0]].unit.name + "</strong>!");
 		
 		state.expendMP(sk);
@@ -302,7 +302,7 @@ public class Engagement
 		{
 			gameOver = true;
 			window.setTitle(window.getTitle() + " - tie game!");
-			window.appendToChat("<br><em><strong>The engagement has ended in a <span style=" +
+			window.appendToChat("<em><strong>The engagement has ended in a <span style=" +
 					"\"text-decoration: underline; color:yellow\">tie</span></strong>");
 		}
 		
@@ -311,7 +311,7 @@ public class Engagement
 		{
 			gameOver = true;
 			window.setTitle(window.getTitle() + " - " + p2name + " wins!");
-			window.appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:blue\">" +
+			window.appendToChat("<em><strong><span style=\"text-decoration: underline; color:blue\">" +
 					p2name + "</span> has won the engagement!</strong>");
 		}
 		
@@ -320,7 +320,7 @@ public class Engagement
 		{
 			gameOver = true;
 			window.setTitle(window.getTitle() + " - " + p1name + " wins!"); 
-			window.appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:red\">" +
+			window.appendToChat("<em><strong><span style=\"text-decoration: underline; color:red\">" +
 					p1name + "</span> has won the engagement!</strong>");
 		}
 		
@@ -334,7 +334,7 @@ public class Engagement
 	
 	public void receiveExit(String username)
 	{
-		window.appendToChat("<br><em><strong>" + username + " has left the room.</strong>");
+		window.appendToChat("<em><strong>" + username + " has left the room.</strong>");
 	}
 	
 	public void beginGame()

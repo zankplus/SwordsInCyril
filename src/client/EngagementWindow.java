@@ -377,7 +377,7 @@ public class EngagementWindow extends JFrame
 	{
 		try {
 			HTMLDocument doc = (HTMLDocument) chat.getDocument();
-			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
+			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s + "<br>");
 			chat.setCaretPosition(doc.getLength());
 		} catch (Exception e) {
 			e.printStackTrace();
