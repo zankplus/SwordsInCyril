@@ -296,7 +296,15 @@ public class DamagePreviewPanel extends JPanel
 		{
 			this.target = target;
 			
-			SkillEffectResult result = sk.EFFECTS[0].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			int whichEffect;
+			if (sk == FFTASkill.RAISE && target.currHP == 0)
+				whichEffect = 1;
+			else
+				whichEffect = 0;
+			
+			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			
+			
 			hit = String.valueOf(result.hitChance);
 			if (result.damage < 0)
 				dmg = "+ " + Math.abs(result.damage);

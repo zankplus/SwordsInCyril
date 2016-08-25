@@ -171,8 +171,8 @@ public class FFTACalc
 	}
 	
 	public static int getDamage(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
-			double damageFactor, boolean healing, boolean canCrit, boolean capToTargetHP,
-			boolean preview)
+			double damageFactor, boolean healing, boolean canCrit, boolean capToHP,
+			boolean capToMP, boolean preview)
 	{
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
@@ -375,8 +375,6 @@ public class FFTACalc
 				dmg = -dmg;
 		}
 		
-		
-		
 		// 15. Random steps
 		wasCritical = false;
 		if (!preview)
@@ -415,8 +413,12 @@ public class FFTACalc
 		dmg = Math.min(999, dmg);
 		
 		// 18b. Cap to target's HP, if applicable
-		if (capToTargetHP)
+		if (capToHP)
 			dmg = Math.min(dmg, defender.currHP);
+		
+		// 18c. Cap to target's MP, if applicable
+		else if (capToMP)
+			dmg = Math.min(dmg, defender.currMP);
 		
 		// 19. If healing, damage is negative
 		if (healing)

@@ -31,8 +31,6 @@ public class GameState
 	
 	public String applyEffect(SkillEffectResult result)
 	{
-		// Apply skill effect to target; return report to engagement window so 
-		// it can print results in chat
 		return result.effect.handler.applyEffect(result);
 	}
 	
@@ -58,6 +56,26 @@ public class GameState
 			au.currHP = (int) au.unit.maxHP;
 		
 		System.out.println(au.unit.name + ": " + au.currHP + " HP");
+	}
+	
+	public void applyMPDamage(int targ, int dmg)
+	{
+		ActiveUnit au = units[targ];
+		au.currMP -= dmg;
+		if (au.currMP <= 0)
+			au.currMP = 0;
+		
+		System.out.println(au.unit.name + ": " + au.currMP + " MP");
+	}
+	
+	public void applyMPHealing(int targ, int mp)
+	{
+		ActiveUnit au = units[targ];
+		au.currMP += mp;
+		if (au.currMP > au.unit.maxMP)
+			au.currMP = (int) au.unit.maxMP;
+		
+		System.out.println(au.unit.name + ": " + au.currMP + " MP");
 	}
 	
 	// Because this function is only called by the click handler when selecting a space it has
