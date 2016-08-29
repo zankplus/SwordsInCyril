@@ -84,7 +84,7 @@ public ActiveUnit[] units;
 		
 		// 1. Check for Quick status
 		for (int i = 0; i < units.length; i++)
-			if (units[i].status[ActiveUnit.QUICK] > 0)
+			if (units[i].status[StatusEffect.QUICK.ordinal()] > 0)
 			{
 				result = i;
 				i = units.length;

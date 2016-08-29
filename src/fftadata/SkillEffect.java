@@ -67,6 +67,14 @@ public enum SkillEffect implements Serializable
 	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, true, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyMPDamage(result);															}	}),
 	
+	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.POISON, preview, false);				}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.POISON);										}	}),
+	
+	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.POISON);										}	}),
+	
 	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyHealing(result);															}	});
@@ -124,10 +132,46 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
+	// Server-side effect handlers
+	public static SkillEffectResult genericStatusEffect(SkillEffectResult result,
+			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
+	{
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
+		FFTASkill skill = result.skill;
+		
+		int hitRate;
+		if (neverMiss)
+			hitRate = 100;
+		else
+			hitRate = FFTACalc.getSTypeHitRate(user, target, sEff, hitFactor);
+		result.hitChance = hitRate;
+		
+		int rand = (int) (100 * Math.random());
+		if (rand < hitRate || preview)
+		{
+			result.success = true;
+		}
+		else
+			result.success = false;
+		
+		return result;
+	}
+	
 	public static SkillEffectResult guaranteedSuccess(SkillEffectResult result)
 	{
 		result.hitChance = 100;
 		result.success = true;
+		return result;
+	}
+	
+	public static SkillEffectResult eff1DepStatusEffect(SkillEffectResult result, SkillEffectResult prev,
+			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
+	{
+		result.dependent = true;
+		if (prev.success)
+			result = genericStatusEffect(result, hitFactor, sEff, preview, neverMiss);
+			
 		return result;
 	}
 	
@@ -242,6 +286,24 @@ public enum SkillEffect implements Serializable
 			}
 			state.applyHealing(result.target, healing);
 		}
+		return report;
+	}
+	
+	public static String applyStatus(SkillEffectResult result, StatusEffect sEff)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					 "</strong> " + sEff.REPORT;
+		}
+		else if (!result.dependent)
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+			 "</strong> was unaffected.";
+		
 		return report;
 	}
 	

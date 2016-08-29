@@ -208,25 +208,37 @@ public class Engagement
 	}
 	
 	// NEXT: initiate the given character's turn
-	public void receiveNext(int index)
+	public void receiveNext(int[] data)
 	{
-		state.currentUnit = index;
-		
-		// Decide which panel to show
-		if (currentUnit().team == playerNumber)	// Show the action panel if it's your turn
-		{	
-			window.startPlayerTurn();
-		}
-		else
-			window.startRivalTurn();	// Show the blank panel if it's not
+		state.currentUnit = data[0];
 		
 		ActiveUnit au = currentUnit();
+		window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 		
-		state.startOfTurnEffects();
-		window.updateUnitPreview(au.id);
+		int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
+		if (poisonDamage > 0)
+		{
+			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
+					"</strong> takes " + poisonDamage + " damage from poison!");
+			
+			window.updateSprite(getUnits()[au.id]);
+			window.updateUnitPreview(au.id);
+			if (au.currHP == 0)
+				window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
+		}
+		
 		
 		window.selectTile(map.mapData[au.x][au.y]);
-		window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
+		
+		if (au.currHP > 0)
+		{
+			// Decide which panel to show
+			if (currentUnit().team == playerNumber)	// Show the action panel if it's your turn
+				window.startPlayerTurn();
+			else
+				window.startRivalTurn();			// Show the blank panel if it's not
+		}
+		
 	}
 	
 	// MOVE: move the indicated unit using MapPanel's moveUnit method
@@ -271,6 +283,10 @@ public class Engagement
 			
 			// Append report to chat
 			window.appendToChat(report);
+			
+			ActiveUnit au = state.units[results[i].target]; 
+			if (au.currHP == 0)
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
 		}
 	}
 	

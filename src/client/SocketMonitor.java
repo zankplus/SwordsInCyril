@@ -145,7 +145,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							// NEXT: the server has indicated that a new unit's turn should begin
 							else if (action.type.equals(ZankGameActionType.NEXT))
 							{
-								game.receiveNext((Integer) action.data);
+								game.receiveNext((int[]) action.data);
 							}
 							
 							// MOVE: the server has indicated that one of the participants in the engagement has moved a unit

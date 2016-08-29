@@ -108,12 +108,35 @@ public class ActiveGame
 	
 	public void advanceTurn() throws InterruptedException
 	{
+		// Determine next unit to move
 		state.currentUnit = turnOrder.getNext();
-		currentUnit().currMP = Math.min(currentUnit().currMP + 5, (int) currentUnit().unit.maxMP);  
-		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null, state.currentUnit);
+		
+		// Calculate poison variance
+		int poisonVariance = 85 + (int) (Math.random() * 30);
+		
+		// Apply start of turn effects on server side
+		state.startOfTurnEffects(poisonVariance);
+		
+		
+		
+		// If the current unit is still alive
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null,
+				new int[] { state.currentUnit, poisonVariance });
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
+	
+		// If the current unit has died
+		if (state.units[state.currentUnit].currHP == 0)
+		{	
+			// See if the game has been won
+			boolean gameOver = victoryCheck();
+			
+			if (!gameOver)
+				advanceTurn();
+		}
+		
+		
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
@@ -172,7 +195,7 @@ public class ActiveGame
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost
-	public void victoryCheck() throws InterruptedException
+	public boolean victoryCheck() throws InterruptedException
 	{
 		// Assume both teams have lost by default. If any unit on a team is alive and well,
 		// change the loss flag to true.
@@ -195,7 +218,8 @@ public class ActiveGame
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);			
-
+		
+		return (p1lose || p2lose);
 	}
 	
 	enum GameStatus { SETUP, ONGOING, COMPLETE }

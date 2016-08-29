@@ -13,10 +13,21 @@ public class GameState
 		SkillEffect.setGameState(this);
 	}
 	
-	public void startOfTurnEffects()
+	public int startOfTurnEffects(int poisonVariance)
 	{
 		ActiveUnit au = units[currentUnit];
-		au.currMP = Math.min(au.currMP + 5, (int) au.unit.maxMP);
+		
+		int poisonDamage = 0;
+		
+		if (au.status[StatusEffect.POISON.ordinal()] > 0)
+		{
+			poisonDamage = (poisonVariance * (int) au.unit.maxHP) / 1000;
+			applyDamage(currentUnit, poisonDamage);
+		}
+		
+		applyMPHealing(currentUnit, 5);
+		
+		return poisonDamage;
 	}
 	
 	public void expendMP(FFTASkill sk)
@@ -41,8 +52,12 @@ public class GameState
 		if (au.currHP <= 0)
 		{
 			au.currHP = 0;
+			
+			// Death handler
 			au.counter = 0;
 			au.reserve = 0;
+			for (int i = 0; i < au.status.length; i++)
+				au.status[i] = 0;
 		}
 		
 		System.out.println(au.unit.name + ": " + au.currHP + " HP");

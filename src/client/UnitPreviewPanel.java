@@ -8,6 +8,8 @@ import javax.swing.JPanel;
 import fftadata.ActiveUnit;
 import fftadata.FFTAEquip;
 import fftadata.FFTAUnit;
+import fftadata.StatusEffect;
+
 import java.awt.Dimension;
 
 import javax.swing.border.BevelBorder;
@@ -34,6 +36,7 @@ public class UnitPreviewPanel extends JPanel
 	FFTAUnit unit;
 	private JLabel lblCurrHP;
 	private JLabel lblCurrMP;
+	private JLabel lblStatus;
 	
 	public UnitPreviewPanel()
 	{
@@ -216,16 +219,41 @@ public class UnitPreviewPanel extends JPanel
 		equipmentList.setModel(unit.equips.getListModel());
 		rightPanel.add(equipmentList, BorderLayout.NORTH);
 		
-		JLabel lblstatusOk = new JLabel("<html><b>Status:</b> OK");
-		lblstatusOk.setVerticalAlignment(SwingConstants.TOP);
-		rightPanel.add(lblstatusOk, BorderLayout.CENTER);
+		lblStatus = new JLabel("<html><b>Status:</b> OK");
+		lblStatus.setVerticalAlignment(SwingConstants.TOP);
+		rightPanel.add(lblStatus, BorderLayout.CENTER);
 		
 	}
 
 	public void updateStats()
 	{
+		// Update HP and MP
 		lblCurrHP.setText("" + au.currHP);
 		lblCurrMP.setText("" + au.currMP);
+		
+		// Update status
+		int count = 0;
+		StringBuilder status = new StringBuilder();
+		
+		if (au.currHP == 0)
+			lblStatus.setText("<html><b>Status:</b> KO");
+		else
+		{
+			for (int i = 0; i < au.status.length; i++)
+				if (au.status[i] > 0)
+				{
+					if (count > 0)
+						status.append(", ");
+					status.append(StatusEffect.values()[i].NAME);
+					count++; 
+				}
+			
+			if (status.toString().equals("")) 
+				lblStatus.setText("<html><b>Status:</b> OK");
+			else
+				lblStatus.setText("<html><b>Status:</b> " + status.toString());
+		}
+		
 		revalidate();
 	}
 	

@@ -48,6 +48,7 @@ public class ZankClient
 		{
 			out.writeObject(message);
 			out.flush();
+			
 		}
 	}
 	
