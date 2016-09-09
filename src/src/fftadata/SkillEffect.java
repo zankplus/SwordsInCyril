@@ -4,28 +4,120 @@ import java.io.Serializable;
 
 public enum SkillEffect implements Serializable
 {
-	DAMAGE_1X										(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-	{ 	return Damage1X(result);			}		public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);			}		}),
+	HEALING_1X																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, true, true);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	}),
 	
-	DAMAGE_1X_CAPPED								(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-	{ 	return Damage1XCapped(result);		}		public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);			}		}),
+	FULLY_HEAL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
+		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return fullHealing(result);																}	}),
 	
-	FIGHT_DAMAGE									(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-	{ 	return FightDamage(result);			}		public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);			}		}),
+	REVIVE_HALF_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	result.damage = (int) -(state.units[result.target].unit.maxHP / 2);
+		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyRevival(result, false);														}	}),
 	
-	FIGHT_DAMAGE_CAPPED								(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-	{ 	return FightDamageCapped(result);	}		public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);			}		}),
+	REVIVE_FULL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
+		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyRevival(result, true);														}	}),
 	
-	EFF1DEP_DRAIN									(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev)
-	{ 	return Eff1DepDrain(result, prev);	}		public String applyEffect(SkillEffectResult result)
-	{	return applyHealing(result);		}		});
+	FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	REGULAR_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+
+	REGULAR_DAMAGE_CAPPED																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, true, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	DOUBLE_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 2, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	TRIPLE_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 3, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HALF_FIGHT_DAMAGE																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, true, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HALF_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HALF_DAMAGE_NEVER_MISS																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, true);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	DOUBLE_DAMAGE_HALF_HIT																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, .5, 2, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HALF_DAMAGE_DOUBLE_HIT																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 2, .5, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+
+	MP_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, true, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyMPDamage(result);															}	}),
+	
+	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.POISON, preview, false);						}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.POISON);										}	}),
+	
+	ADD_BLIND																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.BLIND, preview, false);							}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BLIND);											}	}),
+	
+	ADD_SILENCE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.SILENCE, preview, false);						}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
+	
+	ADD_SLOW																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.SLOW, preview, false);							}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
+	
+	ADD_PETRIFY																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.PETRIFY, preview, false);						}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.PETRIFY);										}	}),
+	
+	ADD_STOP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return sTypeHit(result, 1, StatusEffect.STOP, preview, false);							}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	
+	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.POISON);										}	}),
+	
+	EFF1DEP_ADD_BLIND																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.BLIND, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BLIND);											}	}),
+
+	EFF1DEP_ADD_SILENCE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SILENCE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
+
+	EFF1DEP_ADD_SLOW																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SLOW, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
+	
+	EFF1DEP_ADD_STOP																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.STOP, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	
+	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	});
 	
 	
-	static ActiveUnit[] units;
+	
+	static GameState state;
 	public final SkillEffectHandler handler;
 	
 	SkillEffect(SkillEffectHandler handler)
@@ -35,72 +127,38 @@ public enum SkillEffect implements Serializable
 	
 	public interface SkillEffectHandler
 	{
-		SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev); // serverside
-		String applyEffect(SkillEffectResult result); // clientside
+		SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev, boolean preview); // determine effect
+		String applyEffect(SkillEffectResult result); // apply effect
+		// int[] predictEffect(SkillEffectResult result); // predict effect
 	}
 	
-	public static void setUnitList(ActiveUnit[] unitList)
+	public static void setGameState(GameState gameState)
 	{
-		units = unitList;
+		state = gameState;
 	}
-	
-	// Ancillary methods
-	public static void applyDamage(ActiveUnit au, int dmg)
-	{
-		au.currHP -= dmg;
-		if (au.currHP <= 0)
-		{
-			au.currHP = 0;
-			au.counter = 0;
-			au.reserve = 0;
-		}
-	}
-	
-	public static void applyHealing(ActiveUnit au, int hp)
-	{
-		au.currHP += hp;
-		if (hp > au.unit.maxHP)
-			au.currHP = (int) au.unit.maxHP;
-	}
-	
+		
 	// Server-side effect handlers
-	public static SkillEffectResult GenericDamageEffect(SkillEffectResult result,
-			boolean canCrit, boolean capToTargetHP)
+	public static SkillEffectResult genericDamageEffect(SkillEffectResult result,
+			double hitFactor, double damageFactor, boolean preview,
+			boolean canCrit, boolean capToHP, boolean capToMP, boolean healing, boolean neverMiss)
 	{
-		ActiveUnit user = units[result.user];
-		ActiveUnit target = units[result.target];
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
 		FFTASkill skill = result.skill;
 		
-		int hitRate = FFTACalc.getATypeHitRate(user, target, skill);
+		int hitRate;
+		if (neverMiss)
+			hitRate = 100;
+		else
+			hitRate = FFTACalc.getATypeHitRate(user, target, skill, hitFactor);
 		result.hitChance = hitRate;
 		
 		int rand = (int) (100 * Math.random());
-		if (rand < hitRate)
+		if (rand < hitRate || preview)
 		{
-			int dmg = FFTACalc.getDamage(user, target, skill);
-			int variance = dmg / 10;
-			dmg += (int) (2 * variance * Math.random()) - variance;
-			
-			// Critical check
-			if (canCrit)
-			{
-				rand = (int) (100 * Math.random());
-				if (rand < 5)
-				{
-					result.critical = true;
-					dmg = dmg * 3 / 2;
-				}
-			}
-			
-			// Cap to 999
-			dmg = Math.min(Math.max(dmg, 1), 999);
-			
-			// Cap to target's HP, if applicable
-			if (capToTargetHP)
-				dmg = Math.min(dmg, target.currHP);
-			
-			// Apply changes server-side
-			applyDamage(target, dmg);
+			// Calc damage
+			int dmg = FFTACalc.getDamage(user, target, skill, damageFactor, healing, canCrit, capToHP, capToMP, preview);
+			result.critical = FFTACalc.wasCritical;
 			
 			// Save results
 			result.damage = dmg;
@@ -112,32 +170,55 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
-	public static SkillEffectResult FightDamage(SkillEffectResult result)
+	// Server-side effect handlers
+	public static SkillEffectResult sTypeHit(SkillEffectResult result,
+			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
 	{
-		return GenericDamageEffect(result, true, false);
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
+		FFTASkill skill = result.skill;
+		
+		int hitRate;
+		if (neverMiss)
+			hitRate = 100;
+		else
+			hitRate = FFTACalc.getSTypeHitRate(user, target, sEff, hitFactor);
+		result.hitChance = hitRate;
+		
+		int rand = (int) (100 * Math.random());
+		if (rand < hitRate || preview)
+		{
+			result.success = true;
+		}
+		else
+			result.success = false;
+		
+		return result;
 	}
 	
-	public static SkillEffectResult FightDamageCapped(SkillEffectResult result)
+	public static SkillEffectResult guaranteedSuccess(SkillEffectResult result)
 	{
-		return GenericDamageEffect(result, true, true);
+		result.hitChance = 100;
+		result.success = true;
+		return result;
 	}
 	
-	public static SkillEffectResult Damage1X(SkillEffectResult result)
+	public static SkillEffectResult eff1DepStatusEffect(SkillEffectResult result, SkillEffectResult prev,
+			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
 	{
-		return GenericDamageEffect(result, false, true);
+		result.dependent = true;
+		ActiveUnit au = state.units[state.currentUnit];
+		if (prev.success && au.currHP > 0)
+			result = sTypeHit(result, hitFactor, sEff, preview, neverMiss);
+			
+		return result;
 	}
 	
-	public static SkillEffectResult Damage1XCapped(SkillEffectResult result)
-	{
-		return GenericDamageEffect(result, false, true);
-	}
-	
-	public static SkillEffectResult Eff1DepDrain(SkillEffectResult result, SkillEffectResult prev)
+	public static SkillEffectResult eff1DepDrain(SkillEffectResult result, SkillEffectResult prev)
 	{
 		result.target = result.user;
 		if (prev.success)
 		{
-			applyHealing(units[result.target], prev.damage);
 			result.damage = prev.damage;
 			result.success = true;
 		}
@@ -149,20 +230,50 @@ public enum SkillEffect implements Serializable
 	{
 		String report = "";
 		
-		ActiveUnit target = units[result.target];
+		ActiveUnit target = state.units[result.target];
 		if (result.success)
 		{
-			applyDamage(target, result.damage);
-			report = "<br><em><span style=\"color:gray\">......<strong>";
-			if (result.critical)
-				report += "<span style=\"color:red\">CRITICAL HIT!</span> ";  
+			// Treat absorbed damage as healing instead
+			if (result.damage < 0)
+				return applyHealing(result);
 			
-			report += units[result.target].unit.name + "</strong> takes <strong><span style=\"color:red\">" + 
+			state.applyDamage(result.target, result.damage);
+			report = "<em><span style=\"color:gray\">......<strong>";
+			if (result.critical)
+				report += "</em><span style=\"color:red\">CRITICAL HIT!</span><em> ";  
+			
+			report += target.unit.name + "</strong> takes <strong><span style=\"color:red\">" + 
 					result.damage + "</strong> damage! (" + result.hitChance + "%)";
 		}
 		else
-			report = "<br><em><span style=\"color:gray\">......The attack misses <strong>" +
-					units[result.target].unit.name + "</strong>! (" + result.hitChance + "%)";
+			report = "<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + result.hitChance + "%)";
+				
+		return report;
+	}
+	
+	private static String applyMPDamage(SkillEffectResult result)
+	{
+		String report = "";
+		
+		ActiveUnit target = state.units[result.target];
+		if (result.success)
+		{
+			// Treat absorbed damage as healing instead
+			if (result.damage < 0)
+				return applyMPHealing(result);
+			
+			state.applyMPDamage(result.target, result.damage);
+			report = "<em><span style=\"color:gray\">......<strong>";
+			if (result.critical)
+				report += "</em><span style=\"color:red\">CRITICAL HIT!</span><em> ";  
+			
+			report += target.unit.name + "</strong> takes <strong><span style=\"color:fuchsia\">" + 
+					result.damage + "</strong> MP damage! (" + result.hitChance + "%)";
+		}
+		else
+			report = "<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + result.hitChance + "%)";
 				
 		return report;
 	}
@@ -170,15 +281,84 @@ public enum SkillEffect implements Serializable
 	public static String applyHealing(SkillEffectResult result)
 	{
 		String report = "";
+		ActiveUnit target = state.units[result.target];
 		
-		ActiveUnit target = units[result.target];
-		if (result.success)
+		if (result.success && target.currHP > 0)
 		{
-			applyHealing(target, result.damage);
-			report = "<br><em><span style=\"color:gray\">......<strong>" + units[result.target].unit.name +
-					"</strong> recovers <strong><span style=\"color:green\">" + result.damage + "</strong> HP!";
+			int healing = Math.abs(result.damage);
+			state.applyHealing(result.target, healing);
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong> recovers <strong><span style=\"color:lime\">" + healing + "</strong> HP!";
 		}
 		return report;
 	}
+	
+	public static String applyMPHealing(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			int healing = Math.abs(result.damage);
+			state.applyMPHealing(result.target, healing);
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong> recovers <strong><span style=\"color:cyan\">" + healing + "</strong> MP!";
+		}
+		return report;
+	}
+	
+	public static String applyRevival(SkillEffectResult result, boolean fullLife)
+	{
+		ActiveUnit target = state.units[result.target];
+		String report = "";
+		
+		if (result.success && target.currHP == 0)
+		{
+			int healing = (int) target.unit.maxHP;
+			if (fullLife)
+				report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name + "</strong> rises with full health!";
+			else
+			{
+				healing /= 2;
+				report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name + "</strong> rises!";
+			}
+			state.applyHealing(result.target, healing);
+		}
+		return report;
+	}
+	
+	public static String applyStatus(SkillEffectResult result, StatusEffect sEff)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			state.applyStatus(target, sEff);
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					 "</strong> " + sEff.REPORT;
+		}
+		else if (!result.dependent)
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+			 "</strong> was unaffected.";
+		
+		return report;
+	}
+	
+	public static String fullHealing(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			state.applyHealing(result.target, (int) target.unit.maxHP);
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong>'s HP is fully restored!";
+		}
+		return report;
+	}
+
 }
 

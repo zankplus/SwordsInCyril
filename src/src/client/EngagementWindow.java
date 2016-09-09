@@ -1,20 +1,15 @@
 package client;
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
+import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.JTextArea;
 import java.awt.Dimension;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
@@ -22,74 +17,55 @@ import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
-import fftadata.SkillEffect;
-import fftadata.SkillEffectResult;
-import zank.*;
+import fftadata.StatusEffect;
 
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
-import java.awt.SystemColor;
 
-public class EngagementWindow extends JFrame {
-
-	private JPanel contentPane;
-	JTextPane chat;
+public class EngagementWindow extends JFrame
+{
+	Engagement game;
+	
+	private JPanel contentPane, previewDeck, blankUnitPreview, bottomPanel,
+					damagePreviewPanel;
+	private JTextPane chat;
 	private JTextField chatEntry;
-	Socket socket;
-	ZankUser player, opponent;
-	String gameID;
-	ObjectInputStream in;
-	ObjectOutputStream out;
-	ZankGameMap map;
-	ZankGameAction action;
-	ZankMessage message;
 	
-	int playerNumber;
+	JPanel gamePanel;
+	private MapPanel mapPanel;
+	private UnitActionPanel unitAction;
 	
-	boolean gameOver;
+	private CardLayout deck;
+	private UnitPreviewPanel[] previews;
+	// TurnOrderPanel top;
+	
+	FFTASkill selectedSkill;
 	
 	EngagementWindowRosterPanel rosterPanel;
-	GamePanel gamePanel;
 
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					EngagementWindow frame = new EngagementWindow(null, 1, null, null, null, null);
-					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
+	
+	
+	
 
 	/**
 	 * Create the frame.
 	 */
-	public EngagementWindow(ZankUser player, int playerNumber, ZankUser opponent, String id, ObjectInputStream in, ObjectOutputStream out)
+	public EngagementWindow(Engagement game)
 	{
+		this.game = game;
+		
 		try {
 			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
-		this.player = player;
-		this.playerNumber = playerNumber;
-		this.opponent = opponent;
-		this.gameID = id;
-		this.in = in;
-		this.out = out;
-		gameOver = false;
 		
 		// Set up window
 		ImageIcon img = new ImageIcon("resources/misc/appicon2.png");
@@ -97,7 +73,7 @@ public class EngagementWindow extends JFrame {
 		
 		try
 		{
-			setTitle("[" + "///" + "] " + player.username + " vs " + opponent.username );
+			setTitle("[" + "///" + "] " + game.player.username + " vs " + game.opponent.username );
 		} catch (NullPointerException e) { setTitle("Testin' mode"); }
 		
 		// Closing
@@ -107,7 +83,7 @@ public class EngagementWindow extends JFrame {
 			public void windowClosing(java.awt.event.WindowEvent evt)
 			{
 				// If the engagement is still in progress, prompt the user to confirm the window's closing
-				if (!gameOver)
+				if (!game.gameOver)
 				{
 					/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
 							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
@@ -122,7 +98,7 @@ public class EngagementWindow extends JFrame {
 					
 					// Temporarily do not show warning dialog
 					try {
-						sendExit();
+						game.sendExit();
 					} catch (IOException e) { e.printStackTrace(); }
 					ew.dispose();
 					
@@ -132,7 +108,7 @@ public class EngagementWindow extends JFrame {
 				else
 				{
 					try {
-						sendExit();
+						game.sendExit();
 					} catch (IOException e) { e.printStackTrace(); }
 					ew.dispose();
 				}
@@ -179,314 +155,261 @@ public class EngagementWindow extends JFrame {
 				{
 					try
 					{
-							sendChat(s);
+						game.sendChat(s);
 					} catch (IOException e1) { e1.printStackTrace(); }
 					chatEntry.setText("");
 				}
 			}
 		});
+		System.out.println("checkpoint 1");
+		
 		
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		leftPanel.setBorder(null);
 		leftPanel.setPreferredSize(new Dimension(560, 10));
 		contentPane.add(leftPanel, BorderLayout.WEST);
 
-		gamePanel = new GamePanel(this);
-		map = gamePanel.map;
+		gamePanel = new JPanel();
+		gamePanel.setLayout(new BorderLayout());
+		
+		System.out.println("checkpoint 2");
+		
+		rosterPanel = new EngagementWindowRosterPanel(this);
+		mapPanel = new MapPanel(this);
+	
+		System.out.println("checkpoint 3");
+		
+		JPanel turnOrderPanel = new JPanel();
+		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		turnOrderPanel.setPreferredSize(new Dimension(80, 10));
+		turnOrderPanel.setLayout(new GridLayout(1, 0, 0, 0));
+		
+		
+		leftPanel.add(gamePanel, BorderLayout.CENTER);
+		gamePanel.add(mapPanel, BorderLayout.CENTER);
+		gamePanel.add(turnOrderPanel, BorderLayout.EAST);
+		mapPanel.roster = rosterPanel.roster;
 		leftPanel.add(gamePanel);
-	}
-	
-	public void sendChat(String content) throws IOException
-	{
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
-	}
-	
-	public void sendForfeit() throws IOException
-	{
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
-		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
-	}
-	
-	public void sendReady() throws IOException
-	{
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, gamePanel.getYourUnits());
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
-	}
-	
-	public void sendMove() throws IOException
-	{
-		ActiveUnit au = gamePanel.units[gamePanel.currentUnit];
-		int[] data = {gamePanel.currentUnit, au.x, au.y, au.z};
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
-	}
-	
-	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
-	{
-		int[] data = new int[targets.size() + 3];
-		for (int i = 0; i < targets.size(); i++)
-			data[i] = targets.get(i);
-		data[data.length - 3] = sk.ordinal();
-		data[data.length - 2] = x;
-		data[data.length - 1] = y;
 		
-		System.out.println("sendAction: target = " + data[0]);
 		
-		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		damagePreviewPanel = null;
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		beginPlacementMode();
+		
+		
 	}
 	
-	public void sendWait(int dir) throws IOException
+	public void beginPlacementMode()
 	{
-		int[] data = {gamePanel.currentUnit, dir};
-		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		gamePanel.add(rosterPanel, BorderLayout.SOUTH);
+		mapPanel.beginPlacementMode();
 	}
 	
-	public void sendTurnTest(int ct) throws IOException
+	public void beginGame(ArrayList<ActiveUnit> otherTeam)
 	{
-		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		gamePanel.remove(rosterPanel);
+		bottomPanel = new JPanel(new BorderLayout());
+		gamePanel.add(bottomPanel, BorderLayout.SOUTH);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		deck = new CardLayout();
+		previewDeck = new JPanel(deck);
+		
+		blankUnitPreview = new JPanel();
+		blankUnitPreview.setPreferredSize(new Dimension(320, 162));
+		blankUnitPreview.setBorder(new TitledBorder(null, "Unit Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		previewDeck.add(blankUnitPreview, "Blank");
+		
+		bottomPanel.add(previewDeck, BorderLayout.WEST);
+	
+		unitAction = new UnitActionPanel(this);
+		bottomPanel.add(unitAction, BorderLayout.EAST);
+		
+		// Set up other team's units
+		mapPanel.beginGame(otherTeam);
 	}
 	
-	public void sendExit() throws IOException
+	
+	public void beginTargetingMode(FFTASkill sk)
 	{
-		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		mapPanel.mode = 3;
+		selectedSkill = sk;
+		mapPanel.highlightTargetableTiles(sk);
+	}
+	
+	public void updateSprite(ActiveUnit au)
+	{
+		mapPanel.updateSprite(au);
+	}
+	
+	public void moveUnit(ActiveUnit au, ZankMapTile dest)
+	{
+		mapPanel.moveUnit(au, dest);
+	}
+	
+	public void hideUnitPreview()
+	{
+		deck.show(previewDeck, "Blank");
+		revalidate();
+	}
+	
+	public void showUnitPreview(ActiveUnit selectedUnit)
+	{
+		deck.show(previewDeck, String.valueOf(selectedUnit.id));
+		revalidate();
+	}
+	
+	public void updateUnitPreview(int unit)
+	{
+		previews[unit].updateStats();
+	}
+	
+	public void showDamagePreview(ArrayList<ActiveUnit> targets)
+	{
+		previewDeck.remove(damagePreviewPanel);
+		damagePreviewPanel = new DamagePreviewPanel(game.currentUnit(), targets, selectedSkill);
+		previewDeck.add(damagePreviewPanel, "Damage Preview");
+		deck.last(previewDeck);
+		revalidate();
+	}
+	
+	public void selectTile(ZankMapTile tile)
+	{
+		mapPanel.selectTile(tile);
+	}
+	
+	public void selectTile()
+	{
+		mapPanel.selectTile(mapPanel.selectedTile);
+	}
+	
+	public void commitAction(ArrayList<Integer> targets)
+	{
+		int x = mapPanel.selectedTile.x, y = mapPanel.selectedTile.y;
+		unitAction.unitHasActed = true;
 		
-		synchronized(out)
+		try
 		{
-			out.writeObject(message);
-			out.flush();
+			unitAction.hideActionPanel();
+			if (unitAction.unitHasMoved)
+			{
+				game.sendMove();
+				unitAction.sendMove = false;
+			}
+			
+			// Clear away the tile highlights and return to the actions menu
+			cancelMovementMode();
+			
+			// Reselect the current unit to remind the active player that further action is required of them
+			ActiveUnit au = game.currentUnit();
+			selectTile(game.map.mapData[au.x][au.y]);
+			
+			// Send the action
+			game.sendAction(targets, selectedSkill, x, y);
 		}
+		catch (IOException e) { e.printStackTrace(); }
+	}
+	
+	// Calls UnitActionPanel's finishAct() method to bring up the appropriate menu to finish the current unit's turn
+	public void finishAct()
+	{
+		unitAction.finishAct();
+	}
+	
+	public void setupPreviews()
+	{
+		ActiveUnit[] units = game.getUnits();
+		previews = new UnitPreviewPanel[units.length];
+		for (int i = 0; i < units.length; i++)
+		{
+			previews[i] = new UnitPreviewPanel(units[i]);
+			previewDeck.add(previews[i], String.valueOf(i));
+		}
+		
+		damagePreviewPanel = new JPanel();
+		previewDeck.add(damagePreviewPanel, "Damage Preview");
+		
+		for (int i = 0; i < units.length; i++)
+			System.out.println(i + " " + units[i].unit.name);
+	}
+	
+	public void startPlayerTurn()
+	{
+		unitAction.setUnit(game.currentUnit());
+		unitAction.resetTurnVariables();
+		unitAction.showActionsPanel();
+	}
+	
+	public void startRivalTurn()
+	{
+		unitAction.hideActionPanel();
+	}
+	
+	public void beginMovementMode()
+	{
+		mapPanel.mode = 2;
+		mapPanel.highlightWalkableTiles();
+	}
+	
+	public void cancelMovementMode()
+	{
+		mapPanel.mode = 0;
+		mapPanel.removeHighlightedTiles();
+	}
+	
+	public void finishMovementMode()
+	{
+		cancelMovementMode();
+		unitAction.completeMovement();
+	}
+	
+	public void undoMovement()
+	{
+		ActiveUnit au = game.currentUnit();
+		ZankMapTile old = game.map.mapData[au.oldX][au.oldY];
+		mapPanel.moveUnit(au, old);
+		repaint();
+	}
+	
+	public ArrayList<ActiveUnit> getYourUnits()
+	{
+		return mapPanel.mpUnits;
 	}
 	
 	public void appendToChat(String s)
 	{
-		try {
-			HTMLDocument doc = (HTMLDocument) chat.getDocument();
-			doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s);
-			chat.setCaretPosition(doc.getLength());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		if (!s.equals(""))
+			try {
+				HTMLDocument doc = (HTMLDocument) chat.getDocument();
+				doc.insertAfterEnd(doc.getCharacterElement(doc.getLength()), s + "<br>");
+				chat.setCaretPosition(doc.getLength());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 	}
 	
-	// ZankMessage handlers
-	// CHAT: append the message to the engagement chat and move the caret to the bottom
-	public void receiveChat(String user, String msg)
+	public void startOfTurnAnnouncements(ActiveUnit au)
 	{
-		appendToChat("<br><b>" + user + "</b>: " + msg);
-	}
-	
-	// READY: register the received units to the rival team and create a list all the game's units in gamePanel
-	// before telling gamePanel to start the game.
-	public void receiveReady(ArrayList<ActiveUnit> units)
-	{
-		if (playerNumber == 1)
-			gamePanel.p2Units = units;
-		else if (playerNumber == 2)
-			gamePanel.p1Units = units;
+		if (au.status[StatusEffect.SILENCE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can speak again!");
 		
-		ActiveUnit[] aus = new ActiveUnit[gamePanel.p1Units.size() + gamePanel.p2Units.size()];
+		if (au.status[StatusEffect.SLOW.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
 		
-		for (int i = 0; i < gamePanel.p1Units.size(); i++)
-		{
-			aus[i] = gamePanel.p1Units.get(i);
-			aus[i].id = i;
-			System.out.println(i + " " + aus[i].unit.name);
-		}
-		
-		for (int i = 0; i < gamePanel.p2Units.size(); i++)
-		{
-			aus[i + gamePanel.p1Units.size()] = gamePanel.p2Units.get(i);
-			aus[i + gamePanel.p1Units.size()].id = i + gamePanel.p1Units.size();
-		}
-		
-		gamePanel.units = aus;
-		gamePanel.beginGame();
-		gamePanel.setupPreviews();
-		System.out.println("Finished setting up previews, now beginning game");
-		repaint();
-	}
-	
-	// NEXT: initiate the given character's turn
-	public void receiveNext(int index)
-	{
-		gamePanel.currentUnit = index;
-		
-		// Decide which panel to show
-		if (gamePanel.units[index].team == playerNumber)	// Show the action panel if it's your turn
-		{	
-			gamePanel.startPlayerTurn();
-		}
-		else
-			gamePanel.startRivalTurn();	// Show the blank panel if it's not
-		
-		ActiveUnit au = gamePanel.units[index];
-		gamePanel.startOfTurnEffects();
-		
-		gamePanel.selectTile(map.mapData[au.x][au.y]);
-		
-		appendToChat("<br><em><span style=\"color:gray\"><strong>" + gamePanel.units[index].unit.name + "</strong> takes their turn!");
-	}
-	
-	// MOVE: move the indicated unit using MapPanel's moveUnit method
-	public void receiveMove(int[] data)
-	{
-		ActiveUnit au = gamePanel.units[data[0]];
-		ZankMapTile dest = map.mapData[data[1]][data[2]];
-		gamePanel.moveUnit(au, dest);
-	}
-	
-	// ACT: announce in chat that the active unit has taken the indicated action
-	public void receiveAct(int[] data)
-	{
-		System.out.println("receiveAct: target = " + data[0]);
-		
-		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
-		if (sk == FFTASkill.FIGHT)
-			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
-				"</strong> attacks <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");
-		else
-			appendToChat("<br><em><span style=\"color:gray\">...<strong>" + gamePanel.units[gamePanel.currentUnit].unit.name +
-					"</strong> uses " + sk.NAME + " on <strong>" + gamePanel.units[data[0]].unit.name + "</strong>!");
-		
-		gamePanel.expendMP(sk);
-		System.out.println("Received " + sk.NAME);
-	}
-	
-	// HIT: apply the effects of skills specified and announce the results in chat
-	public void receiveHit(SkillEffectResult[] results)
-	{
-		System.out.println("results: " + results.length);
-		for (int j = 0; j < results.length; j++)
-			if (results[j] == null)
-				System.out.println("null result");
-			else
-				System.out.println(results[j].effect);
-		
-		// System.out.println("Hit details: " + data[0] + " " + data[1] + " " + data[2] + " " + data[3]);
-		SkillEffectResult result;
-		for (int i = 0; i < results.length; i++)
-		{
-			result = results[i];
-
-			String report = gamePanel.applyEffect(result);
-			appendToChat(report);
-		}
-	}
-	
-	// WAIT: change the indicated unit's facing in the MapPanel
-	public void receiveWait(int[] data)
-	{
-		gamePanel.faceUnit(data[1]);
-	}
-	
-	// LOSE: announce the winner's victory (or a draw, if both teams have 'lost') in chat.
-	// If the current turn belongs to one of this unit's clients, and the game isn't over, bring up the facing panel.
-	public void receiveGameOver(boolean[] data)
-	{
-		// Determine which player is p1 and which is p2
-		String p1name, p2name;
-		if (playerNumber == 1)
-		{
-			p1name = player.username;
-			p2name = opponent.username;
-		}
-		else
-		{
-			p2name = player.username;
-			p1name = opponent.username;
-		}
-		
-		// If data[0] and data[1] are both true, the match has ended in a tie
-		if (data[0] && data[1])
-		{
-			gameOver = true;
-			setTitle(getTitle() + " - tie game!");
-			appendToChat("<br><em><strong>The engagement has ended in a <span style=" +
-					"\"text-decoration: underline; color:yellow\">tie</span></strong>");
-		}
-		
-		// If data[0] is true, player *1* has LOST and player *2* has WON
-		else if (data[0])
-		{
-			gameOver = true;
-			setTitle(getTitle() + " - " + p2name + " wins!");
-			appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:blue\">" +
-					p2name + "</span> has won the engagement!</strong>");
-		}
-		
-		// If data[1] is true, player *2* has LOST and player *1* has WON
-		else if (data[1])
-		{
-			gameOver = true;
-			setTitle(getTitle() + " - " + p1name + " wins!"); 
-			appendToChat("<br><em><strong><span style=\"text-decoration: underline; color:red\">" +
-					p1name + "</span> has won the engagement!</strong>");
-		}
-		
-		// If neither data[0] nor [1] is true, something weird has happened.
-		else
-		{
-			if (gamePanel.isYourTurn())
-				gamePanel.finishAct();
-		}
-	}
-	
-	public void receiveExit(String username)
-	{
-		appendToChat("<br><em><strong>" + username + " has left the room.</strong>");
+		if (au.status[StatusEffect.STOP.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s back in time!");
 	}
 }
 
 class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 {
-	EngagementWindow ew;
+	Engagement game;
+	EngagementWindow window;
 	
-	public EngagementWindowRosterPanel(EngagementWindow ew)
+	public EngagementWindowRosterPanel(EngagementWindow window)
 	{
-		this.ew = ew;
+		this.window = window;
+		game = window.game;
+		
 		setPreferredSize(new Dimension(1, 162));
 		JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
 		padding.setPreferredSize(new Dimension(36, 1));
@@ -511,16 +434,16 @@ class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 			@Override
 			public void actionPerformed(ActionEvent e)
 			{
-				ArrayList<ActiveUnit> units = ew.gamePanel.getYourUnits();
+				ArrayList<ActiveUnit> units = window.getYourUnits();
 				if (units.size() > 0)
 				{
 					try
 					{
-						ew.sendReady();
-						if (ew.playerNumber == 1)
-							ew.gamePanel.p1Units = units;
-						else if (ew.playerNumber == 2)
-							ew.gamePanel.p2Units = units;
+						game.sendReady();
+						if (game.playerNumber == 1)
+							game.p1Units = units;
+						else if (game.playerNumber == 2)
+							game.p2Units = units;
 						
 						btnReady.setEnabled(false);
 						btnReady.setText("Waiting for other player...");

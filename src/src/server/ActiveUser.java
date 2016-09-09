@@ -89,6 +89,7 @@ public class ActiveUser extends Thread
 										messageQueue.put(result);
 									}
 								}
+								System.out.println("LOGIN: " + username);
 								ChatServer.masterMessageQueue.put(msg);
 							}
 							
@@ -109,13 +110,20 @@ public class ActiveUser extends Thread
 							{
 								String challenged = (String) msg.data;
 								ActiveUser challengedUser = null;
+								
+								
+								
 								for (ActiveUser user : ChatServer.userlist)
+								{
+									System.out.println("1 user = " + (user.nickname == null));
+									System.out.println("2 " + user.nickname);
 									if (user.nickname.equals(challenged))
 									{
 										challengedUser = user;
 										break;
 									}
-
+								}
+								
 								if (challengedUser == null)
 								{
 									// System.out.println("challengee not found");
@@ -211,8 +219,8 @@ public class ActiveUser extends Thread
 										}
 										else if (action.type == ZankGameActionType.TURNTEST)
 										{
-											ag.turnOrder.units[ag.currentUnit].counter -= (Integer) action.data;
-											ag.turnOrder.units[ag.currentUnit].reserve = 0;
+											ag.turnOrder.units[ag.state.currentUnit].counter -= (Integer) action.data;
+											ag.turnOrder.units[ag.state.currentUnit].reserve = 0;
 											ag.advanceTurn();
 										}
 										else if (action.type == ZankGameActionType.MOVE)
@@ -231,7 +239,7 @@ public class ActiveUser extends Thread
 											
 											// Send intermediate facing
 											int x = data[data.length - 2], y = data[data.length - 1];
-											int[] waitData = {ag.currentUnit, ag.intermediateFacing(ag.currentUnit, x, y)}; 
+											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x, y)}; 
 											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
 											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
 											ag.player1.messageQueue.put(waitmsg);

@@ -227,7 +227,11 @@ public class ChatWindow extends JFrame {
 	public void receiveLogin(String user)
 	{
 		if (user.equals(zu.username))
+		{
 			appendToChat("<em><span style=\"color:blue\">** You are now connected to Swords in Cyril as <strong>" + zu.username + "</strong></span>");
+			setVisible(true);
+			client.loginWindow.dispose();
+		}
 		else
 			appendToChat("<br><i><span style=\"color:gray\">* " + user + " has entered the room");
 		usersOnline.add(user);
