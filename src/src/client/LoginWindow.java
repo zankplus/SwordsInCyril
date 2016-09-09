@@ -217,9 +217,7 @@ public class LoginWindow extends JFrame {
 		{
 			client.zu = new ZankUser(usernameField.getText());
 			client.chatWindow = new ChatWindow(client);
-			client.chatWindow.setVisible(true);
 			sendLogin();
-			dispose();
 		}
 		catch (IOException e) { e.printStackTrace(); System.exit(0); }
 	}

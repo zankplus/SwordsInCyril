@@ -12,6 +12,8 @@ import fftadata.FFTACalc;
 import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
 import fftadata.FFTAUnit;
+import fftadata.SkillEffectResult;
+
 import java.awt.Dimension;
 
 import javax.swing.border.BevelBorder;
@@ -273,10 +275,10 @@ public class DamagePreviewPanel extends JPanel
 					targets.add(au3);
 					targets.add(au4);
 					
-					MapPanelTest frame = new MapPanelTest();
-					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
-					frame.pack();
-					frame.setVisible(true);
+//					MapPanelTest frame = new MapPanelTest();
+//					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
+//					frame.pack();
+//					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -287,16 +289,29 @@ public class DamagePreviewPanel extends JPanel
 	class TargetPanel extends JPanel
 	{
 		ActiveUnit target;
-		int dmg, hit;
+		String dmg, hit;
 		BufferedImage sprite;
 		
 		public TargetPanel(ActiveUnit target)
 		{
 			this.target = target;
-			hit = FFTACalc.getATypeHitRate(au, target, sk);
-			dmg = FFTACalc.getDamage(au, target, sk);
 			
-			if (target.team == au.team)
+			int whichEffect;
+			if (sk == FFTASkill.RAISE && target.currHP == 0)
+				whichEffect = 1;
+			else
+				whichEffect = 0;
+			
+			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			
+			
+			hit = String.valueOf(result.hitChance);
+			if (result.damage < 0)
+				dmg = "+ " + Math.abs(result.damage);
+			else
+				dmg = String.valueOf(result.damage);
+			
+			if (target.team == 1)
 				setBackground(new Color(192, 192, 248));
 			else
 				setBackground(new Color(248, 192, 192));

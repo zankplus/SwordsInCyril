@@ -40,8 +40,7 @@ import javax.swing.border.EmptyBorder;
 public class UnitActionPanel extends JPanel
 {
 	CardLayout cl;
-	EngagementWindow ew;
-	GamePanel gp;
+	EngagementWindow window;
 	ActiveUnit au;
 	
 	private JButton btnAct, btnWait, btnMoveCancel, btnMove, btnActCancel, btnWaitCancel,
@@ -50,12 +49,12 @@ public class UnitActionPanel extends JPanel
 	private JPanel blankPanel, actionsPanel, movePanel, waitPanel, directionsPanel, actPanel,
 		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel;
 	private JLabel lblMoveInstruction; 
-	private SkillPanel skillPanel1, skillPanel2, alchItemPanel;
 	boolean unitHasMoved, unitHasActed, sendMove;
 	private JPanel fightPanel;
 	private JButton btnFightCancel;
 	private JLabel lblClickTheUnit;
 	String prevCard;
+	Engagement game;
 	
 	/**
 	 * Create the panel.
@@ -64,12 +63,12 @@ public class UnitActionPanel extends JPanel
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					MapPanelTest frame = new MapPanelTest();
-					UnitActionPanel uap = new UnitActionPanel(null);
-					uap.showActionsPanel();
-					frame.getContentPane().add(uap);
-					frame.pack();
-					frame.setVisible(true);
+//					MapPanelTest frame = new MapPanelTest();
+//					UnitActionPanel uap = new UnitActionPanel(null);
+//					uap.showActionsPanel();
+//					frame.getContentPane().add(uap);
+//					frame.pack();
+//					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -77,10 +76,10 @@ public class UnitActionPanel extends JPanel
 		});
 	}
 	
-	public UnitActionPanel(EngagementWindow ew)
+	public UnitActionPanel(EngagementWindow window)
 	{
-		this.ew = ew;
-		gp = ew.gamePanel;
+		this.window = window;
+		game = window.game;
 		
 		sendMove = false;
 		
@@ -191,7 +190,7 @@ public class UnitActionPanel extends JPanel
 		btnFight.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				prevCard = "Act";
-				showSkillUsePanel(gp.units[gp.currentUnit].getFightSkill());
+				showSkillUsePanel(game.currentUnit().getFightSkill());
 			}
 		});
 		btnFight.setPreferredSize(new Dimension(112, 23));
@@ -220,28 +219,7 @@ public class UnitActionPanel extends JPanel
 		lblClickTheUnit = new JLabel("<html>Click the unit to target.<br>Double-click to confirm action.");
 		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
 		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
-		
-		
-		// Skill Panel
-		/*skillPanel = new JPanel();
-		add(skillPanel, "Skill");
-		skillPanel.setLayout(new BorderLayout(0, 0));
-		
-		btnSkillCancel = new JButton("Cancel Skill");
-		skillPanel.add(btnSkillCancel, BorderLayout.SOUTH);
-		
-		skillInnerPanel = new JPanel();
-		skillPanel.add(skillInnerPanel, BorderLayout.CENTER);
-		skillInnerPanel.setLayout(new BorderLayout(0, 0));
-		
-		btnOk = new JButton("OK");
-		skillInnerPanel.add(btnOk, BorderLayout.EAST);
-		
-		skillList = new JList();
-		skillList.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		skillInnerPanel.add(skillList, BorderLayout.CENTER);*/
-		
-		
+			
 		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
 		waitPanel = new JPanel();
 		waitPanel.setLayout(new BorderLayout(0, 0));
@@ -364,7 +342,7 @@ public class UnitActionPanel extends JPanel
 	
 	public void showMovePanel()
 	{
-		gp.beginMovementMode();
+		game.window.beginMovementMode();
 		cl.show(this, "Move");
 	}
 	
@@ -381,14 +359,14 @@ public class UnitActionPanel extends JPanel
 	public void undoMove()
 	{
 		sendMove = false;
-		gp.undoMovement();
+		window.undoMovement();
 		unitHasMoved = false;
 		showActionsPanel();
 	}
 	
 	public void cancelMovement()
 	{
-		gp.cancelMovementMode();
+		window.cancelMovementMode();
 		showActionsPanel();
 	}
 
@@ -407,41 +385,18 @@ public class UnitActionPanel extends JPanel
 
 	public void showSkillUsePanel(FFTASkill sk)
 	{
-		gp.beginTargetingMode(sk);
+		window.beginTargetingMode(sk);
 		cl.show(this, "Fight");
 	}
 	
 	public void cancelFight()
 	{
-		gp.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
-		gp.selectTile();
-		showPrevPanel();				// tiles and sets the map panel's mode to 0, it serves our purpose here
+		window.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
+		window.selectTile();
+		showPrevPanel();			// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
-	public void doAct(ArrayList<Integer> targets, FFTASkill sk, int x, int y)
-	{
-		unitHasActed = true;
-		
-		try
-		{
-			hideActionPanel();
-			if (unitHasMoved)
-			{
-				ew.sendMove();
-				sendMove = false;
-			}
-			
-			// Clear away the tile highlights and return to the actions menu
-			gp.cancelMovementMode();
-			
-			// Reselect the current unit to remind the active player that further action is required of them
-			gp.selectTile(gp.map.mapData[gp.units[gp.currentUnit].x][gp.units[gp.currentUnit].y]);
-			
-			// Send the action
-			ew.sendAction(targets, sk, x, y);
-		}
-		catch (IOException e) { e.printStackTrace(); }
-	}
+	
 	
 	public void finishAct()
 	{
@@ -464,8 +419,8 @@ public class UnitActionPanel extends JPanel
 		try
 		{
 			if (sendMove)
-				ew.sendMove();
-			ew.sendWait(dir);
+				game.sendMove();
+			game.sendWait(dir);
 			
 			btnNe.setEnabled(false);
 			btnNw.setEnabled(false);
