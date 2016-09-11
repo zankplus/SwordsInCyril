@@ -78,12 +78,17 @@ public class ActiveUnit implements Serializable
 	public int getTickSpeed()
 	{
 		double modifier = 1.0;
-//		if (status[HASTE] > 0)
-//			modifier *= 2;
-//		else if (status[SLOW] > 0)
-//			modifier *= 0.5;
-//		if (status[SPEED_DOWN] > 0)
-//			modifier *= 0.5;
+		
+		// Petrified units do not accumulate counter
+		if (status[StatusEffect.PETRIFY.ordinal()] > 0)
+			return 0;
+		
+		if (status[StatusEffect.HASTE.ordinal()] > 0)
+			modifier *= 2;
+		else if (status[StatusEffect.SLOW.ordinal()] > 0)
+			modifier *= 0.5;
+		if (status[StatusEffect.SPEED_DOWN.ordinal()] > 0)
+			modifier *= 0.5;
 		
 		return (int) (modifier * unit.getTotalSpeed());
 	}

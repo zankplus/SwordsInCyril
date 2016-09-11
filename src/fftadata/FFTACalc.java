@@ -271,10 +271,10 @@ public class FFTACalc
 		if (defender.status[StatusEffect.MRES_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && !skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
 		// 9. Target's equipment check
@@ -365,7 +365,7 @@ public class FFTACalc
 			resistance = Math.max(resistance - enhanced, 1);
 			
 			// d. Geomancy check
-			if (attacker.unit.support == FFTASupport.GEOMANCY)
+			if (element != Element.NULL && attacker.unit.support == FFTASupport.GEOMANCY)
 				resistance = Math.max(resistance - 1, 1);
 			
 			// System.out.println("resistance: " + resistance);
@@ -445,6 +445,9 @@ public class FFTACalc
 	
 	public static boolean statusNegates(ActiveUnit defender, StatusEffect sEff)
 	{
+		// TODO: STOP prevents SLOW
+		// TODO: does it also prevent HASTE?
+		
 		return false;
 	}
 	

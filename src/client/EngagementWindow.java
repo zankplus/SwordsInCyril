@@ -23,6 +23,8 @@ import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
+import fftadata.StatusEffect;
+
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
@@ -383,6 +385,18 @@ public class EngagementWindow extends JFrame
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+	}
+	
+	public void startOfTurnAnnouncements(ActiveUnit au)
+	{
+		if (au.status[StatusEffect.SILENCE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can speak again!");
+		
+		if (au.status[StatusEffect.SLOW.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
+		
+		if (au.status[StatusEffect.STOP.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s back in time!");
 	}
 }
 

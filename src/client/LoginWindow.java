@@ -215,11 +215,10 @@ public class LoginWindow extends JFrame {
 		statusLabel.setForeground(Color.BLUE);
 		try
 		{
-			client.zu = new ZankUser(usernameField.getText());
+			client.zu = zUser;
 			client.chatWindow = new ChatWindow(client);
-			client.chatWindow.setVisible(true);
+			System.out.println("client.chatWindow: " + client.chatWindow);
 			sendLogin();
-			dispose();
 		}
 		catch (IOException e) { e.printStackTrace(); System.exit(0); }
 	}

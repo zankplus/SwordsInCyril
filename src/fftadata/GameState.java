@@ -17,17 +17,44 @@ public class GameState
 	{
 		ActiveUnit au = units[currentUnit];
 		
-		int poisonDamage = 0;
+		// Decrement silence
+		if (au.status[StatusEffect.SILENCE.ordinal()] > 0) 
+			au.status[StatusEffect.SILENCE.ordinal()] -= 1;
 		
+		// Decrement slow
+		if (au.status[StatusEffect.SLOW.ordinal()] > 0) 
+			au.status[StatusEffect.SLOW.ordinal()] -= 1;
+		
+		// Decrement stop
+		if (au.status[StatusEffect.STOP.ordinal()] > 0) 
+			au.status[StatusEffect.STOP.ordinal()] -= 1;
+		
+		// Apply poison damage
+		int poisonDamage = 0;
 		if (au.status[StatusEffect.POISON.ordinal()] > 0)
 		{
 			poisonDamage = (poisonVariance * (int) au.unit.maxHP) / 1000;
 			applyDamage(currentUnit, poisonDamage);
 		}
 		
+		// Apply MP regeneration
 		applyMPHealing(currentUnit, 5);
 		
 		return poisonDamage;
+	}
+	
+	// Returns true if the current unit recovers from stop this turn
+	public boolean stopTick()
+	{
+		ActiveUnit au = units[currentUnit];
+		boolean result = false;
+		
+		if (au.status[StatusEffect.STOP.ordinal()] == 1)
+			result = true;
+		
+		au.status[StatusEffect.STOP.ordinal()] = Math.max(0, au.status[StatusEffect.STOP.ordinal()] - 1);
+		
+		return result;
 	}
 	
 	public void expendMP(FFTASkill sk)
@@ -52,12 +79,7 @@ public class GameState
 		if (au.currHP <= 0)
 		{
 			au.currHP = 0;
-			
-			// Death handler
-			au.counter = 0;
-			au.reserve = 0;
-			for (int i = 0; i < au.status.length; i++)
-				au.status[i] = 0;
+			applyDeath(au);
 		}
 		
 		System.out.println(au.unit.name + ": " + au.currHP + " HP");
@@ -92,6 +114,37 @@ public class GameState
 		
 		System.out.println(au.unit.name + ": " + au.currMP + " MP");
 	}
+	
+	public void applyStatus(ActiveUnit target, StatusEffect sEff)
+	{
+		// Individual effect considerations
+		switch(sEff)
+		{
+			case SLOW:
+				target.status[StatusEffect.HASTE.ordinal()] = 0;
+				break;
+				
+			case HASTE:
+				target.status[StatusEffect.SLOW.ordinal()] = 0;
+				break;
+		
+			case PETRIFY:
+				applyDeath(target);		
+				break;
+			
+			case STOP:
+				target.status[StatusEffect.SLOW.ordinal()] = 0;
+				target.status[StatusEffect.HASTE.ordinal()] = 0;
+				target.reserve = 0;
+				break;
+				
+			default:
+				break;
+		}
+		
+		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
+	}
+	
 	
 	// Because this function is only called by the click handler when selecting a space it has
 	// already confirmed is within your targeting range, the getTargets() method can safely
@@ -167,5 +220,14 @@ public class GameState
 			
 		}	
 		return result;
+	}
+	
+	public void applyDeath(ActiveUnit au)
+	{
+		// Death handler
+		au.counter = 0;
+		au.reserve = 0;
+		for (int i = 0; i < au.status.length; i++)
+			au.status[i] = 0;
 	}
 }

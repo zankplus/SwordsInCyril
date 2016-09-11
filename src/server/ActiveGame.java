@@ -108,35 +108,65 @@ public class ActiveGame
 	
 	public void advanceTurn() throws InterruptedException
 	{
+		System.out.println("x?");
+		
 		// Determine next unit to move
 		state.currentUnit = turnOrder.getNext();
+
+		// Grab reference to current unit
+		ActiveUnit au = state.units[state.currentUnit];
 		
 		// Calculate poison variance
 		int poisonVariance = 85 + (int) (Math.random() * 30);
 		
-		// Apply start of turn effects on server side
-		state.startOfTurnEffects(poisonVariance);
+		// Decrement Stop status
+		state.stopTick();
 		
+		System.out.println("y?");
 		
-		
-		// If the current unit is still alive
+		// Apply start of turn effects only if the target is alive and not stopped or petrified
+		if (au.status[StatusEffect.STOP.ordinal()] == 0)
+		{
+			// Apply start of turn effects on server side
+			state.startOfTurnEffects(poisonVariance);
+		}
+
+		// Tell the client that it's this unit's turn, whether they're able to take their turn or not.
+		// If the unit is dead, petrified, stopped, etc., the client will handle it accordingly.
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null,
 				new int[] { state.currentUnit, poisonVariance });
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
 	
-		// If the current unit has died
-		if (state.units[state.currentUnit].currHP == 0)
+		System.out.println("then what?" + au.status[StatusEffect.STOP.ordinal()]);
+		
+		// If the current unit has died of poison this turn...
+		if (au.currHP == 0)
 		{	
+			System.out.println("a?");
 			// See if the game has been won
 			boolean gameOver = victoryCheck();
 			
+			// If it hasn't been, advance to the next turn
 			if (!gameOver)
 				advanceTurn();
+			System.out.println("b?");
 		}
 		
-		
+		// If the current unit is stopped...
+		else if (au.status[StatusEffect.STOP.ordinal()] > 0)
+		{
+			System.out.println("c?");
+			// Force them to take the wait action, retaining the same direction
+			waitUnit(state.currentUnit, au.dir);
+			
+			// Advance to the next turn
+			advanceTurn();
+			System.out.println("d?");
+		}
+
+		System.out.println(au.unit.name + "'s turn!");
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
@@ -199,17 +229,17 @@ public class ActiveGame
 	{
 		// Assume both teams have lost by default. If any unit on a team is alive and well,
 		// change the loss flag to true.
-		boolean p1lose = true, p2lose = true;
+		boolean p1lose = false, p2lose = false;
 		
 		// Team 1
 		for (int i = 0; i < p1Units.size(); i++)
-			if (p1Units.get(i).currHP > 0)
-				p1lose = false;
+			if (p1Units.get(i).currHP == 0 || p1Units.get(i).status[StatusEffect.PETRIFY.ordinal()] > 0)
+				p1lose = true;
 		
 		// Team 2
 		for (int i = 0; i < p2Units.size(); i++)
-			if (p2Units.get(i).currHP > 0)
-				p2lose = false;
+			if (p2Units.get(i).currHP == 0 || p2Units.get(i).status[StatusEffect.PETRIFY.ordinal()] > 0)
+				p2lose = true;
 		
 		if (p1lose || p2lose)
 			status = GameStatus.COMPLETE;

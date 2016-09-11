@@ -31,6 +31,8 @@ public class ActiveUser extends Thread
 	{
 		this.connection = connection;
 		messageQueue = new LinkedBlockingQueue<ZankMessage>();
+		messageQueue.add(new ZankMessage (ZankMessageType.READY, null, null));
+		
 		try
 		{
 			connection.setSoTimeout(0);
@@ -40,8 +42,8 @@ public class ActiveUser extends Thread
 			out.flush();
 			readyChecker = new InputStreamReader(new BufferedInputStream(connection.getInputStream()));
 		}
-		catch (SocketException e) { System.out.println("\r" + e); }
-		catch (IOException e) { System.err.println("\r" + e); }
+		catch (SocketException e) { e.printStackTrace(); }
+		catch (IOException e) { e.printStackTrace(); }
 	}
 	
 	@SuppressWarnings({ "unchecked" })
@@ -67,7 +69,10 @@ public class ActiveUser extends Thread
 							
 							String username = msg.user;
 							ZankMessageType command = msg.type;
-								
+							
+
+							System.out.println(msg.type + " " + msg.user + " " + msg.data);
+							
 							// Special handlers for different message types
 							if (command.equals(ZankMessageType.LOGIN) && nickname == null)
 							{								
@@ -109,13 +114,20 @@ public class ActiveUser extends Thread
 							{
 								String challenged = (String) msg.data;
 								ActiveUser challengedUser = null;
+								
+								
+								
 								for (ActiveUser user : ChatServer.userlist)
+								{
+									System.out.println("1 user = " + (user.nickname == null));
+									System.out.println("2 " + user.nickname);
 									if (user.nickname.equals(challenged))
 									{
 										challengedUser = user;
 										break;
 									}
-
+								}
+								
 								if (challengedUser == null)
 								{
 									// System.out.println("challengee not found");

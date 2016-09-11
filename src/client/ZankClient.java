@@ -37,9 +37,11 @@ public class ZankClient
 		message = null;
 		clanBuilder = null;
 		loginWindow = new LoginWindow(this);
+		chatWindow = null;
 		EngagementWindow gameWindow = null;
+		
 	}
-	
+
 	public void sendChallenge(String user) throws IOException
 	{
 		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.username, user);

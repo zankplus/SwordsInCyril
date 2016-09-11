@@ -68,16 +68,74 @@ public enum SkillEffect implements Serializable
 	{	return applyMPDamage(result);															}	}),
 	
 	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericStatusEffect(result, 1, StatusEffect.POISON, preview, false);				}	public String applyEffect(SkillEffectResult result)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.POISON, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.POISON);										}	}),
+	
+	ADD_BLIND																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.BLIND, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BLIND);											}	}),
+	
+	ADD_SILENCE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.SILENCE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
+	
+	ADD_SLOW																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.SLOW, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
+	
+	ADD_PETRIFY																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.PETRIFY, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.PETRIFY);										}	}),
+	
+	ADD_STOP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.STOP, false, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	
+	ADD_WATK_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.WATK_DOWN, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.WATK_DOWN);										}	}),
+	
+	ADD_WDEF_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.WDEF_DOWN, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.WDEF_DOWN);										}	}),
+	
+	ADD_MPOW_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.MPOW_DOWN, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.MPOW_DOWN);										}	}),
+	
+	ADD_SPEED_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.SPEED_DOWN, true, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SPEED_DOWN);									}	}),
 	
 	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.POISON);										}	}),
 	
+	EFF1DEP_ADD_BLIND																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.BLIND, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BLIND);											}	}),
+
+	EFF1DEP_ADD_SILENCE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SILENCE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
+
+	EFF1DEP_ADD_SLOW																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SLOW, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
+	
+	EFF1DEP_ADD_STOP																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.STOP, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+
+	EFF1DEP_ADD_MRES_DOWN																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.MRES_DOWN, preview, true);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.MRES_DOWN);										}	}),
+	
 	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyHealing(result);															}	});
+	
+	
 	
 	static GameState state;
 	public final SkillEffectHandler handler;
@@ -132,26 +190,28 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
-	// Server-side effect handlers
+	// Effect resolvers
 	public static SkillEffectResult genericStatusEffect(SkillEffectResult result,
-			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
+			double hitFactor, StatusEffect sEff, boolean aType, boolean preview, boolean neverMiss)
 	{
 		ActiveUnit user = state.units[result.user];
 		ActiveUnit target = state.units[result.target];
 		FFTASkill skill = result.skill;
 		
+		// Calculate hit rate
 		int hitRate;
 		if (neverMiss)
 			hitRate = 100;
+		else if (aType)
+			hitRate = FFTACalc.getATypeHitRate(user, target, skill, hitFactor);
 		else
 			hitRate = FFTACalc.getSTypeHitRate(user, target, sEff, hitFactor);
 		result.hitChance = hitRate;
 		
+		// Determine whether effect succeeds or fails
 		int rand = (int) (100 * Math.random());
 		if (rand < hitRate || preview)
-		{
 			result.success = true;
-		}
 		else
 			result.success = false;
 		
@@ -169,8 +229,9 @@ public enum SkillEffect implements Serializable
 			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
 	{
 		result.dependent = true;
-		if (prev.success)
-			result = genericStatusEffect(result, hitFactor, sEff, preview, neverMiss);
+		ActiveUnit target = state.units[prev.target];
+		if (prev.success && target.currHP > 0)
+			result = genericStatusEffect(result, hitFactor, sEff, false, preview, neverMiss);
 			
 		return result;
 	}
@@ -296,9 +357,9 @@ public enum SkillEffect implements Serializable
 		
 		if (result.success)
 		{
-			target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
+			state.applyStatus(target, sEff);
 			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
-					 "</strong> " + sEff.REPORT;
+					 "</strong>" + sEff.REPORT;
 		}
 		else if (!result.dependent)
 			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +

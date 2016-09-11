@@ -311,7 +311,7 @@ public class DamagePreviewPanel extends JPanel
 			else
 				dmg = String.valueOf(result.damage);
 			
-			if (target.team == au.team)
+			if (target.team == 1)
 				setBackground(new Color(192, 192, 248));
 			else
 				setBackground(new Color(248, 192, 192));

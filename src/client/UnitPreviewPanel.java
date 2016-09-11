@@ -28,6 +28,7 @@ import java.awt.Component;
 import javax.swing.JSeparator;
 import javax.swing.JTextArea;
 import javax.swing.JTextPane;
+import javax.swing.ListSelectionModel;
 
 public class UnitPreviewPanel extends JPanel
 {
@@ -37,6 +38,7 @@ public class UnitPreviewPanel extends JPanel
 	private JLabel lblCurrHP;
 	private JLabel lblCurrMP;
 	private JLabel lblStatus;
+	private JList equipmentList_1;
 	
 	public UnitPreviewPanel()
 	{
@@ -52,15 +54,29 @@ public class UnitPreviewPanel extends JPanel
 		setPreferredSize(new Dimension(320, 162));
 		setLayout(new BorderLayout(0, 0));
 		
+		JList equipmentList = new JList();
+		
+		JPanel mainPanel = new JPanel();
+		if (au.team == 1)
+			mainPanel.setBackground(new Color(192, 192, 248));
+		else
+			mainPanel.setBackground(new Color(248, 192, 192));
+		mainPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		add(mainPanel, BorderLayout.CENTER);
+		mainPanel.setLayout(new BorderLayout(0, 0));
+		
 		JPanel leftPanel = new JPanel();
-		add(leftPanel, BorderLayout.CENTER);
+		leftPanel.setOpaque(false);
+		mainPanel.add(leftPanel, BorderLayout.CENTER);
 		leftPanel.setLayout(new BorderLayout(0, 0));
 		
 		JPanel upperPanel = new JPanel();
+		upperPanel.setOpaque(false);
 		leftPanel.add(upperPanel, BorderLayout.NORTH);
 		upperPanel.setLayout(new BorderLayout(0, 0));
 		
 		JPanel basicInfoPanel = new JPanel();
+		basicInfoPanel.setOpaque(false);
 		upperPanel.add(basicInfoPanel, BorderLayout.CENTER);
 		basicInfoPanel.setLayout(new GridLayout(4, 1, 0, 0));
 		
@@ -69,12 +85,13 @@ public class UnitPreviewPanel extends JPanel
 		basicInfoPanel.add(lblNameAndLevel);
 		
 		JPanel basicStatsAlignmentPanel = new JPanel();
+		basicStatsAlignmentPanel.setOpaque(false);
 		basicStatsAlignmentPanel.setBorder(null);
 		basicInfoPanel.add(basicStatsAlignmentPanel);
-		basicStatsAlignmentPanel.setLayout(new GridLayout(0, 7, 0, 0));
+		basicStatsAlignmentPanel.setLayout(new GridLayout(0, 6, 0, 0));
 		
 		JLabel lblHP = new JLabel("<html><b>HP</b>");
-		lblHP.setHorizontalAlignment(SwingConstants.CENTER);
+		lblHP.setHorizontalAlignment(SwingConstants.RIGHT);
 		basicStatsAlignmentPanel.add(lblHP);
 		
 		lblCurrHP = new JLabel("" + au.currHP);
@@ -84,11 +101,8 @@ public class UnitPreviewPanel extends JPanel
 		JLabel lblMaxHP = new JLabel("/ " + (int) unit.maxHP);
 		basicStatsAlignmentPanel.add(lblMaxHP);
 		
-		JPanel basicStatsAlignmentGap = new JPanel();
-		basicStatsAlignmentPanel.add(basicStatsAlignmentGap);
-		
 		JLabel lblMP = new JLabel("<html><b>MP</b>");
-		lblMP.setHorizontalAlignment(SwingConstants.CENTER);
+		lblMP.setHorizontalAlignment(SwingConstants.RIGHT);
 		basicStatsAlignmentPanel.add(lblMP);
 		
 		lblCurrMP = new JLabel("" + au.currMP);
@@ -122,15 +136,18 @@ public class UnitPreviewPanel extends JPanel
 					else
 						t = 0;
 						
-					g.drawImage(sprite, t, 0, 32*r, 64, null);
+
+					g.drawImage(sprite, t + 2, 2, 32*r, 64, null);
 				} catch(IOException e) { System.out.println("Couldn't find sprite!"); }
 				
 			}
 		};
-		imagePanel.setPreferredSize(new Dimension(32, 64));
+		imagePanel.setOpaque(false);
+		imagePanel.setPreferredSize(new Dimension(34, 66));
 		upperPanel.add(imagePanel, BorderLayout.WEST);
 		
 		JPanel lowerPanel = new JPanel();
+		lowerPanel.setOpaque(false);
 		leftPanel.add(lowerPanel, BorderLayout.CENTER);
 		lowerPanel.setLayout(new BorderLayout(0, 0));
 		
@@ -138,6 +155,7 @@ public class UnitPreviewPanel extends JPanel
 		lowerPanel.add(separator, BorderLayout.NORTH);
 		
 		JPanel statsPanel = new JPanel();
+		statsPanel.setOpaque(false);
 		lowerPanel.add(statsPanel, BorderLayout.CENTER);
 		statsPanel.setLayout(new GridLayout(4, 4, 0, 0));
 		
@@ -206,18 +224,19 @@ public class UnitPreviewPanel extends JPanel
 		statsPanel.add(lblEvadeScore);
 		
 		JPanel rightPanel = new JPanel();
+		rightPanel.setOpaque(false);
+		mainPanel.add(rightPanel, BorderLayout.EAST);
 		rightPanel.setPreferredSize(new Dimension(100, 95));
-		add(rightPanel, BorderLayout.EAST);
 		rightPanel.setLayout(new BorderLayout(0, 0));
-		
-		JList equipmentList = new JList();
-		equipmentList = new JList<FFTAEquip>();
-		equipmentList.setPreferredSize(new Dimension(100, 94));
-		equipmentList.setCellRenderer(new EquipCellRenderer());
-		equipmentList.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		equipmentList.setVisibleRowCount(5);
-		equipmentList.setModel(unit.equips.getListModel());
-		rightPanel.add(equipmentList, BorderLayout.NORTH);
+		equipmentList_1 = new JList<FFTAEquip>();
+		equipmentList_1.setEnabled(false);
+		equipmentList_1.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		equipmentList_1.setPreferredSize(new Dimension(100, 94));
+		equipmentList_1.setCellRenderer(new EquipCellRenderer());
+		equipmentList_1.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		equipmentList_1.setVisibleRowCount(5);
+		equipmentList_1.setModel(unit.equips.getListModel());
+		rightPanel.add(equipmentList_1, BorderLayout.NORTH);
 		
 		lblStatus = new JLabel("<html><b>Status:</b> OK");
 		lblStatus.setVerticalAlignment(SwingConstants.TOP);

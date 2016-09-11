@@ -1,3 +1,3 @@
 package zank;
 
-public enum ZankMessageType { CHAT, LOGIN, LOGOUT, CHALLENGE, ENGAGE, GAME, ONLINE; }
+public enum ZankMessageType { CHAT, LOGIN, LOGOUT, CHALLENGE, ENGAGE, GAME, ONLINE, READY; }

@@ -20,6 +20,7 @@ import fftadata.FFTASkill;
 import fftadata.GameState;
 import fftadata.SkillEffect;
 import fftadata.SkillEffectResult;
+import fftadata.StatusEffect;
 import fftadata.Targeting;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
@@ -213,31 +214,57 @@ public class Engagement
 		state.currentUnit = data[0];
 		
 		ActiveUnit au = currentUnit();
-		window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 		
-		int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
-		if (poisonDamage > 0)
+		// Decrement this unit's Stop counter and check whether it has abated this turn
+		boolean stopEnded = state.stopTick();
+		
+		if (au.status[StatusEffect.STOP.ordinal()] > 0 && !stopEnded)
+			{}
+		else
 		{
-			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
-					"</strong> takes " + poisonDamage + " damage from poison!");
+			if (au.status[StatusEffect.SLEEP.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is asleep!");
+			else if (stopEnded)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is back in time!");
+			else if (au.status[StatusEffect.PETRIFY.ordinal()] == 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 			
-			window.updateSprite(getUnits()[au.id]);
-			window.updateUnitPreview(au.id);
-			if (au.currHP == 0)
-				window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
+			// Announce status effects that are abating this turn
+			window.startOfTurnAnnouncements(au);
+			
+			// Apply poison damage (if applicable) 
+			int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
+			
+			// Announce poison damage (if applicable) and update displays to reflect it
+			if (poisonDamage > 0)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
+						"</strong> takes " + poisonDamage + " damage from poison!");
+				
+				window.updateSprite(getUnits()[au.id]);
+				window.updateUnitPreview(au.id);
+				if (au.currHP == 0)
+					window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
+			}
 		}
 		
 		
-		window.selectTile(map.mapData[au.x][au.y]);
 		
-		if (au.currHP > 0)
+		if (au.currHP > 0 && au.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
+							 au.status[StatusEffect.STOP.ordinal()]    == 0 && 
+							 au.status[StatusEffect.SLEEP.ordinal()]   == 0 )
 		{
+			// Select current unit's tile
+			window.selectTile(map.mapData[au.x][au.y]);
+			
 			// Decide which panel to show
 			if (currentUnit().team == playerNumber)	// Show the action panel if it's your turn
 				window.startPlayerTurn();
 			else
 				window.startRivalTurn();			// Show the blank panel if it's not
 		}
+		else
+			window.startRivalTurn();
 		
 	}
 	
