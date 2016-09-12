@@ -108,8 +108,6 @@ public class ActiveGame
 	
 	public void advanceTurn() throws InterruptedException
 	{
-		System.out.println("x?");
-		
 		// Determine next unit to move
 		state.currentUnit = turnOrder.getNext();
 
@@ -121,8 +119,6 @@ public class ActiveGame
 		
 		// Decrement Stop status
 		state.stopTick();
-		
-		System.out.println("y?");
 		
 		// Apply start of turn effects only if the target is alive and not stopped or petrified
 		if (au.status[StatusEffect.STOP.ordinal()] == 0)
@@ -139,34 +135,27 @@ public class ActiveGame
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
 	
-		System.out.println("then what?" + au.status[StatusEffect.STOP.ordinal()]);
-		
 		// If the current unit has died of poison this turn...
 		if (au.currHP == 0)
 		{	
-			System.out.println("a?");
 			// See if the game has been won
 			boolean gameOver = victoryCheck();
 			
 			// If it hasn't been, advance to the next turn
 			if (!gameOver)
 				advanceTurn();
-			System.out.println("b?");
 		}
 		
-		// If the current unit is stopped...
-		else if (au.status[StatusEffect.STOP.ordinal()] > 0)
+		// If the current unit is stopped or asleep...
+		else if (au.status[StatusEffect.STOP.ordinal()]  > 0 ||
+				 au.status[StatusEffect.SLEEP.ordinal()] > 0 )
 		{
-			System.out.println("c?");
 			// Force them to take the wait action, retaining the same direction
 			waitUnit(state.currentUnit, au.dir);
 			
 			// Advance to the next turn
 			advanceTurn();
-			System.out.println("d?");
 		}
-
-		System.out.println(au.unit.name + "'s turn!");
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
@@ -227,19 +216,19 @@ public class ActiveGame
 	// Check both teams' HP scores and status to see if either size has lost
 	public boolean victoryCheck() throws InterruptedException
 	{
-		// Assume both teams have lost by default. If any unit on a team is alive and well,
-		// change the loss flag to true.
-		boolean p1lose = false, p2lose = false;
+		// Assume both teams to have not yet lost by default. If any unit on a team is alive and well,
+		// change the loss flag to false.
+		boolean p1lose = true, p2lose = true;
 		
 		// Team 1
 		for (int i = 0; i < p1Units.size(); i++)
-			if (p1Units.get(i).currHP == 0 || p1Units.get(i).status[StatusEffect.PETRIFY.ordinal()] > 0)
-				p1lose = true;
+			if (p1Units.get(i).currHP > 0 && p1Units.get(i).status[StatusEffect.PETRIFY.ordinal()] == 0)
+				p1lose = false;
 		
 		// Team 2
 		for (int i = 0; i < p2Units.size(); i++)
-			if (p2Units.get(i).currHP == 0 || p2Units.get(i).status[StatusEffect.PETRIFY.ordinal()] > 0)
-				p2lose = true;
+			if (p2Units.get(i).currHP > 0 && p2Units.get(i).status[StatusEffect.PETRIFY.ordinal()] == 0)
+				p2lose = false;
 		
 		if (p1lose || p2lose)
 			status = GameStatus.COMPLETE;

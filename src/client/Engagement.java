@@ -242,10 +242,11 @@ public class Engagement
 						"</strong> takes " + poisonDamage + " damage from poison!");
 				
 				window.updateSprite(getUnits()[au.id]);
-				window.updateUnitPreview(au.id);
 				if (au.currHP == 0)
 					window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
 			}
+			
+			window.updateUnitPreview(au.id);
 		}
 		
 		

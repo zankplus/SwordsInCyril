@@ -21,13 +21,21 @@ public class GameState
 		if (au.status[StatusEffect.SILENCE.ordinal()] > 0) 
 			au.status[StatusEffect.SILENCE.ordinal()] -= 1;
 		
+		// Decrement sleep
+		if (au.status[StatusEffect.SLEEP.ordinal()] > 0) 
+			au.status[StatusEffect.SLEEP.ordinal()] -= 1;
+		
+		// Decrement immobilize
+		if (au.status[StatusEffect.IMMOBILIZE.ordinal()] > 0) 
+			au.status[StatusEffect.IMMOBILIZE.ordinal()] -= 1;
+		
+		// Decrement disable
+		if (au.status[StatusEffect.DISABLE.ordinal()] > 0) 
+			au.status[StatusEffect.DISABLE.ordinal()] -= 1;
+				
 		// Decrement slow
 		if (au.status[StatusEffect.SLOW.ordinal()] > 0) 
 			au.status[StatusEffect.SLOW.ordinal()] -= 1;
-		
-		// Decrement stop
-		if (au.status[StatusEffect.STOP.ordinal()] > 0) 
-			au.status[StatusEffect.STOP.ordinal()] -= 1;
 		
 		// Apply poison damage
 		int poisonDamage = 0;
@@ -136,6 +144,11 @@ public class GameState
 				target.status[StatusEffect.SLOW.ordinal()] = 0;
 				target.status[StatusEffect.HASTE.ordinal()] = 0;
 				target.reserve = 0;
+				break;
+				
+			case DEATH:
+				target.currHP = 0;
+				applyDeath(target);
 				break;
 				
 			default:

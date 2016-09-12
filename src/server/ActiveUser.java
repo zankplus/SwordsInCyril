@@ -306,8 +306,8 @@ public class ActiveUser extends Thread
 			if (in != null) in.close();
 			synchronized (ChatServer.userlist) { ChatServer.userlist.remove(this); }
 		}
-		catch (IOException e) { System.err.println("\rAcceptance error: " + e.getMessage()); }
-		catch (InterruptedException e) { System.err.println("\rFailed to add message to queue. "); }
+		catch (IOException e) { e.printStackTrace(); }
+		catch (InterruptedException e) { e.printStackTrace(); }
 	}
 	
 }

@@ -389,8 +389,14 @@ public class EngagementWindow extends JFrame
 	
 	public void startOfTurnAnnouncements(ActiveUnit au)
 	{
-		if (au.status[StatusEffect.SILENCE.ordinal()] == 1)
-			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can speak again!");
+		if (au.status[StatusEffect.SLEEP.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> wakes up!");
+		
+		if (au.status[StatusEffect.IMMOBILIZE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can move again!");
+		
+		if (au.status[StatusEffect.DISABLE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can act again!");
 		
 		if (au.status[StatusEffect.SLOW.ordinal()] == 1)
 			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");

@@ -79,6 +79,18 @@ public enum SkillEffect implements Serializable
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SILENCE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
 	
+	ADD_SLEEP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.SLEEP, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SLEEP);											}	}),
+	
+	ADD_IMMOBILIZE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.IMMOBILIZE, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.IMMOBILIZE);									}	}),
+	
+	ADD_DISABLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.DISABLE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.DISABLE);										}	}),
+	
 	ADD_SLOW																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SLOW, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
@@ -107,6 +119,10 @@ public enum SkillEffect implements Serializable
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SPEED_DOWN, true, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SPEED_DOWN);									}	}),
 	
+	ADD_DEATH																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.DEATH, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.DEATH);											}	}),
+	
 	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.POISON);										}	}),
@@ -119,6 +135,14 @@ public enum SkillEffect implements Serializable
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SILENCE, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
 
+	EFF1DEP_ADD_IMMOBILIZE																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.IMMOBILIZE, preview, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.IMMOBILIZE);									}	}),
+	
+	EFF1DEP_ADD_DISABLE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.DISABLE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.DISABLE);										}	}),
+	
 	EFF1DEP_ADD_SLOW																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SLOW, preview, false);			}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
@@ -266,6 +290,13 @@ public enum SkillEffect implements Serializable
 			
 			report += target.unit.name + "</strong> takes <strong><span style=\"color:red\">" + 
 					result.damage + "</strong> damage! (" + result.hitChance + "%)";
+			
+			// Wake sleeping units
+			if (result.damage > 0 && target.status[StatusEffect.SLEEP.ordinal()] > 0)
+			{
+				target.status[StatusEffect.SLEEP.ordinal()] = 0;
+				report += "<br><em><span style=\"color:gray\">.........<strong>" + target.unit.name + " wakes up!";
+			}
 		}
 		else
 			report = "<em><span style=\"color:gray\">......The attack misses <strong>" +

@@ -15,11 +15,13 @@ import fftadata.FFTAEquip;
 import fftadata.FFTAJob;
 import fftadata.FFTASkill;
 import fftadata.FFTASupport;
+import fftadata.StatusEffect;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -230,7 +232,19 @@ public class UnitActionPanel extends JPanel
 		btnWaitCancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				showActionsPanel();
+				if(unitHasActed && unitHasMoved)
+				{
+					// undo the movement
+					sendMove = false;
+					window.undoMovement();
+					unitHasMoved = false;
+					
+					// assume start of new movement
+					showMovePanel();
+					
+				}
+				else
+					showActionsPanel();
 			}
 		});
 		
@@ -265,6 +279,7 @@ public class UnitActionPanel extends JPanel
 		
 		// Add first skillset button
 		btnSkillset_1 = new JButton("" + au.unit.job.command);
+		btnSkillset_1.setMargin(new Insets(2, 5, 2, 5));
 		actSkillsetPanel.add(btnSkillset_1);
 		btnSkillset_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0)
@@ -322,15 +337,26 @@ public class UnitActionPanel extends JPanel
 	
 	public void showActionsPanel()
 	{
-		if (unitHasActed)
+		if (unitHasActed || au.status[StatusEffect.DISABLE.ordinal()] > 0)
 			btnAct.setEnabled(false);
 		else
 			btnAct.setEnabled(true);
 		
 		if (unitHasMoved)
+		{
 			btnMove.setText("Undo move");
-		else
+			btnMove.setEnabled(true);
+		}
+		else if (au.status[StatusEffect.IMMOBILIZE.ordinal()] > 0)
+		{
 			btnMove.setText("Move");
+			btnMove.setEnabled(false);
+		}
+		else
+		{
+			btnMove.setText("Move");
+			btnMove.setEnabled(true);
+		}
 		
 		cl.show(this, "Actions");
 	}
@@ -376,7 +402,6 @@ public class UnitActionPanel extends JPanel
 		unitHasMoved = true;
 		if (unitHasActed)
 		{
-			btnWaitCancel.setEnabled(false);
 			showWaitPanel();
 		}
 		else
@@ -401,15 +426,18 @@ public class UnitActionPanel extends JPanel
 	public void finishAct()
 	{
 		if (unitHasMoved)
+		{
+			btnWaitCancel.setEnabled(false);
 			showWaitPanel();
+		}
 		else
 			showActionsPanel();
 	}
 	
 	public void showWaitPanel()
 	{
-		if (unitHasMoved && unitHasActed)
-			btnWaitCancel.setEnabled(false);
+//		if (unitHasMoved && unitHasActed)
+//			btnWaitCancel.setEnabled(false);
 		
 		cl.show(this,  "Wait");
 	}

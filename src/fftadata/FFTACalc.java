@@ -140,7 +140,7 @@ public class FFTACalc
 					defender.status[StatusEffect.SLEEP.ordinal()] != 0 ||
 					defender.status[StatusEffect.EXPERT_GUARD.ordinal()] != 0)
 			{
-				hitRate = 0;
+				hitRate = 100;
 			}
 			else
 			{
