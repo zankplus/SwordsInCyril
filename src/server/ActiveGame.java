@@ -156,6 +156,18 @@ public class ActiveGame
 			// Advance to the next turn
 			advanceTurn();
 		}
+		
+		// If the current unit is charmed, confused, or berserked
+		else if (au.status[StatusEffect.CONFUSE.ordinal()]  > 0 ||
+				 au.status[StatusEffect.CHARM.ordinal()] > 0    ||
+				 au.status[StatusEffect.BERSERK.ordinal()] > 0)
+		{
+			// Force them to take the wait action, retaining the same direction
+			waitUnit(state.currentUnit, au.dir);
+			
+			// Advance to the next turn
+			advanceTurn();
+		}
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter

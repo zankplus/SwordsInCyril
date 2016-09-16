@@ -126,6 +126,10 @@ public class FFTACalc
 		// 1. Retrieve target's Status Resistance
 		int sRes = 50;
 		
+		// 1.5. Return 0 if attempting to charm
+		if (sEff == StatusEffect.CHARM && attacker.team == defender.team)
+			hitRate = 0;
+		
 		// 2. Status check | 3. Equipment check | 4. Immunity check
 		if (statusNegates(defender, sEff) || equipmentNegates(defender, sEff) ||
 				supportNegates(defender, sEff))

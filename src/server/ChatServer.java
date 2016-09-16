@@ -33,15 +33,10 @@ public class ChatServer
 			
 			while(true)
 			{
-				System.out.println("confirmation 1");
 				Socket connection = server.accept();
-				System.out.println("confirmation 2");
 				ActiveUser user = new ActiveUser(connection);
-				System.out.println("confirmation 3");
 				synchronized (userlist) { userlist.add(user); }
-				System.out.println("confirmation 4");
 				pool.submit(user);
-				System.out.println("confirmation 5");
 			}
 		}
 		catch (IOException e) { System.err.println(e); }
@@ -89,7 +84,6 @@ public class ChatServer
 				{
 					try
 					{
-						System.out.println("Message handler 1");
 						ZankMessage message = masterMessageQueue.take();
 						
 						// If it's a Game message, send it to everyone in the specified room

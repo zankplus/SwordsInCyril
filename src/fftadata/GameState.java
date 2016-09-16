@@ -17,6 +17,18 @@ public class GameState
 	{
 		ActiveUnit au = units[currentUnit];
 		
+		// Decrement doom
+		if (au.status[StatusEffect.DOOM.ordinal()] > 1)
+			au.status[StatusEffect.DOOM.ordinal()] -= 1;
+		else if (au.status[StatusEffect.DOOM.ordinal()] == 1)
+		{
+			au.currHP = 0;
+			applyDeath(au);
+			
+			// If the unit dies, return without applying any of the other effects
+			return 0;
+		}
+		
 		// Decrement silence
 		if (au.status[StatusEffect.SILENCE.ordinal()] > 0) 
 			au.status[StatusEffect.SILENCE.ordinal()] -= 1;
@@ -36,6 +48,20 @@ public class GameState
 		// Decrement slow
 		if (au.status[StatusEffect.SLOW.ordinal()] > 0) 
 			au.status[StatusEffect.SLOW.ordinal()] -= 1;
+
+		// Decrement addle
+		if (au.status[StatusEffect.ADDLE.ordinal()] > 0) 
+			au.status[StatusEffect.ADDLE.ordinal()] -= 1;
+
+		// Decrement confuse
+		if (au.status[StatusEffect.CONFUSE.ordinal()] > 0) 
+			au.status[StatusEffect.CONFUSE.ordinal()] -= 1;
+		
+		// Decrement charm
+		if (au.status[StatusEffect.CHARM.ordinal()] > 0) 
+			au.status[StatusEffect.CHARM.ordinal()] -= 1;
+		
+		
 		
 		// Apply poison damage
 		int poisonDamage = 0;
@@ -48,6 +74,7 @@ public class GameState
 		// Apply MP regeneration
 		applyMPHealing(currentUnit, 5);
 		
+		// Return poison damage
 		return poisonDamage;
 	}
 	
@@ -240,7 +267,11 @@ public class GameState
 		// Death handler
 		au.counter = 0;
 		au.reserve = 0;
-		for (int i = 0; i < au.status.length; i++)
+		
+		// Wipe all status effects, except for frog
+		for (int i = 0; i < StatusEffect.FROG.ordinal(); i++)
+			au.status[i] = 0;
+		for (int i = StatusEffect.FROG.ordinal() + 1; i < au.status.length; i++)
 			au.status[i] = 0;
 	}
 }

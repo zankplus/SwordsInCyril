@@ -45,7 +45,11 @@ public class ActiveUnit implements Serializable
 	public String getSpriteURL()
 	{
 		StringBuilder url = new StringBuilder();
-		url.append("resources/jobs/" + unit.job.name());
+		
+		if (status[StatusEffect.FROG.ordinal()] > 0)
+			url.append("resources/jobs/frog");
+		else
+			url.append("resources/jobs/" + unit.job.name());
 		
 		if (team == 1)
 			url.append("_ally");

@@ -389,6 +389,17 @@ public class EngagementWindow extends JFrame
 	
 	public void startOfTurnAnnouncements(ActiveUnit au)
 	{
+		if (au.status[StatusEffect.DOOM.ordinal()] > 0)
+		{
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name +
+					"</strong>'s timer drops to <strong>" + (au.status[StatusEffect.DOOM.ordinal()] - 1) + 
+					"</strong>!");
+			
+			if (au.status[StatusEffect.DOOM.ordinal()] == 1)
+				appendToChat("<em><span style=\"color:gray\">......The reaper takes <strong>" + 
+							  au.unit.name + "</strong>!");
+		}
+		
 		if (au.status[StatusEffect.SLEEP.ordinal()] == 1)
 			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> wakes up!");
 		
@@ -403,6 +414,15 @@ public class EngagementWindow extends JFrame
 		
 		if (au.status[StatusEffect.STOP.ordinal()] == 1)
 			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s back in time!");
+		
+		if (au.status[StatusEffect.ADDLE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> remembers!");
+		
+		if (au.status[StatusEffect.CONFUSE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> comes to!");
+		
+		if (au.status[StatusEffect.CHARM.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> comes to!");
 	}
 }
 

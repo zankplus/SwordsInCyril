@@ -95,13 +95,37 @@ public enum SkillEffect implements Serializable
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SLOW, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
 	
+	ADD_STOP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.STOP, false, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	
 	ADD_PETRIFY																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.PETRIFY, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.PETRIFY);										}	}),
 	
-	ADD_STOP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericStatusEffect(result, 1, StatusEffect.STOP, false, preview, false);			}	public String applyEffect(SkillEffectResult result)
-	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	ADD_FROG																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.FROG, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.FROG);											}	}),
+
+	ADD_ADDLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.ADDLE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.ADDLE);											}	}),
+	
+	ADD_DOOM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.DOOM, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.DOOM);											}	}),
+	
+	ADD_CONFUSE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.CONFUSE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.CONFUSE);										}	}),
+	
+	ADD_CHARM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.CHARM, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.CHARM);											}	}),
+	
+	ADD_BERSERK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.BERSERK, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BERSERK);										}	}),
 	
 	ADD_WATK_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.WATK_DOWN, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
@@ -150,10 +174,26 @@ public enum SkillEffect implements Serializable
 	EFF1DEP_ADD_STOP																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.STOP, preview, false);			}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.STOP);											}	}),
+	
+	EFF1DEP_ADD_FROG																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.FROG, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.FROG);											}	}),
 
 	EFF1DEP_ADD_MRES_DOWN																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.MRES_DOWN, preview, true);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.MRES_DOWN);										}	}),
+	
+	EFF1DEP_ADD_CONFUSE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.CONFUSE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.CONFUSE);										}	}),
+	
+	EFF1DEP_ADD_CHARM																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.CHARM, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.CHARM);											}	}),
+
+	EFF1DEP_ADD_BERSERK																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.BERSERK, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.BERSERK);										}	}),
 	
 	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
@@ -288,20 +328,30 @@ public enum SkillEffect implements Serializable
 			if (result.critical)
 				report += "</em><span style=\"color:red\">CRITICAL HIT!</span><em> ";  
 			
-			report += target.unit.name + "</strong> takes <strong><span style=\"color:red\">" + 
-					result.damage + "</strong> damage! (" + result.hitChance + "%)";
+			report += target.unit.name + "</strong> takes </em><strong><span style=\"color:red\">" + 
+					result.damage + "</strong><em><span style=\"color:gray\"> damage! (" + result.hitChance + "%)";
 			
 			// Wake sleeping units
-			if (result.damage > 0 && target.status[StatusEffect.SLEEP.ordinal()] > 0)
+			if (result.damage > 0)
 			{
-				target.status[StatusEffect.SLEEP.ordinal()] = 0;
-				report += "<br><em><span style=\"color:gray\">.........<strong>" + target.unit.name + " wakes up!";
+				if (target.status[StatusEffect.SLEEP.ordinal()] > 0)
+				{
+					target.status[StatusEffect.SLEEP.ordinal()] = 0;
+					report += "<br><em><span style=\"color:gray\">.........<strong>" + target.unit.name + "</strong> wakes up!";
+				}
+				if (target.status[StatusEffect.CHARM.ordinal()] > 0)
+				{
+					target.status[StatusEffect.CHARM.ordinal()] = 0;
+					report += "<br><em><span style=\"color:gray\">.........<strong>" + target.unit.name + "</strong> comes to!";
+				}
+				if (target.status[StatusEffect.CONFUSE.ordinal()] > 0)
+				{
+					target.status[StatusEffect.CONFUSE.ordinal()] = 0;
+					report += "<br><em><span style=\"color:gray\">.........<strong>" + target.unit.name + "</strong> comes to!";
+				}
 			}
 		}
-		else
-			report = "<em><span style=\"color:gray\">......The attack misses <strong>" +
-					target.unit.name + "</strong>! (" + result.hitChance + "%)";
-				
+		
 		return report;
 	}
 	
@@ -324,10 +374,7 @@ public enum SkillEffect implements Serializable
 			report += target.unit.name + "</strong> takes <strong><span style=\"color:fuchsia\">" + 
 					result.damage + "</strong> MP damage! (" + result.hitChance + "%)";
 		}
-		else
-			report = "<em><span style=\"color:gray\">......The attack misses <strong>" +
-					target.unit.name + "</strong>! (" + result.hitChance + "%)";
-				
+			
 		return report;
 	}
 	
@@ -392,9 +439,6 @@ public enum SkillEffect implements Serializable
 			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
 					 "</strong>" + sEff.REPORT;
 		}
-		else if (!result.dependent)
-			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
-			 "</strong> was unaffected.";
 		
 		return report;
 	}

@@ -2,30 +2,39 @@ package fftadata;
 
 public enum StatusEffect
 {
+	// Basic debuffs
 	POISON			("Poison",			1,	" is <strong><span style=\"color:maroon\">poisoned</strong></span>!"),
 	BLIND 			("Blind",			1,	" is <strong><span style=\"color:maroon\">blinded</strong></span>!"),
 	SILENCE			("Silence",			3,	" is <strong><span style=\"color:maroon\">silenced</strong></span>!"),
 	SLEEP 			("Sleep",			3,	" falls <strong><span style=\"color:maroon\">asleep</strong></span>!"),
-	SLOW 			("Slow",			3,	" is <strong><span style=\"color:maroon\">slowed</strong></span>!"),
-	PETRIFY			("Petrify",			1,	" is <strong><span style=\"color:maroon\">petrified</strong></span>!"),
-	STOP 			("Stop",			2,	" <strong><span style=\"color:maroon\">stops moving</strong></span>!"),
 	IMMOBILIZE 		("Immobilize",		3,	" is <strong><span style=\"color:maroon\">immobilized</strong></span>!"),
 	DISABLE			("Disable",			3,	" is <strong><span style=\"color:maroon\">disabled</strong></span>!"),
+	SLOW 			("Slow",			3,	" is <strong><span style=\"color:maroon\">slowed</strong></span>!"),
+	STOP 			("Stop",			2,	" <strong><span style=\"color:maroon\">stops moving</strong></span>!"),
+	PETRIFY			("Petrify",			1,	" is <strong><span style=\"color:maroon\">petrified</strong></span>!"),
+	FROG 			("Frog",			1,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
+	ADDLE	 		("Addle",			3,	" is <strong><span style=\"color:maroon\">addled</strong></span>!"),
+	DOOM	 		("Doom",			3,	" is <strong><span style=\"color:maroon\">doomed</strong></span>!"),
 	
-	CONFUSE 		("",				1,	"is <strong><span style=\"color:cyan\">confused</strong></span>!"),
-	CHARM	 		("",				1,	"is <strong><span style=\"color:cyan\">charmed</strong></span>!"),
-	BERSERK 		("",				1,	"is driven <strong><span style=\"color:cyan\">berserk</strong></span>!"),
+	// AI-controlling debuffs
+	CONFUSE 		("Confuse",			3,	" is <strong><span style=\"color:maroon\">confused</strong></span>!"),
+	CHARM	 		("Charm",			3,	" is <strong><span style=\"color:maroon\">charmed</strong></span>!"),
+	BERSERK 		("Berserk",			1,	" is driven <strong><span style=\"color:maroon\">berserk</strong></span>!"),
 	
+	// Stat-down debuffs
 	WATK_DOWN 		("WAtk Down",		1,	"'s <strong><span style=\"color:maroon\">WAtk drops</strong></span>!"),
 	WDEF_DOWN 		("WDef Down",		1,	"'s <strong><span style=\"color:maroon\">WDef drops</strong></span>!"),
 	MPOW_DOWN 		("MPow Down",		1,	"'s <strong><span style=\"color:maroon\">MPow drops</strong></span>!"),
 	MRES_DOWN 		("MRes Down",		1,	"'s <strong><span style=\"color:maroon\">MRes drops</strong></span>!"),
 	SPEED_DOWN 		("Speed Down",		1,	"'s <strong><span style=\"color:maroon\">Speed drops</strong></span>!"),
+	
+	// Death
 	DEATH			("Death",			0,	"'s spirit leaves the body!"),
 	
+	// Buffs
 	EXPERT_GUARD 	("Expert Guard",	1,	""),
 	HIBERNATE 		("",	1,	""),
-	FROG 			("",				1,	" turns into a <strong><span style=\"color:cyan\">fog</strong></span>!"),
+	
 	
 	
 	SHELL 			("Shell",			3,	" is shielded against magic!"),

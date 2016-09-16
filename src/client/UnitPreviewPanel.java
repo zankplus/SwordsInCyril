@@ -263,7 +263,12 @@ public class UnitPreviewPanel extends JPanel
 				{
 					if (count > 0)
 						status.append(", ");
+					
 					status.append(StatusEffect.values()[i].NAME);
+					
+					if (i == StatusEffect.DOOM.ordinal())
+						status.append(" (" + au.status[i] + ")");
+					
 					count++; 
 				}
 			

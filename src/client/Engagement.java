@@ -229,10 +229,19 @@ public class Engagement
 			else if (au.status[StatusEffect.PETRIFY.ordinal()] == 0)
 				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 			
+			if (au.status[StatusEffect.CHARM.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is charmed!");
+			
+			if (au.status[StatusEffect.CONFUSE.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is confused!");
+			
+			if (au.status[StatusEffect.BERSERK.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is berserk!");
+			
 			// Announce status effects that are abating this turn
 			window.startOfTurnAnnouncements(au);
 			
-			// Apply poison damage (if applicable) 
+			// Apply poison damage (if applicable) and start of turn effects 
 			int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
 			
 			// Announce poison damage (if applicable) and update displays to reflect it
@@ -241,15 +250,13 @@ public class Engagement
 				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
 						"</strong> takes " + poisonDamage + " damage from poison!");
 				
-				window.updateSprite(getUnits()[au.id]);
 				if (au.currHP == 0)
 					window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
 			}
 			
+			window.updateSprite(getUnits()[au.id]);
 			window.updateUnitPreview(au.id);
 		}
-		
-		
 		
 		if (au.currHP > 0 && au.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
 							 au.status[StatusEffect.STOP.ordinal()]    == 0 && 
@@ -298,10 +305,14 @@ public class Engagement
 	// HIT: apply the effects of skills specified and announce the results in chat
 	public void receiveHit(SkillEffectResult[] results)
 	{
+		boolean miss = true;
+		
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
 		{
 			String report = state.applyEffect(results[i]);
+			if (results[i].success)
+				miss = false;
 			
 			// Update target sprite to reflect any changes in HP
 			window.updateSprite(getUnits()[results[i].target]);
@@ -316,6 +327,15 @@ public class Engagement
 			if (au.currHP == 0)
 				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
 		}
+		
+		if (miss)
+		{
+			ActiveUnit target = state.units[results[0].target];
+			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
+		}
+		
+		
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel

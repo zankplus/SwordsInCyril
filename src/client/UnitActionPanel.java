@@ -289,6 +289,10 @@ public class UnitActionPanel extends JPanel
 			}
 		});
 		add(new SkillPanel(au.unit.job.command), "Skillset 1");
+		if (au.status[StatusEffect.FROG.ordinal()] > 0 || au.status[StatusEffect.ADDLE.ordinal()] > 0)
+			btnSkillset_1.setEnabled(false);
+		else
+			btnSkillset_1.setEnabled(true);
 		
 		// Add second skillset button
 		if (au.unit.secondary != FFTACommand.NONE)
@@ -304,6 +308,11 @@ public class UnitActionPanel extends JPanel
 			});
 			add(new SkillPanel(au.unit.secondary), "Skillset 2");
 		}
+		if ((au.status[StatusEffect.FROG.ordinal()] > 0 && au.unit.secondary != FFTACommand.ITEM) ||
+			 au.status[StatusEffect.ADDLE.ordinal()] > 0)
+			btnSkillset_2.setEnabled(false);
+		else
+			btnSkillset_2.setEnabled(true);
 		
 		// Add Item skillset button, if the user is an alchemist
 		if (au.unit.job == FFTAJob.ALCHEMIST && au.unit.secondary != FFTACommand.ITEM)
@@ -317,9 +326,14 @@ public class UnitActionPanel extends JPanel
 					cl.show(thisRef,  "AlchItem");
 				}
 			});
+			if (au.status[StatusEffect.ADDLE.ordinal()] > 0)
+				btnItem.setEnabled(false);
+			else
+				btnItem.setEnabled(true);
 			
 			add(new SkillPanel(FFTACommand.ITEM), "AlchItem");
 		}
+		
 		actSkillsetPanel.revalidate();
 	}
 	
