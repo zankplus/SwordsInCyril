@@ -39,7 +39,7 @@ public class ActiveUnit implements Serializable
 		reserve = 0;
 		jp = 0;
 		
-		status = new int[40];
+		status = new int[StatusEffect.values().length];
 	}
 	
 	public String getSpriteURL()
@@ -87,6 +87,7 @@ public class ActiveUnit implements Serializable
 		if (status[StatusEffect.PETRIFY.ordinal()] > 0)
 			return 0;
 		
+		// Consider speed-affecting status effects
 		if (status[StatusEffect.HASTE.ordinal()] > 0)
 			modifier *= 2;
 		else if (status[StatusEffect.SLOW.ordinal()] > 0)

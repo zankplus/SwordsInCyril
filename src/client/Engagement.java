@@ -105,8 +105,10 @@ public class Engagement
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		synchronized(out)
 		{
+			System.out.println("Sending MOVE");
 			out.writeObject(message);
 			out.flush();
+			System.out.println("Sent MOVE");
 		}
 	}
 	
@@ -119,15 +121,15 @@ public class Engagement
 		data[data.length - 2] = x;
 		data[data.length - 1] = y;
 		
-		System.out.println("sendAction: target = " + data[0]);
-		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
 		synchronized(out)
 		{
+			System.out.println("Sending ACT");
 			out.writeObject(message);
 			out.flush();
+			System.out.println("Sent ACT");
 		}
 	}
 	
@@ -137,10 +139,13 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
+		
 		synchronized(out)
 		{
+			System.out.println("Sending WAIT");
 			out.writeObject(message);
 			out.flush();
+			System.out.println("Sent WAIT");
 		}
 	}
 	
@@ -174,7 +179,6 @@ public class Engagement
 	public void receiveChat(String user, String msg)
 	{
 		window.appendToChat("<b>" + user + "</b>: " + msg);
-		System.out.println("chat ew: " + window);
 	}
 	
 	// READY: register the received units to the rival team and create a list all the game's units in gamePanel
@@ -192,7 +196,6 @@ public class Engagement
 		{
 			aus[i] = p1Units.get(i);
 			aus[i].id = i;
-			System.out.println(i + " " + aus[i].unit.name);
 		}
 		
 		for (int i = 0; i < p2Units.size(); i++)
@@ -214,6 +217,7 @@ public class Engagement
 		state.currentUnit = data[0];
 		
 		ActiveUnit au = currentUnit();
+		System.out.println("--- " + au.unit.name + "'s turn");
 		
 		// Decrement this unit's Stop counter and check whether it has abated this turn
 		boolean stopEnded = state.stopTick();
@@ -226,6 +230,8 @@ public class Engagement
 				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is asleep!");
 			else if (stopEnded)
 				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is back in time!");
+			else if (au.status[StatusEffect.QUICK.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> cuts in!");
 			else if (au.status[StatusEffect.PETRIFY.ordinal()] == 0)
 				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
 			
@@ -256,6 +262,18 @@ public class Engagement
 			
 			window.updateSprite(getUnits()[au.id]);
 			window.updateUnitPreview(au.id);
+			
+			// If the unit has died but has auto-life on, revive them
+			boolean autoLifeRevived = state.checkAutoLife(au);
+			if (autoLifeRevived)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name +
+						"</strong> is protected by <span style=\"color:aqua\"><strong>Auto-Life</strong></span>!");
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + "</strong> rises!");
+				
+				window.updateSprite(getUnits()[au.id]);
+				window.updateUnitPreview(au.id);
+			}
 		}
 		
 		if (au.currHP > 0 && au.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
@@ -287,8 +305,6 @@ public class Engagement
 	// ACT: announce in chat that the active unit has taken the indicated action
 	public void receiveAct(int[] data)
 	{
-		System.out.println("receiveAct: target = " + data[0]);
-		
 		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
 		if (sk == FFTASkill.FIGHT)
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
@@ -299,7 +315,6 @@ public class Engagement
 		
 		state.expendMP(sk);
 		window.updateUnitPreview(currentID());
-		System.out.println("Received " + sk.NAME);
 	}
 	
 	// HIT: apply the effects of skills specified and announce the results in chat
@@ -310,22 +325,25 @@ public class Engagement
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
 		{
-			String report = state.applyEffect(results[i]);
-			if (results[i].success)
-				miss = false;
-			
-			// Update target sprite to reflect any changes in HP
-			window.updateSprite(getUnits()[results[i].target]);
-			
-			// Update preview panels to reflect any stat changes
-			window.updateUnitPreview(results[i].target);
-			
-			// Append report to chat
-			window.appendToChat(report);
-			
-			ActiveUnit au = state.units[results[i].target]; 
-			if (au.currHP == 0)
-				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
+			if (results[i] != null)
+			{
+				String report = state.applyEffect(results[i]);
+				if (results[i].success)
+					miss = false;
+				
+				// Update target sprite to reflect any changes in HP
+				window.updateSprite(getUnits()[results[i].target]);
+				
+				// Update preview panels to reflect any stat changes
+				window.updateUnitPreview(results[i].target);
+				
+				// Append report to chat
+				window.appendToChat(report);
+				
+				ActiveUnit au = state.units[results[i].target]; 
+				if (au.currHP == 0)
+					window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
+			}
 		}
 		
 		if (miss)
@@ -333,6 +351,23 @@ public class Engagement
 			ActiveUnit target = state.units[results[0].target];
 			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
 					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
+		}
+		
+		// Check auto-life trigger
+		else
+		{
+			ActiveUnit target = state.units[results[0].target];
+			boolean autoLifeRevived = state.checkAutoLife(target);
+			if (autoLifeRevived)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name +
+						"</strong> is protected by <span style=\"color:aqua\"><strong>Auto-Life</strong></span>!");
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name + "</strong> rises!");
+				
+				// Update sprites and preview panels again
+				window.updateSprite(getUnits()[target.id]);
+				window.updateUnitPreview(target.id);
+			}
 		}
 		
 		

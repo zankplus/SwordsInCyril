@@ -12,7 +12,6 @@ public enum StatusEffect
 	SLOW 			("Slow",			3,	" is <strong><span style=\"color:maroon\">slowed</strong></span>!"),
 	STOP 			("Stop",			2,	" <strong><span style=\"color:maroon\">stops moving</strong></span>!"),
 	PETRIFY			("Petrify",			1,	" is <strong><span style=\"color:maroon\">petrified</strong></span>!"),
-	FROG 			("Frog",			1,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
 	ADDLE	 		("Addle",			3,	" is <strong><span style=\"color:maroon\">addled</strong></span>!"),
 	DOOM	 		("Doom",			3,	" is <strong><span style=\"color:maroon\">doomed</strong></span>!"),
 	
@@ -32,17 +31,26 @@ public enum StatusEffect
 	DEATH			("Death",			0,	"'s spirit leaves the body!"),
 	
 	// Buffs
-	EXPERT_GUARD 	("Expert Guard",	1,	""),
-	HIBERNATE 		("",	1,	""),
+	SHELL 			("Shell",			3,	" is <strong><span style=\"color:aqua\">shelled</strong></span> against magic!"),
+	PROTECT 		("Protect",			3,	" is <strong><span style=\"color:aqua\">protected</strong></span> against weapons!"),
+	QUICK 			("Quick",			1,	" is <strong><span style=\"color:aqua\">quickened</strong></span>!"),
+	HASTE 			("Haste",			3,	" is <strong><span style=\"color:aqua\">hastened</strong></span>!"),
+	
+	ASTRA 			("Astra",			1,	" is granted <strong><span style=\"color:aqua\">Astra</strong></span>!"),
+	
+	EXPERT_GUARD 	("Expert Guard",	1,	" is <strong><span style=\"color:aqua\">immune to damage</strong></span>!"),
 	
 	
 	
-	SHELL 			("Shell",			3,	" is shielded against magic!"),
-	PROTECT 		("Protect",			3,	" is shielded against weapons!"),
-	QUICK 			("Quick",			1,	" is <strong><span style=\"color:cyan\">quickened</strong></span>!"),
-	HASTE 			("Haste",			3,	" is <strong><span style=\"color:cyan\">hastened</strong></span>!"),
 	
-	ASTRA 			("Astra",			1,	" is shielded against status ailments!"),
+	
+	HIBERNATE 		("Hibernate",			1,	""),
+	
+	
+	
+	
+	
+	
 	
 	WATK_UP 		("WAtk UP",			1,	""),
 	WDEF_UP 		("WDef UP",			1,	""),
@@ -51,7 +59,12 @@ public enum StatusEffect
 	
 	BOOST 			("",	1,	""),
 	
-	DEFENSE 		("",	1,	"");
+	DEFENSE 		("",	1,	""),
+	
+	
+	// Status effects that persist after death
+	FROG 			("Frog",			1,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
+	AUTO_LIFE		("Auto-Life",		1,	" is granted <strong><span style=\"color:aqua\">Auto-Life</strong></span>!");
 	
 	
 	public final String NAME, REPORT;

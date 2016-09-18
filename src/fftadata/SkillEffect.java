@@ -13,6 +13,10 @@ public enum SkillEffect implements Serializable
 		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
 	{	return fullHealing(result);																}	}),
 	
+	ESUNA_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyEsuna(result);																}	}),
+	
 	REVIVE_HALF_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	result.damage = (int) -(state.units[result.target].unit.maxHP / 2);
 		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
@@ -22,6 +26,26 @@ public enum SkillEffect implements Serializable
 	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
 		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyRevival(result, true);														}	}),
+	
+	ADD_SHELL																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.SHELL);											}	}),
+	
+	ADD_PROTECT																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.PROTECT);										}	}),
+	
+	ADD_HASTE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.HASTE);											}	}),
+	
+	ADD_QUICK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.QUICK);											}	}),
+	
+	ADD_AUTO_LIFE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.AUTO_LIFE);										}	}),
 	
 	FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
@@ -199,7 +223,7 @@ public enum SkillEffect implements Serializable
 	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyHealing(result);															}	});
 	
-	
+	////////////////////////////////////////
 	
 	static GameState state;
 	public final SkillEffectHandler handler;
@@ -438,6 +462,43 @@ public enum SkillEffect implements Serializable
 			state.applyStatus(target, sEff);
 			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
 					 "</strong>" + sEff.REPORT;
+		}
+		
+		return report;
+	}
+	
+	public static String applyEsuna(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			boolean healedSomething = false;
+
+			// Store all the status ailments to check for in an array
+			StatusEffect[] esuna = new StatusEffect[] { StatusEffect.PETRIFY, StatusEffect.BERSERK, StatusEffect.FROG,
+														StatusEffect.POISON, StatusEffect.BLIND, StatusEffect.SLEEP,
+														StatusEffect.SILENCE, StatusEffect.CONFUSE, StatusEffect.IMMOBILIZE,
+														StatusEffect.DISABLE };
+
+			// For any status about to be healed, add notice of its recovery to the report
+			for (StatusEffect sEff : esuna)
+				if (target.status[sEff.ordinal()] > 0)
+				{
+					if (healedSomething)
+						report += "<br>";
+					report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+							"</strong> recovers from " + sEff.NAME.toLowerCase() + "!";
+					
+					healedSomething = true;
+				}
+			
+			if (!healedSomething)
+				report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name + "</strong> is unaffected.";
+			
+			// Remove the status effects in the game status
+			state.applyStatusRecovery(result.target, esuna);
 		}
 		
 		return report;

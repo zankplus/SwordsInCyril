@@ -11,11 +11,30 @@ public class GameState
 	{
 		this.units = units;
 		SkillEffect.setGameState(this);
+		
+		for (int i = 0; i < units.length; i++)
+			units[i].id = i;
 	}
 	
 	public int startOfTurnEffects(int poisonVariance)
 	{
 		ActiveUnit au = units[currentUnit];
+		
+		// Apply poison damage
+		int poisonDamage = 0;
+		if (au.status[StatusEffect.POISON.ordinal()] > 0)
+		{
+			poisonDamage = (poisonVariance * (int) au.unit.maxHP) / 1000;
+			applyDamage(currentUnit, poisonDamage);
+			
+			// If the poison kills the current unit, skip the remaining checks
+			if (au.currHP == 0)
+			{
+				applyDeath(au, false);
+				return poisonDamage;
+			}
+		}
+		
 		
 		// Decrement doom
 		if (au.status[StatusEffect.DOOM.ordinal()] > 1)
@@ -23,7 +42,7 @@ public class GameState
 		else if (au.status[StatusEffect.DOOM.ordinal()] == 1)
 		{
 			au.currHP = 0;
-			applyDeath(au);
+			applyDeath(au, false);
 			
 			// If the unit dies, return without applying any of the other effects
 			return 0;
@@ -60,16 +79,22 @@ public class GameState
 		// Decrement charm
 		if (au.status[StatusEffect.CHARM.ordinal()] > 0) 
 			au.status[StatusEffect.CHARM.ordinal()] -= 1;
+
+		// Decrement shell
+		if (au.status[StatusEffect.SHELL.ordinal()] > 0) 
+			au.status[StatusEffect.SHELL.ordinal()] -= 1;
 		
+		// Decrement protect
+		if (au.status[StatusEffect.PROTECT.ordinal()] > 0) 
+			au.status[StatusEffect.PROTECT.ordinal()] -= 1;
 		
+		// Decrement quick
+		if (au.status[StatusEffect.QUICK.ordinal()] > 0) 
+			au.status[StatusEffect.QUICK.ordinal()] -= 1;
 		
-		// Apply poison damage
-		int poisonDamage = 0;
-		if (au.status[StatusEffect.POISON.ordinal()] > 0)
-		{
-			poisonDamage = (poisonVariance * (int) au.unit.maxHP) / 1000;
-			applyDamage(currentUnit, poisonDamage);
-		}
+		// Decrement quick
+		if (au.status[StatusEffect.QUICK.ordinal()] > 0) 
+			au.status[StatusEffect.QUICK.ordinal()] -= 1;
 		
 		// Apply MP regeneration
 		applyMPHealing(currentUnit, 5);
@@ -114,10 +139,8 @@ public class GameState
 		if (au.currHP <= 0)
 		{
 			au.currHP = 0;
-			applyDeath(au);
+			applyDeath(au, false);
 		}
-		
-		System.out.println(au.unit.name + ": " + au.currHP + " HP");
 	}
 	
 	public void applyHealing(int targ, int hp)
@@ -126,8 +149,6 @@ public class GameState
 		au.currHP += hp;
 		if (au.currHP > au.unit.maxHP)
 			au.currHP = (int) au.unit.maxHP;
-		
-		System.out.println(au.unit.name + ": " + au.currHP + " HP");
 	}
 	
 	public void applyMPDamage(int targ, int dmg)
@@ -136,8 +157,6 @@ public class GameState
 		au.currMP -= dmg;
 		if (au.currMP <= 0)
 			au.currMP = 0;
-		
-		System.out.println(au.unit.name + ": " + au.currMP + " MP");
 	}
 	
 	public void applyMPHealing(int targ, int mp)
@@ -146,12 +165,12 @@ public class GameState
 		au.currMP += mp;
 		if (au.currMP > au.unit.maxMP)
 			au.currMP = (int) au.unit.maxMP;
-		
-		System.out.println(au.unit.name + ": " + au.currMP + " MP");
 	}
 	
 	public void applyStatus(ActiveUnit target, StatusEffect sEff)
 	{
+		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
+		
 		// Individual effect considerations
 		switch(sEff)
 		{
@@ -164,7 +183,7 @@ public class GameState
 				break;
 		
 			case PETRIFY:
-				applyDeath(target);		
+				applyDeath(target, true);	
 				break;
 			
 			case STOP:
@@ -175,16 +194,23 @@ public class GameState
 				
 			case DEATH:
 				target.currHP = 0;
-				applyDeath(target);
+				applyDeath(target, false);
 				break;
 				
 			default:
 				break;
 		}
 		
-		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
+		
 	}
 	
+	public void applyStatusRecovery(int targ, StatusEffect[] statuses)
+	{
+		ActiveUnit target = units[targ];
+		
+		for (StatusEffect sEff : statuses)
+			target.status[sEff.ordinal()] = 0;
+	}
 	
 	// Because this function is only called by the click handler when selecting a space it has
 	// already confirmed is within your targeting range, the getTargets() method can safely
@@ -232,8 +258,6 @@ public class GameState
 			if (dx != 0) dx = dx / Math.abs(dx);
 			if (dy != 0) dy = dy / Math.abs(dy);
 			
-			System.out.println("dx: " + dx + "  dy: " + dy);
-			
 			for (int i = 0; i < units.length; i++)
 			{
 				if ((units[i].currHP > 0 && sk.TARGET_LIVE) ||
@@ -251,7 +275,6 @@ public class GameState
 							result.add(0, i);
 						else if (sdist <= range)
 						{
-							System.out.println("Targeting " + units[i].unit.name + " - " + sdist);
 							result.add(i);
 						}
 					}
@@ -262,16 +285,34 @@ public class GameState
 		return result;
 	}
 	
-	public void applyDeath(ActiveUnit au)
+	public void applyDeath(ActiveUnit au, boolean petrify)
 	{
 		// Death handler
-		au.counter = 0;
-		au.reserve = 0;
+		if (au.status[StatusEffect.AUTO_LIFE.ordinal()] == 0 || petrify )
+		{
+			au.counter /= 2;
+			au.reserve = 0;
+		}
 		
-		// Wipe all status effects, except for frog
-		for (int i = 0; i < StatusEffect.FROG.ordinal(); i++)
+		// Wipe all status effects, except for those that persist after death
+		for (int i = 0; i < au.status.length - 2; i++)
 			au.status[i] = 0;
-		for (int i = StatusEffect.FROG.ordinal() + 1; i < au.status.length; i++)
-			au.status[i] = 0;
+	}
+	
+	public boolean checkAutoLife(ActiveUnit au)
+	{
+		boolean revived = false;
+		if (au.currHP == 0 && au.status[StatusEffect.AUTO_LIFE.ordinal()] > 0)
+		{
+			int healing = (int) au.unit.maxHP / 2;
+			applyHealing(au.id, healing);
+			
+			// Reset target's auto-life status
+			au.status[StatusEffect.AUTO_LIFE.ordinal()] = 0;
+			
+			revived = true;
+		}
+		
+		return revived;
 	}
 }

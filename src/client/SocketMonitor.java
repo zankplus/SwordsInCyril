@@ -78,7 +78,6 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 						System.out.println("IN:\t" + msg);
 						ZankMessageType type = msg.type;
 						String user = msg.user;
-						System.out.println("User: " + user);
 						
 						// CHAT: a user has sent a message for the lobby chat
 						if (type.equals(ZankMessageType.READY))
@@ -167,7 +166,6 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 							// HIT: the server has indicated that a unit in combat has taken damage
 							else if (action.type.equals(ZankGameActionType.HIT))
 							{
-								System.out.println("Received HIT: " + action);
 								game.receiveHit((SkillEffectResult[]) action.data);
 							}
 								
@@ -195,7 +193,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 						if (client.chatWindow != null)
 							client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());							
 					}
-					catch (NullPointerException e) { System.err.println("received bad message from server: " + msg); e.printStackTrace(); }
+					catch (NullPointerException e) { e.printStackTrace(); }
 				}
 				done = true;
 				

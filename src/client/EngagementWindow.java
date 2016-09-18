@@ -161,8 +161,6 @@ public class EngagementWindow extends JFrame
 				}
 			}
 		});
-		System.out.println("checkpoint 1");
-		
 		
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		leftPanel.setBorder(null);
@@ -172,12 +170,8 @@ public class EngagementWindow extends JFrame
 		gamePanel = new JPanel();
 		gamePanel.setLayout(new BorderLayout());
 		
-		System.out.println("checkpoint 2");
-		
 		rosterPanel = new EngagementWindowRosterPanel(this);
 		mapPanel = new MapPanel(this);
-	
-		System.out.println("checkpoint 3");
 		
 		JPanel turnOrderPanel = new JPanel();
 		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -327,9 +321,6 @@ public class EngagementWindow extends JFrame
 		
 		damagePreviewPanel = new JPanel();
 		previewDeck.add(damagePreviewPanel, "Damage Preview");
-		
-		for (int i = 0; i < units.length; i++)
-			System.out.println(i + " " + units[i].unit.name);
 	}
 	
 	public void startPlayerTurn()
@@ -396,8 +387,11 @@ public class EngagementWindow extends JFrame
 					"</strong>!");
 			
 			if (au.status[StatusEffect.DOOM.ordinal()] == 1)
+			{
 				appendToChat("<em><span style=\"color:gray\">......The reaper takes <strong>" + 
 							  au.unit.name + "</strong>!");
+				return;
+			}
 		}
 		
 		if (au.status[StatusEffect.SLEEP.ordinal()] == 1)
@@ -423,6 +417,18 @@ public class EngagementWindow extends JFrame
 		
 		if (au.status[StatusEffect.CHARM.ordinal()] == 1)
 			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> comes to!");
+		
+		// Buffs fading
+		if (au.status[StatusEffect.PROTECT.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s protect fades!");
+		
+		if (au.status[StatusEffect.SHELL.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s shell melts!");
+		
+		if (au.status[StatusEffect.HASTE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
+		
+		
 	}
 }
 

@@ -58,6 +58,7 @@ public class ActiveUser extends Thread
 			{
 				try
 				{
+					
 					// Check reader for new messages to read
 					if (readyChecker.ready())
 					{
@@ -65,12 +66,11 @@ public class ActiveUser extends Thread
 
 						try
 						{
+							System.out.print("IN:\t");
 							msg = (ZankMessage) in.readObject();
 							
 							String username = msg.user;
 							ZankMessageType command = msg.type;
-							
-
 							System.out.println(msg.type + " " + msg.user + " " + msg.data);
 							
 							// Special handlers for different message types
@@ -253,7 +253,7 @@ public class ActiveUser extends Thread
 											for (int i = 0; i < targets.length; i++)
 												targets[i] = data[i];
 											FFTASkill sk = FFTASkill.values[data[data.length - 3]];
-											ag.executeSkill(targets, sk);
+											ag.doAction(targets, sk);
 											ag.victoryCheck();
 										}
 										else if (action.type == ZankGameActionType.WAIT)
@@ -278,6 +278,8 @@ public class ActiveUser extends Thread
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); e.printStackTrace(); }
 									ag.gameLock.unlock();
+									
+									System.out.println("awaiting messages...");
 								}
 							}
 							else

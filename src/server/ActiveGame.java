@@ -74,8 +74,6 @@ public class ActiveGame
 					userlist.get(i).messageQueue.put(zm);
 			}
 		} catch (InterruptedException e) { e.printStackTrace(); }
-		
-
 	}
 	
 	// leaveRoom(String): Find the ActiveUser with the username listed and call leaveRoom() on them
@@ -125,6 +123,9 @@ public class ActiveGame
 		{
 			// Apply start of turn effects on server side
 			state.startOfTurnEffects(poisonVariance);
+			
+			// Check for auto-life in case the current unit has been killed by poison or doom 
+			state.checkAutoLife(au);
 		}
 
 		// Tell the client that it's this unit's turn, whether they're able to take their turn or not.
@@ -135,7 +136,7 @@ public class ActiveGame
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
 	
-		// If the current unit has died of poison this turn...
+		// If the current unit has died of poison/doom this turn...
 		if (au.currHP == 0)
 		{	
 			// See if the game has been won
@@ -174,7 +175,7 @@ public class ActiveGame
 	public void moveUnit(int unit, int x, int y, int z)
 	{
 		ActiveUnit au = state.units[unit];
-		au.counter -= 300;
+		au.counter = Math.max(au.counter - 300, 0);
 		au.x = x;
 		au.y = y;
 		au.z = z;
@@ -183,24 +184,31 @@ public class ActiveGame
 	public void waitUnit(int unit, int dir)
 	{
 		ActiveUnit au = state.units[unit];
-		au.counter -= 500;
-//		System.out.println(au.unit.name + "-->" + au.counter);
+		au.counter = Math.max(au.counter - 500, 0);
 		au.reserve = 0;
 		au.dir = dir;
 	}
 	
-	public void executeSkill(int[] targets, FFTASkill sk) throws InterruptedException
+	public void doAction(int[] targets, FFTASkill sk) throws InterruptedException
+	{
+		ActiveUnit au = state.units[state.currentUnit];
+		au.counter = Math.max(au.counter - 200, 0);
+		
+		executeSkill(state.currentUnit, targets, sk);
+	}
+	
+	public void executeSkill(int actor, int[] targets, FFTASkill sk) throws InterruptedException
 	{
 		state.expendMP(sk);
 		
 		// For each target, apply all effects sequentially
 		for (int i = 0; i < targets.length; i++)
 		{
-			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length];
+			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length + 1];
 			for (int j = 0; j < sk.EFFECTS.length; j++)
 			{
 				// Make new result
-				SkillEffectResult result = new SkillEffectResult(state.currentUnit, targets[i], sk, j);
+				SkillEffectResult result = new SkillEffectResult(actor, targets[i], sk, j);
 				
 				// Refer to old result (or null if none exists)
 				SkillEffectResult prevResult;
@@ -215,13 +223,15 @@ public class ActiveGame
 				// Apply those results
 				sk.EFFECTS[j].handler.applyEffect(results[j]);
 			}
-
+			
 			// Send the message
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			
 			player1.messageQueue.put(zm);
 			player2.messageQueue.put(zm);
+			
+			// Check for auto-life trigger on current unit
+			state.checkAutoLife(state.units[targets[i]]);
 		}
 	}
 	

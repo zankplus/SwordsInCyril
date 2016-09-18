@@ -188,13 +188,13 @@ public class ChatWindow extends JFrame {
 	
 	public void sendLogout() throws IOException
 	{
-//		ZankMessage msg = new ZankMessage(ZankMessageType.LOGOUT, zu.username, null);
-//		System.out.println("OUT:\t" + msg);
-//		synchronized(out)
-//		{
-//			out.writeObject(msg);
-//			out.flush();
-//		}
+		ZankMessage msg = new ZankMessage(ZankMessageType.LOGOUT, zu.username, null);
+		System.out.println("OUT:\t" + msg);
+		synchronized(out)
+		{
+			out.writeObject(msg);
+			out.flush();
+		}
 	}
 	
 	public void updateUserlist()

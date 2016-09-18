@@ -47,8 +47,6 @@ public class MapPanel extends JPanel
 		this.window = window;
 		game = window.game;
 		
-		System.out.println("window: " + window);
-		
 		player = game.playerNumber;
 		map = game.map;
 		// int targetX = 240 + 16*x - 16*y, targetY = 160 + 8*x + 8*y;
@@ -97,7 +95,7 @@ public class MapPanel extends JPanel
 						selectTile(selectedTile);
 					else if (e.getClickCount() == 2 && selectedTile != null)
 					{
-						System.out.println("[" + selectedTile.x + ", " + selectedTile.y + "]");
+//						System.out.println("[" + selectedTile.x + ", " + selectedTile.y + "]");
 						for (int i = 0; i < hlTiles.size(); i++)
 						{
 							if (selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile)
@@ -308,7 +306,6 @@ public class MapPanel extends JPanel
 		{
 			FFTAEquip weapon = au.unit.getWeapon();
 			range = weapon.range;
-			System.out.println(weapon.name + " " + range);
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;
 			else
@@ -326,7 +323,6 @@ public class MapPanel extends JPanel
 				for (int y = ymin; y <= ymax; y++)
 				{
 					int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
-					System.out.println(x + ", " + y + "(" + dist + ")");
 					if (map.mapData[x][y] != null && dist <= range && (dist > 0 || sk.SELF_TARGET))
 					{
 						ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
@@ -347,7 +343,6 @@ public class MapPanel extends JPanel
 					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 					hlTiles.add(fgo);
 					fgObjects.add(fgo);
-					System.out.println("added " + x + ", " + y);
 				}
 			}
 			
@@ -360,7 +355,6 @@ public class MapPanel extends JPanel
 					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 					hlTiles.add(fgo);
 					fgObjects.add(fgo);
-					System.out.println("added " + x + ", " + y);
 				}
 			}
 		}
@@ -425,9 +419,6 @@ public class MapPanel extends JPanel
 
 	public void moveUnit(ActiveUnit au, ZankMapTile dest)
 	{
-		System.out.println("Moving " + au.unit.name + " from " + au.x + ", " + au.y + ", " + au.z + " to " +
-				dest.x + ", " + dest.y + ", " + dest.z);
-		
 		// au = gamePanel.units[gamePanel.currentUnit]; 
 		removeUnit(au);
 		au.oldX = au.x;

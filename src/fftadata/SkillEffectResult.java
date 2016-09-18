@@ -15,7 +15,24 @@ public class SkillEffectResult implements Serializable
 		this.user = user;
 		this.target = target;
 		this.skill = skill;
-		this.effect = skill.EFFECTS[effectIndex];
+		if (effectIndex >= 0)
+			this.effect = skill.EFFECTS[effectIndex];
+		else
+			this.effect = null;
+		
+		damage = 0;
+		hitChance = 0;
+		success = false;
+		critical = false;
+		dependent = false;
+	}
+	
+	public SkillEffectResult()
+	{
+		this.user = -1;
+		this.target = -1;
+		this.skill = null;
+		this.effect = null;
 		
 		damage = 0;
 		hitChance = 0;

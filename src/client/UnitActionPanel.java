@@ -461,8 +461,12 @@ public class UnitActionPanel extends JPanel
 		try
 		{
 			if (sendMove)
+			{
+				System.out.println("sending move");
 				game.sendMove();
+			}
 			game.sendWait(dir);
+			System.out.println("sending wait");
 			
 			btnNe.setEnabled(false);
 			btnNw.setEnabled(false);
