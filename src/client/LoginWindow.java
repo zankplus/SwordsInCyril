@@ -219,6 +219,8 @@ public class LoginWindow extends JFrame {
 			client.chatWindow = new ChatWindow(client);
 			System.out.println("client.chatWindow: " + client.chatWindow);
 			sendLogin();
+			client.startHeartbeat();
+			
 		}
 		catch (IOException e) { e.printStackTrace(); System.exit(0); }
 	}

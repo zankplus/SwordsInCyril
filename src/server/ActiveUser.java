@@ -99,15 +99,18 @@ public class ActiveUser extends Thread
 							
 							else if (command.equals(ZankMessageType.LOGOUT))
 							{
-//								System.out.print("\r\n* " + username + " has left the room");
 								done = true;
-								ChatServer.masterMessageQueue.put(msg);
 							}
 							
 							else if (command.equals(ZankMessageType.CHAT))
 							{
 //								 System.out.print("\r\n" + username + ": " + (String) msg.data);
 								ChatServer.masterMessageQueue.put(msg);
+							}
+							
+							else if (command.equals(ZankMessageType.BEEP))
+							{
+								//
 							}
 							
 							else if (command.equals(ZankMessageType.CHALLENGE))
@@ -300,6 +303,7 @@ public class ActiveUser extends Thread
 					}
 					sleep(50);
 				}
+				catch (SocketException e) { done = true; }
 				catch (IOException e) { done = true; e.printStackTrace(); }
 			}
 
@@ -307,6 +311,7 @@ public class ActiveUser extends Thread
 			if (connection != null) connection.close();
 			if (in != null) in.close();
 			synchronized (ChatServer.userlist) { ChatServer.userlist.remove(this); }
+			ChatServer.masterMessageQueue.put(new ZankMessage(ZankMessageType.LOGOUT, nickname, null));
 		}
 		catch (IOException e) { e.printStackTrace(); }
 		catch (InterruptedException e) { e.printStackTrace(); }

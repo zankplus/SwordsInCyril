@@ -42,6 +42,7 @@ public class Engagement
 	ZankGameMap map;
 	ZankGameAction action;
 	ZankMessage message;
+	ZankClient client;
 	
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	
@@ -49,14 +50,15 @@ public class Engagement
 	private GameState state;
 	
 	
-	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, ObjectInputStream in, ObjectOutputStream out)
+	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, ZankClient client)
 	{
 		this.player = player;
 		this.playerNumber = playerNumber;
 		this.opponent = opponent;
 		this.gameID = id;
-		this.in = in;
-		this.out = out;
+		this.client = client;
+		this.in = client.in;
+		this.out = client.out;
 		gameOver = false;
 		
 		map = MuscadetMapLoader.getMap();
@@ -68,33 +70,21 @@ public class Engagement
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendForfeit() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
 		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendReady() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, window.getYourUnits());
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendMove() throws IOException
@@ -103,13 +93,7 @@ public class Engagement
 		int[] data = {au.id, au.x, au.y, au.z};
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			System.out.println("Sending MOVE");
-			out.writeObject(message);
-			out.flush();
-			System.out.println("Sent MOVE");
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
@@ -123,14 +107,7 @@ public class Engagement
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		
-		synchronized(out)
-		{
-			System.out.println("Sending ACT");
-			out.writeObject(message);
-			out.flush();
-			System.out.println("Sent ACT");
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendWait(int dir) throws IOException
@@ -139,14 +116,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		
-		synchronized(out)
-		{
-			System.out.println("Sending WAIT");
-			out.writeObject(message);
-			out.flush();
-			System.out.println("Sent WAIT");
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendTurnTest(int ct) throws IOException
@@ -154,11 +124,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendExit() throws IOException
@@ -166,11 +132,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	

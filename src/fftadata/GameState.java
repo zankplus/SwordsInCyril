@@ -88,9 +88,9 @@ public class GameState
 		if (au.status[StatusEffect.PROTECT.ordinal()] > 0) 
 			au.status[StatusEffect.PROTECT.ordinal()] -= 1;
 		
-		// Decrement quick
-		if (au.status[StatusEffect.QUICK.ordinal()] > 0) 
-			au.status[StatusEffect.QUICK.ordinal()] -= 1;
+		// Decrement haste
+		if (au.status[StatusEffect.HASTE.ordinal()] > 0) 
+			au.status[StatusEffect.HASTE.ordinal()] -= 1;
 		
 		// Decrement quick
 		if (au.status[StatusEffect.QUICK.ordinal()] > 0) 
@@ -169,8 +169,6 @@ public class GameState
 	
 	public void applyStatus(ActiveUnit target, StatusEffect sEff)
 	{
-		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
-		
 		// Individual effect considerations
 		switch(sEff)
 		{
@@ -201,7 +199,7 @@ public class GameState
 				break;
 		}
 		
-		
+		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
 	}
 	
 	public void applyStatusRecovery(int targ, StatusEffect[] statuses)

@@ -139,7 +139,6 @@ public class ChatWindow extends JFrame {
 		});
 		chatPane.add(chatLine, BorderLayout.SOUTH);
 		
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		setSize(640, 480);
 		revalidate();
 		repaint();
@@ -147,12 +146,27 @@ public class ChatWindow extends JFrame {
 //		setTitle("Swords in Cyril - Lobby (" + client.zUser.username + ")");
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			@Override
-			public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-				if (socket.isConnected()) // if socket has ever been connected
-				{
-					try {	sendLogout();	}
-					catch (IOException e) { System.out.println("IOException closing window"); }
+			public void windowClosing(java.awt.event.WindowEvent windowEvent)
+			{
+				// Close the engagement window, if it's still open
+				if (client.game != null)
+					client.game.window.closeEngagementWindow();
+				
+			
+				// Sleep for a fraction of a second to give the server time to process the above
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
+				
+				// Notify the server of departure
+				sendLogout();
+			
+				// Exit program
+				client.shutdownPrep();
+				System.exit(0);
 			}
 		});
 		
@@ -178,23 +192,13 @@ public class ChatWindow extends JFrame {
 	public void sendMessage(String content) throws IOException
 	{
 		ZankMessage msg = new ZankMessage(ZankMessageType.CHAT, zu.username, content);
-		System.out.println("OUT:\t" + msg);
-		synchronized(out)
-		{
-			out.writeObject(msg);
-			out.flush();
-		}
+		client.sendZankMessage(msg);
 	}
 	
-	public void sendLogout() throws IOException
+	public void sendLogout()
 	{
 		ZankMessage msg = new ZankMessage(ZankMessageType.LOGOUT, zu.username, null);
-		System.out.println("OUT:\t" + msg);
-		synchronized(out)
-		{
-			out.writeObject(msg);
-			out.flush();
-		}
+		client.sendZankMessage(msg);
 	}
 	
 	public void updateUserlist()

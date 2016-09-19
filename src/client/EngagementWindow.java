@@ -82,36 +82,7 @@ public class EngagementWindow extends JFrame
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(java.awt.event.WindowEvent evt)
 			{
-				// If the engagement is still in progress, prompt the user to confirm the window's closing
-				if (!game.gameOver)
-				{
-					/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
-							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
-					if (output == JOptionPane.YES_OPTION)
-					{
-						// Notify the server of user's leaving the room
-						try {
-							sendExit();
-						} catch (IOException e) { e.printStackTrace(); }
-						ew.dispose();
-					}*/
-					
-					// Temporarily do not show warning dialog
-					try {
-						game.sendExit();
-					} catch (IOException e) { e.printStackTrace(); }
-					ew.dispose();
-					
-				}
-				
-				// If the engagement is over, simply notify the server of the exit and close the window
-				else
-				{
-					try {
-						game.sendExit();
-					} catch (IOException e) { e.printStackTrace(); }
-					ew.dispose();
-				}
+				closeEngagementWindow();
 			}
 		});
 		
@@ -429,6 +400,35 @@ public class EngagementWindow extends JFrame
 			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
 		
 		
+	}
+	
+	public void closeEngagementWindow()
+	{
+		// If the engagement is still in progress, prompt the user to confirm the window's closing
+		if (!game.gameOver)
+		{
+			/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
+					"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
+			if (output == JOptionPane.YES_OPTION)
+			{
+				// Notify the server of user's leaving the room
+				try {
+					sendExit();
+				} catch (IOException e) { e.printStackTrace(); }
+				ew.dispose();
+			}*/			
+		}
+		
+		// Temporarily do not show warning dialog
+		try {
+			game.sendExit();
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		// Remove client's reference to this game
+		game.client.game = null;
+		
+		// Close window
+		dispose();
 	}
 }
 
