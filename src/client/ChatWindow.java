@@ -151,7 +151,6 @@ public class ChatWindow extends JFrame {
 				// Close the engagement window, if it's still open
 				if (client.game != null)
 					client.game.window.closeEngagementWindow();
-				
 			
 				// Sleep for a fraction of a second to give the server time to process the above
 				try {

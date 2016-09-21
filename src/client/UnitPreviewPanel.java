@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import fftadata.ActiveUnit;
 import fftadata.FFTAEquip;
 import fftadata.FFTAUnit;
+import fftadata.GameState;
 import fftadata.StatusEffect;
 
 import java.awt.Dimension;
@@ -32,7 +33,7 @@ import javax.swing.ListSelectionModel;
 
 public class UnitPreviewPanel extends JPanel
 {
-	
+	static Engagement game;
 	ActiveUnit au;
 	FFTAUnit unit;
 	private JLabel lblCurrHP;
@@ -49,6 +50,7 @@ public class UnitPreviewPanel extends JPanel
 	{
 		this.au = au;
 		unit = au.unit;
+		this.game = game;
 		
 		setBorder(new TitledBorder(null, "Unit Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setPreferredSize(new Dimension(320, 162));
@@ -271,6 +273,14 @@ public class UnitPreviewPanel extends JPanel
 					
 					count++; 
 				}
+			
+			if (au.covering != -1)
+			{
+				if (count > 0)
+					status.append(", ");
+				status.append("Covering (" + game.getUnits()[au.covering].unit.name + ")");
+				count++;
+			}
 			
 			if (status.toString().equals("")) 
 				lblStatus.setText("<html><b>Status:</b> OK");

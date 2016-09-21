@@ -19,6 +19,10 @@ public class ActiveUnit implements Serializable
 	public int jp;
 	public int id;
 	
+	public int covering;
+	public int switchedInFor;
+	public int turnCoverUsed;
+	
 	public int[] status;
 		
 	public ActiveUnit(FFTAUnit unit, int x, int y, int z, int team)
@@ -40,6 +44,10 @@ public class ActiveUnit implements Serializable
 		jp = 0;
 		
 		status = new int[StatusEffect.values().length];
+		
+		covering = -1;
+		switchedInFor = -1;
+		turnCoverUsed = -1;
 	}
 	
 	public String getSpriteURL()

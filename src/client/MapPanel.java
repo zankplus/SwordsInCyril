@@ -122,12 +122,13 @@ public class MapPanel extends JPanel
 							ArrayList<ActiveUnit> targets = new ArrayList<ActiveUnit>();
 							
 							
-							ActiveUnit au;
+							ActiveUnit au, curr = game.currentUnit();
 							for (Integer j : targetIDs)
 							{
 								au = game.getUnits()[j];
-								if ((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
-									 au.currHP == 0 && window.selectedSkill.TARGET_DEAD)
+								if (((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
+									 (au.currHP == 0 && window.selectedSkill.TARGET_DEAD)) &&
+									 (window.selectedSkill.TARGET_ENEMY || au.team == curr.team))
 								targets.add(game.getUnits()[j]);
 							}
 							
@@ -311,7 +312,6 @@ public class MapPanel extends JPanel
 			else
 				targ = Targeting.FREE_SELECT;
 		}
-		
 		
 		// Free Select targeting
 		if (targ == Targeting.FREE_SELECT)

@@ -6,6 +6,7 @@ public class GameState
 {
 	public ActiveUnit[] units;
 	public int currentUnit;
+	public int currentTurn;
 	
 	public GameState(ActiveUnit[] units)
 	{
@@ -14,12 +15,37 @@ public class GameState
 		
 		for (int i = 0; i < units.length; i++)
 			units[i].id = i;
+		
+		currentTurn = 0;
 	}
 	
-	public int startOfTurnEffects(int poisonVariance)
+	public int[] startOfTurnEffects(int poisonVariance, int regenVariance)
 	{
 		ActiveUnit au = units[currentUnit];
 		
+		// Cancel cover
+		au.covering = -1;
+		
+		// Decrement doom
+		if (au.status[StatusEffect.DOOM.ordinal()] > 1)
+			au.status[StatusEffect.DOOM.ordinal()] -= 1;
+		else if (au.status[StatusEffect.DOOM.ordinal()] == 1)
+		{
+			au.currHP = 0;
+			applyDeath(au, false);
+			
+			// If the unit dies, return without applying any of the other effects
+			return new int[] {0, 0};
+		}
+
+		// Apply regen healing
+		int regenHealing = 0;
+		if (au.status[StatusEffect.REGEN.ordinal()] > 0)
+		{
+			regenHealing = (regenVariance * (int) au.unit.maxHP) / 1000;
+			applyHealing(currentUnit, regenHealing);
+		}
+				
 		// Apply poison damage
 		int poisonDamage = 0;
 		if (au.status[StatusEffect.POISON.ordinal()] > 0)
@@ -31,21 +57,8 @@ public class GameState
 			if (au.currHP == 0)
 			{
 				applyDeath(au, false);
-				return poisonDamage;
+				return new int[] {poisonDamage, 0};
 			}
-		}
-		
-		
-		// Decrement doom
-		if (au.status[StatusEffect.DOOM.ordinal()] > 1)
-			au.status[StatusEffect.DOOM.ordinal()] -= 1;
-		else if (au.status[StatusEffect.DOOM.ordinal()] == 1)
-		{
-			au.currHP = 0;
-			applyDeath(au, false);
-			
-			// If the unit dies, return without applying any of the other effects
-			return 0;
 		}
 		
 		// Decrement silence
@@ -96,11 +109,21 @@ public class GameState
 		if (au.status[StatusEffect.QUICK.ordinal()] > 0) 
 			au.status[StatusEffect.QUICK.ordinal()] -= 1;
 		
+		// Decrement defense status
+		if (au.status[StatusEffect.DEFENSE.ordinal()] > 0) 
+			au.status[StatusEffect.DEFENSE.ordinal()] -= 1;
+		
+		// Decrement expert guard
+		if (au.status[StatusEffect.EXPERT_GUARD.ordinal()] > 0) 
+			au.status[StatusEffect.EXPERT_GUARD.ordinal()] -= 1;
+		
+		
+		
 		// Apply MP regeneration
 		applyMPHealing(currentUnit, 5);
 		
 		// Return poison damage
-		return poisonDamage;
+		return new int[] {poisonDamage, regenHealing};
 	}
 	
 	// Returns true if the current unit recovers from stop this turn
@@ -115,6 +138,19 @@ public class GameState
 		au.status[StatusEffect.STOP.ordinal()] = Math.max(0, au.status[StatusEffect.STOP.ordinal()] - 1);
 		
 		return result;
+	}
+	
+	public void swapUnits(int au1, int au2)
+	{
+		ActiveUnit coverer = units[au1];
+		ActiveUnit covered = units[au2];
+		
+		// Swap locations
+		int temp = coverer.x;	coverer.x = covered.x;	covered.x = temp;
+		    temp = coverer.y;	coverer.y = covered.y;	covered.y = temp;
+		    temp = coverer.z;	coverer.z = covered.z;	covered.z = temp;
+		
+		System.out.println("Swapped " + coverer.unit.name + " and " + covered.unit.name);
 	}
 	
 	public void expendMP(FFTASkill sk)
@@ -238,8 +274,7 @@ public class GameState
 		if (targ == Targeting.FREE_SELECT)
 			for (int i = 0; i < units.length; i++)
 			{
-				if ((units[i].currHP > 0 && sk.TARGET_LIVE) ||
-					(units[i].currHP == 0 && sk.TARGET_DEAD))
+				if (isValidTarget(units[i], sk))
 				{
 					int dist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
 					
@@ -258,8 +293,7 @@ public class GameState
 			
 			for (int i = 0; i < units.length; i++)
 			{
-				if ((units[i].currHP > 0 && sk.TARGET_LIVE) ||
-						(units[i].currHP == 0 && sk.TARGET_DEAD))
+				if (isValidTarget(units[i], sk))
 				{
 					int dx2 = units[i].x - user.x, dy2 = units[i].y - user.y;
 					if (dx2 != 0) dx2 = dx2 / Math.abs(dx2);
@@ -283,6 +317,25 @@ public class GameState
 		return result;
 	}
 	
+	// Returns true if the selected skill can apply to the selected target, assuming they're in range
+	public boolean isValidTarget (ActiveUnit au, FFTASkill sk)
+	{
+		boolean valid = (au.currHP > 0 && sk.TARGET_LIVE) 	||
+						(au.currHP == 0 && sk.TARGET_DEAD)	;
+		
+		if (sk == FFTASkill.COVER && au.covering != -1)
+			valid = false;
+		
+		return valid;
+	}
+	
+	public void applyCover(int user, int target)
+	{
+		// Set the user to cover the target
+		units[user].covering  = target;
+		units[user].turnCoverUsed = currentTurn;
+	}
+	
 	public void applyDeath(ActiveUnit au, boolean petrify)
 	{
 		// Death handler
@@ -291,10 +344,12 @@ public class GameState
 			au.counter /= 2;
 			au.reserve = 0;
 		}
-		
+	
 		// Wipe all status effects, except for those that persist after death
 		for (int i = 0; i < au.status.length - 2; i++)
 			au.status[i] = 0;
+		
+		au.covering = -1;
 	}
 	
 	public boolean checkAutoLife(ActiveUnit au)
@@ -312,5 +367,20 @@ public class GameState
 		}
 		
 		return revived;
+	}
+	
+	// Returns the number of the unit covering this unit, or 0 if nobody is covering them
+	public int whoCovers(int target)
+	{
+		int coverer = -1;
+		
+		for (int i = 0; i < units.length; i++)
+			if (units[i].covering == target && (coverer == -1 || units[coverer].turnCoverUsed > units[i].turnCoverUsed))
+			{
+				coverer = i;
+				System.out.println(units[coverer].unit.name + " is covering " + units[target].unit.name);
+			}
+		
+		return coverer;
 	}
 }

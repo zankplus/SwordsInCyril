@@ -242,21 +242,17 @@ public class ActiveUser extends Thread
 											ag.player1.messageQueue.put(msg);
 											ag.player2.messageQueue.put(msg);
 											int[] data = (int[]) action.data;
-											System.out.println("run: target = " + data[0]);
 											
 											// Send intermediate facing
-											int x = data[data.length - 2], y = data[data.length - 1];
+											int x = data[2], y = data[3];
 											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x, y)}; 
 											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
 											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
 											ag.player1.messageQueue.put(waitmsg);
 											ag.player2.messageQueue.put(waitmsg);
 											
-											int[] targets = new int[data.length - 3];
-											for (int i = 0; i < targets.length; i++)
-												targets[i] = data[i];
-											FFTASkill sk = FFTASkill.values[data[data.length - 3]];
-											ag.doAction(targets, sk);
+											FFTASkill sk = FFTASkill.values[data[1]];
+											ag.doAction(sk, x, y);
 											ag.victoryCheck();
 										}
 										else if (action.type == ZankGameActionType.WAIT)
@@ -281,8 +277,6 @@ public class ActiveUser extends Thread
 									}
 									catch (NullPointerException e) { System.out.println("\rUser " + username + " tried to send message to invalid game"); e.printStackTrace(); }
 									ag.gameLock.unlock();
-									
-									System.out.println("awaiting messages...");
 								}
 							}
 							else

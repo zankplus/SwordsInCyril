@@ -154,6 +154,7 @@ public class ZankClient
 		
 		dispatch.done = true;
 		heartbeater.shutdown();
+		chatWindow.appendToChat("<br><span style=\"color: red\">oh no, disconnectio!");
 		chatWindow.chatLine.setEnabled(false);
 		chatWindow.userlist.setEnabled(false);
 	}

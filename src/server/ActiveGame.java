@@ -3,6 +3,7 @@ package server;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.*;
@@ -25,6 +26,7 @@ public class ActiveGame
 	TurnOrder turnOrder;
 	GameState state;
 	Lock gameLock;
+	int turn;
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2)
 	{
@@ -42,6 +44,7 @@ public class ActiveGame
 //		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
+		turn = 0;
 		
 		// Initialize user list
 		userlist = Collections.synchronizedList(new ArrayList<ActiveUser>());
@@ -108,12 +111,16 @@ public class ActiveGame
 	{
 		// Determine next unit to move
 		state.currentUnit = turnOrder.getNext();
-
+		
+		// Increment the current turn
+		state.currentTurn++;
+		
 		// Grab reference to current unit
 		ActiveUnit au = state.units[state.currentUnit];
 		
-		// Calculate poison variance
+		// Calculate poison and regen variance
 		int poisonVariance = 85 + (int) (Math.random() * 30);
+		int regenVariance  = 85 + (int) (Math.random() * 30);
 		
 		// Decrement Stop status
 		state.stopTick();
@@ -122,7 +129,7 @@ public class ActiveGame
 		if (au.status[StatusEffect.STOP.ordinal()] == 0)
 		{
 			// Apply start of turn effects on server side
-			state.startOfTurnEffects(poisonVariance);
+			state.startOfTurnEffects(poisonVariance, regenVariance);
 			
 			// Check for auto-life in case the current unit has been killed by poison or doom 
 			state.checkAutoLife(au);
@@ -131,7 +138,7 @@ public class ActiveGame
 		// Tell the client that it's this unit's turn, whether they're able to take their turn or not.
 		// If the unit is dead, petrified, stopped, etc., the client will handle it accordingly.
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null,
-				new int[] { state.currentUnit, poisonVariance });
+				new int[] { state.currentUnit, poisonVariance, regenVariance });
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		player1.messageQueue.put(zm);
 		player2.messageQueue.put(zm);
@@ -189,26 +196,62 @@ public class ActiveGame
 		au.dir = dir;
 	}
 	
-	public void doAction(int[] targets, FFTASkill sk) throws InterruptedException
+	public void doAction(FFTASkill sk, int x, int y) throws InterruptedException
 	{
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
-		executeSkill(state.currentUnit, targets, sk);
+		executeSkill(state.currentUnit, sk, x, y);
 	}
 	
-	public void executeSkill(int actor, int[] targets, FFTASkill sk) throws InterruptedException
+	public void executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
 	{
+		// Expend skill's cost
 		state.expendMP(sk);
 		
-		// For each target, apply all effects sequentially
-		for (int i = 0; i < targets.length; i++)
+		// Find skill's targets
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor]);
+		
+		// Cover check
+		if (sk.COVERABLE)
 		{
+			// Cover check
+			int k;
+			for (int i = 0; i < targets.size(); i++)
+			{
+				k = state.whoCovers(targets.get(i));
+				if (k != -1)
+				{
+					System.out.println("k = " + state.units[k].unit.name);
+					System.out.println("i = " + state.units[i].unit.name);
+					state.units[k].switchedInFor = targets.get(i);
+					state.swapUnits(k, targets.get(i));
+				}
+			}
+			
+			// Find targets again using new locations
+			targets = state.getTargets(x, y, sk, state.units[actor]);
+		}
+		
+		// For each target, apply all effects sequentially
+		for (int i = 0; i < targets.size(); i++)
+		{
+			boolean reflect = false;
 			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length + 1];
+			int target = targets.get(i);
+			
+			// Reflect check
+			if (sk.REFLECTABLE && state.units[target].status[StatusEffect.REFLECT.ordinal()] > 0 &&
+					target != actor)
+			{
+				target = actor;
+				reflect = true;
+			}
+			
 			for (int j = 0; j < sk.EFFECTS.length; j++)
 			{
 				// Make new result
-				SkillEffectResult result = new SkillEffectResult(actor, targets[i], sk, j);
+				SkillEffectResult result = new SkillEffectResult(actor, target, sk, j);
 				
 				// Refer to old result (or null if none exists)
 				SkillEffectResult prevResult;
@@ -224,6 +267,18 @@ public class ActiveGame
 				sk.EFFECTS[j].handler.applyEffect(results[j]);
 			}
 			
+			// If unit switched for cover, return both units to their original locations 
+			if (state.units[target].switchedInFor != -1)
+			{
+				ActiveUnit au = state.units[target];
+				results[0].cover = au.id;
+				state.swapUnits(au.id, au.switchedInFor);
+				au.switchedInFor = -1;
+			}
+			
+			if (reflect)
+				results[0].reflect = true;
+			
 			// Send the message
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
@@ -231,7 +286,7 @@ public class ActiveGame
 			player2.messageQueue.put(zm);
 			
 			// Check for auto-life trigger on current unit
-			state.checkAutoLife(state.units[targets[i]]);
+			state.checkAutoLife(state.units[targets.get(i)]);
 		}
 	}
 	

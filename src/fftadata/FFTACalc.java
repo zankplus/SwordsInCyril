@@ -83,11 +83,11 @@ public class FFTACalc
 			evade /= getRelativeFacing(attacker, defender);
 			
 			// 5. Status check
-			if (defender.status[StatusEffect.BLIND.ordinal()] != 0)
+			if (defender.status[StatusEffect.DARKNESS.ordinal()] != 0)
 				evade -= 20;
 			if (defender.status[StatusEffect.CONFUSE.ordinal()] != 0)
 				evade -= 10;
-			if (attacker.status[StatusEffect.BLIND.ordinal()] != 0)
+			if (attacker.status[StatusEffect.DARKNESS.ordinal()] != 0)
 				evade += 50;
 			
 			// 6. Support check

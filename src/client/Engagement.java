@@ -96,14 +96,13 @@ public class Engagement
 		client.sendZankMessage(message);
 	}
 	
-	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
+	public void sendAction(int user, FFTASkill sk, int x, int y) throws IOException
 	{
-		int[] data = new int[targets.size() + 3];
-		for (int i = 0; i < targets.size(); i++)
-			data[i] = targets.get(i);
-		data[data.length - 3] = sk.ordinal();
-		data[data.length - 2] = x;
-		data[data.length - 1] = y;
+		int[] data = new int[4];
+		data[0] = user;
+		data[1] = sk.ordinal();
+		data[2] = x;
+		data[3] = y;
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
@@ -209,14 +208,24 @@ public class Engagement
 			// Announce status effects that are abating this turn
 			window.startOfTurnAnnouncements(au);
 			
-			// Apply poison damage (if applicable) and start of turn effects 
-			int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
+			// Apply poison damage and regen healing, if applicable
+			int[] hpChanges = state.startOfTurnEffects(data[1], data[2]);		// data[1] is poisonVariance
+			int poisonDamage = hpChanges[0];
+			int regenHealing = hpChanges[1];
+			
+			if (regenHealing > 0)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
+						"</strong> regenerates <strong><span style=\"color: lime\">" + regenHealing + 
+						"</strong></span> hit points!");
+			}
 			
 			// Announce poison damage (if applicable) and update displays to reflect it
 			if (poisonDamage > 0)
 			{
 				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
-						"</strong> takes " + poisonDamage + " damage from poison!");
+						"</strong> takes <strong><span style=\"color: red\">" + poisonDamage + 
+						"</strong></span> damage from poison!");
 				
 				if (au.currHP == 0)
 					window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
@@ -267,13 +276,16 @@ public class Engagement
 	// ACT: announce in chat that the active unit has taken the indicated action
 	public void receiveAct(int[] data)
 	{
-		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
+		FFTASkill sk = FFTASkill.values[data[1]];
+		int user = data[0], x = data[2], y = data[3];
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user]);
+		
 		if (sk == FFTASkill.FIGHT)
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-				"</strong> attacks <strong>" + state.units[data[0]].unit.name + "</strong>!");
+				"</strong> attacks <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		else
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-					"</strong> uses " + sk.NAME + " on <strong>" + state.units[data[0]].unit.name + "</strong>!");
+					"</strong> uses " + sk.NAME + " on <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		
 		state.expendMP(sk);
 		window.updateUnitPreview(currentID());
@@ -284,6 +296,16 @@ public class Engagement
 	{
 		boolean miss = true;
 		
+		ActiveUnit target = state.units[results[0].target];
+		
+		if (results[0].cover != -1)
+			window.appendToChat("<em><span style=\"color:gray\">......<strong>" + target.unit.name + 
+								"</strong> <span style=\"color:blue\">swaps places with</span> <strong>" + 
+								state.units[target.covering].unit.name + "</strong>!");
+		
+		if (results[0].reflect)
+			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
+			
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
 		{
@@ -303,6 +325,7 @@ public class Engagement
 				window.appendToChat(report);
 				
 				ActiveUnit au = state.units[results[i].target]; 
+				
 				if (au.currHP == 0)
 					window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
 			}
@@ -310,7 +333,6 @@ public class Engagement
 		
 		if (miss)
 		{
-			ActiveUnit target = state.units[results[0].target];
 			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
 					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
 		}
@@ -318,7 +340,6 @@ public class Engagement
 		// Check auto-life trigger
 		else
 		{
-			ActiveUnit target = state.units[results[0].target];
 			boolean autoLifeRevived = state.checkAutoLife(target);
 			if (autoLifeRevived)
 			{

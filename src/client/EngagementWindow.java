@@ -269,7 +269,7 @@ public class EngagementWindow extends JFrame
 			selectTile(game.map.mapData[au.x][au.y]);
 			
 			// Send the action
-			game.sendAction(targets, selectedSkill, x, y);
+			game.sendAction(au.id, selectedSkill, x, y);
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}
@@ -289,7 +289,7 @@ public class EngagementWindow extends JFrame
 			previews[i] = new UnitPreviewPanel(units[i]);
 			previewDeck.add(previews[i], String.valueOf(i));
 		}
-		
+		UnitPreviewPanel.game = game;
 		damagePreviewPanel = new JPanel();
 		previewDeck.add(damagePreviewPanel, "Damage Preview");
 	}
