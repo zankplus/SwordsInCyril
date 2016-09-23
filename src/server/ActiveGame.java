@@ -212,6 +212,10 @@ public class ActiveGame
 		// Find skill's targets
 		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor]);
 		
+		// Boost check  
+		boolean clearBoostAfterExecuting = (state.units[actor].status[StatusEffect.BOOST.ordinal()] > 0 && 
+											sk != FFTASkill.BOOST);
+		
 		// Cover check
 		if (sk.COVERABLE)
 		{
@@ -276,6 +280,11 @@ public class ActiveGame
 				au.switchedInFor = -1;
 			}
 			
+			// Boost flag
+			if (clearBoostAfterExecuting)
+				results[0].boost = true;
+			
+			// Reflect flag
 			if (reflect)
 				results[0].reflect = true;
 			
@@ -285,9 +294,13 @@ public class ActiveGame
 			player1.messageQueue.put(zm);
 			player2.messageQueue.put(zm);
 			
-			// Check for auto-life trigger on current unit
+			// Check for auto-life trigger on current target
 			state.checkAutoLife(state.units[targets.get(i)]);
 		}
+		
+		// Remove boost, if necessary
+		if (clearBoostAfterExecuting)
+			state.units[actor].status[StatusEffect.BOOST.ordinal()] = 0;
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost

@@ -38,9 +38,10 @@ public enum StatusEffect
 	HASTE 			("Haste",			3,	true,	" is <strong><span style=\"color:aqua\">hastened</strong></span>!"),
 	REFLECT 		("Reflect",			1,	true,	" gains a <strong><span style=\"color:aqua\">reflective barrier</strong></span>!"),
 	ASTRA 			("Astra",			1,	true,	" is granted <strong><span style=\"color:aqua\">Astra</strong></span>!"),
+	BOOST 			("Boost",			1,	true,	"'s Weapon Attack is <strong><span style=\"color:aqua\">boosted</strong></span>!"),
 	DEFENSE 		("Defense",			1,	true,	" is <strong><span style=\"color:aqua\">defending</strong></span>!"),
 	EXPERT_GUARD 	("Expert Guard",	1,	true,	" is <strong><span style=\"color:aqua\">immune to damage</strong></span>!"),
-	
+	ADVICE		 	("Advice",			1,	true,	"'s <strong><span style=\"color:aqua\">Critical Hit rate improves</strong></span>!"),
 	
 	
 	
@@ -58,7 +59,7 @@ public enum StatusEffect
 	MPOW_UP 		("MPow UP",			1,	true,	""),
 	MRES_UP 		("MRes UP",			1,	true,	""),
 	
-	BOOST 			("",	1,	true,	""),
+	
 	
 	// Status effects that persist after death
 	FROG 			("Frog",			1,	false,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),

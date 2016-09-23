@@ -214,7 +214,7 @@ public class FFTACalc
 			atk = atk * 307 / 256;
 		if (attacker.status[StatusEffect.FROG.ordinal()] != 0)
 			atk = atk * 25 / 256;
-		if (attacker.status[StatusEffect.BOOST.ordinal()] != 0 && skill.IS_PHYSICAL)
+		if (attacker.status[StatusEffect.BOOST.ordinal()] > 0 && skill.IS_PHYSICAL)
 			atk = atk * 384 / 256;
 		if (attacker.status[StatusEffect.WATK_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 281 / 256;
@@ -396,7 +396,7 @@ public class FFTACalc
 			if (canCrit)
 			{
 				int rand = (int) (100 * Math.random());
-				if (rand < 5)
+				if (rand < 5 || (rand < 25 && attacker.status[StatusEffect.ADVICE.ordinal()] > 0))
 				{
 					wasCritical = true;
 					dmg = dmg * 3 / 2;
@@ -449,6 +449,10 @@ public class FFTACalc
 	
 	public static boolean statusNegates(ActiveUnit defender, StatusEffect sEff)
 	{
+		// I
+		if (defender.status[sEff.ordinal()] > 0)
+			return true;
+		
 		// TODO: STOP prevents SLOW
 		// TODO: does it also prevent HASTE?
 		

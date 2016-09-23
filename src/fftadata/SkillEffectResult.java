@@ -8,7 +8,7 @@ public class SkillEffectResult implements Serializable
 	public SkillEffect effect;
 	
 	public int user, target, damage, hitChance, cover;
-	public boolean success, critical, dependent, reflect;
+	public boolean success, critical, dependent, boost, reflect;
 	
 	public SkillEffectResult(int user, int target, FFTASkill skill, int effectIndex)
 	{
@@ -25,6 +25,7 @@ public class SkillEffectResult implements Serializable
 		success = false;
 		critical = false;
 		dependent = false;
+		boost = false;
 		reflect = false;
 		cover = -1;
 	}

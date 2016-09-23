@@ -303,17 +303,32 @@ public class Engagement
 								"</strong> <span style=\"color:blue\">swaps places with</span> <strong>" + 
 								state.units[target.covering].unit.name + "</strong>!");
 		
+		if (results[0].boost)
+		{
+			state.units[results[0].user].status[StatusEffect.BOOST.ordinal()] = 0;
+			window.updateUnitPreview(results[0].user);
+		}
+		
 		if (results[0].reflect)
 			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
 			
+		// determine whether the attack missed, and report so if it does
+		for (int i = 0; i < results.length; i++)
+			if (results[i] != null && results[i].success)
+				miss = false;
+		
+		if (miss)
+		{
+			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
+		}
+		
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
 		{
 			if (results[i] != null)
 			{
 				String report = state.applyEffect(results[i]);
-				if (results[i].success)
-					miss = false;
 				
 				// Update target sprite to reflect any changes in HP
 				window.updateSprite(getUnits()[results[i].target]);
@@ -331,14 +346,10 @@ public class Engagement
 			}
 		}
 		
-		if (miss)
-		{
-			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
-					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
-		}
+		
 		
 		// Check auto-life trigger
-		else
+		if (!miss)
 		{
 			boolean autoLifeRevived = state.checkAutoLife(target);
 			if (autoLifeRevived)
