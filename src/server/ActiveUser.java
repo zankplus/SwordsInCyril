@@ -66,12 +66,12 @@ public class ActiveUser extends Thread
 
 						try
 						{
-							System.out.print("IN:\t");
+							// Read message
 							msg = (ZankMessage) in.readObject();
-							
-							String username = msg.user;
 							ZankMessageType command = msg.type;
-							System.out.println(msg.type + " " + msg.user + " " + msg.data);
+							if (msg.type != ZankMessageType.BEEP)
+								System.out.println("IN:\t" + msg.type + " " + msg.user + " " + msg.data);
+							String username = msg.user;
 							
 							// Special handlers for different message types
 							if (command.equals(ZankMessageType.LOGIN) && nickname == null)
@@ -290,7 +290,8 @@ public class ActiveUser extends Thread
 					if (!messageQueue.isEmpty() && !done)
 					{
 						ZankMessage m = messageQueue.take();
-						System.out.println("OUT: " + nickname + "\t" + m);
+						if (m.type != ZankMessageType.BEEP)
+							System.out.println("OUT: " + nickname + "\t" + m);
 						
 						out.writeObject(m);
 						out.flush();

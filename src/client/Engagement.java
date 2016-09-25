@@ -295,20 +295,22 @@ public class Engagement
 	public void receiveHit(SkillEffectResult[] results)
 	{
 		boolean miss = true;
-		
 		ActiveUnit target = state.units[results[0].target];
 		
+		// Check cover
 		if (results[0].cover != -1)
 			window.appendToChat("<em><span style=\"color:gray\">......<strong>" + target.unit.name + 
 								"</strong> <span style=\"color:blue\">swaps places with</span> <strong>" + 
 								state.units[target.covering].unit.name + "</strong>!");
 		
+		// Check boost
 		if (results[0].boost)
 		{
 			state.units[results[0].user].status[StatusEffect.BOOST.ordinal()] = 0;
 			window.updateUnitPreview(results[0].user);
 		}
 		
+		// Check reflect
 		if (results[0].reflect)
 			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
 			
@@ -317,7 +319,8 @@ public class Engagement
 			if (results[i] != null && results[i].success)
 				miss = false;
 		
-		if (miss)
+		// Check multi-hit attack
+		if (miss && results[0].skill != FFTASkill.DOUBLE_SWORD && results[0].skill != FFTASkill.DOUBLESHOT)
 		{
 			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
 					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
@@ -325,9 +328,10 @@ public class Engagement
 		
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
-		{
-			if (results[i] != null)
+		{	
+			if (!results[i].dependent || results[0].success)
 			{
+				boolean targetWasAlive = state.units[results[i].target].currHP > 0;
 				String report = state.applyEffect(results[i]);
 				
 				// Update target sprite to reflect any changes in HP
@@ -339,13 +343,14 @@ public class Engagement
 				// Append report to chat
 				window.appendToChat(report);
 				
-				ActiveUnit au = state.units[results[i].target]; 
 				
-				if (au.currHP == 0)
-					window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
 			}
 		}
 		
+		// Check death
+		ActiveUnit au = state.units[results[0].target];
+		if (au.currHP == 0)
+			window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
 		
 		
 		// Check auto-life trigger

@@ -101,7 +101,8 @@ public class ZankClient
 	
 	public void sendZankMessage(ZankMessage zm)
 	{
-		System.out.println(Thread.currentThread().getName() + "\tOUT:\t" + zm);
+		if (zm.type != ZankMessageType.BEEP)
+		 	System.out.println(Thread.currentThread().getName() + "\tOUT:\t" + zm);
 		synchronized(out)
 		{
 			try

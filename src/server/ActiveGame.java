@@ -206,6 +206,8 @@ public class ActiveGame
 	
 	public void executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
 	{
+		ActiveUnit user = state.units[actor];
+		
 		// Expend skill's cost
 		state.expendMP(sk);
 		
@@ -219,7 +221,6 @@ public class ActiveGame
 		// Cover check
 		if (sk.COVERABLE)
 		{
-			// Cover check
 			int k;
 			for (int i = 0; i < targets.size(); i++)
 			{
@@ -237,11 +238,40 @@ public class ActiveGame
 			targets = state.getTargets(x, y, sk, state.units[actor]);
 		}
 		
+		// Generate effect list
+		SkillEffect[] effects;
+		
+		// If using Double Sword, create new skill list by combining those of each weapon equipped
+		if (sk == FFTASkill.DOUBLE_SWORD)
+		{
+			SkillEffect[] rEffs = user.getWeaponSkill(false).EFFECTS,
+						  lEffs = user.getWeaponSkill( true).EFFECTS;
+			
+			System.out.println("Right weapon: " + user.getWeaponSkill(false));
+			System.out.println("Left weapon: "  + user.getWeaponSkill(true));
+			
+			effects = new SkillEffect[rEffs.length + lEffs.length];
+			System.out.print("1");
+			for (int i = 0; i < rEffs.length; i++)
+				effects[i] = rEffs[i];
+			System.out.print(" - 2");
+			for (int i = 0; i < lEffs.length; i++)
+				effects[i + rEffs.length] = lEffs[i];
+			System.out.println(" - 3");
+			for (int i = 0; i < effects.length; i++)
+				System.out.println("Eff" + i + ": " + effects[i]);
+		}
+		
+		// Otherwise use skill's native effect list
+		else
+			 effects = sk.EFFECTS;
+		
+		
 		// For each target, apply all effects sequentially
 		for (int i = 0; i < targets.size(); i++)
 		{
 			boolean reflect = false;
-			SkillEffectResult[] results = new SkillEffectResult[sk.EFFECTS.length + 1];
+			SkillEffectResult[] results = new SkillEffectResult[effects.length];
 			int target = targets.get(i);
 			
 			// Reflect check
@@ -252,23 +282,22 @@ public class ActiveGame
 				reflect = true;
 			}
 			
-			for (int j = 0; j < sk.EFFECTS.length; j++)
+			// Apply effects to target
+			for (int j = 0; j < effects.length; j++)
 			{
 				// Make new result
-				SkillEffectResult result = new SkillEffectResult(actor, target, sk, j);
+				SkillEffectResult result = new SkillEffectResult(actor, target, sk, effects[j]);
 				
-				// Refer to old result (or null if none exists)
-				SkillEffectResult prevResult;
-				if (j > 0)
-					prevResult = results[j - 1];
-				else
-					prevResult = null;
+				// Reference to result of first effect
+				SkillEffectResult eff1Result = results[0];
 				
 				// Determine the results of the current effect
-				results[j] = sk.EFFECTS[j].handler.resolveEffect(result, prevResult, false);
+				results[j] = effects[j].handler.resolveEffect(result, eff1Result, false);
 				
-				// Apply those results
-				sk.EFFECTS[j].handler.applyEffect(results[j]);
+				// Apply those results IF they are not effect1-dependent, or if they are but
+				// effect1 was successful
+				if (!results[j].dependent || results[0].success)
+					effects[j].handler.applyEffect(results[j]);
 			}
 			
 			// If unit switched for cover, return both units to their original locations 

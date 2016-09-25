@@ -306,13 +306,16 @@ public class UnitActionPanel extends JPanel
 					cl.show(thisRef, "Skillset 2");
 				}
 			});
+			
+			if ((au.status[StatusEffect.FROG.ordinal()] > 0 && au.unit.secondary != FFTACommand.ITEM) ||
+					 au.status[StatusEffect.ADDLE.ordinal()] > 0)
+					btnSkillset_2.setEnabled(false);
+				else
+					btnSkillset_2.setEnabled(true);
+			
 			add(new SkillPanel(au.unit.secondary), "Skillset 2");
 		}
-		if ((au.status[StatusEffect.FROG.ordinal()] > 0 && au.unit.secondary != FFTACommand.ITEM) ||
-			 au.status[StatusEffect.ADDLE.ordinal()] > 0)
-			btnSkillset_2.setEnabled(false);
-		else
-			btnSkillset_2.setEnabled(true);
+		
 		
 		// Add Item skillset button, if the user is an alchemist
 		if (au.unit.job == FFTAJob.ALCHEMIST && au.unit.secondary != FFTACommand.ITEM)
@@ -425,6 +428,7 @@ public class UnitActionPanel extends JPanel
 	public void showSkillUsePanel(FFTASkill sk)
 	{
 		window.beginTargetingMode(sk);
+		lblClickTheUnit.setText(window.selectedSkill + "");
 		cl.show(this, "Fight");
 	}
 	

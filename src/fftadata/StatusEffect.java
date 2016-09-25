@@ -43,7 +43,10 @@ public enum StatusEffect
 	EXPERT_GUARD 	("Expert Guard",	1,	true,	" is <strong><span style=\"color:aqua\">immune to damage</strong></span>!"),
 	ADVICE		 	("Advice",			1,	true,	"'s <strong><span style=\"color:aqua\">Critical Hit rate improves</strong></span>!"),
 	
-	
+	WATK_UP 		("WAtk UP",			1,	true,	"'s <strong><span style=\"color:cyan\">WAtk rises</strong></span>!"),
+	WDEF_UP 		("WDef UP",			1,	true,	"'s <strong><span style=\"color:cyan\">WDef rises</strong></span>!"),
+	MPOW_UP 		("MPow UP",			1,	true,	"'s <strong><span style=\"color:cyan\">MPow rises</strong></span>!"),
+	MRES_UP 		("MRes UP",			1,	true,	"'s <strong><span style=\"color:cyan\">MRes rises</strong></span>!"),
 	
 	
 	HIBERNATE 		("Hibernate",			1,	true,	""),
@@ -54,10 +57,7 @@ public enum StatusEffect
 	
 	
 	
-	WATK_UP 		("WAtk UP",			1,	true,	""),
-	WDEF_UP 		("WDef UP",			1,	true,	""),
-	MPOW_UP 		("MPow UP",			1,	true,	""),
-	MRES_UP 		("MRes UP",			1,	true,	""),
+	
 	
 	
 	

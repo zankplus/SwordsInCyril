@@ -302,7 +302,7 @@ public class DamagePreviewPanel extends JPanel
 			else
 				whichEffect = 0;
 			
-			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, sk.EFFECTS[0]), null, true);
 			
 			
 			hit = String.valueOf(result.hitChance);

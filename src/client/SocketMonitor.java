@@ -106,8 +106,10 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 		{
 			try
 			{
-				System.out.println("IN:\t" + msg);
 				ZankMessageType type = msg.type;
+				if (msg.type != ZankMessageType.BEEP)
+					System.out.println("IN:\t" + msg);
+				
 				String user = msg.user;
 				
 				// CHAT: a user has sent a message for the lobby chat

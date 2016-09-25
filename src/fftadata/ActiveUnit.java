@@ -125,9 +125,27 @@ public class ActiveUnit implements Serializable
 	
 	public FFTASkill getFightSkill()
 	{
-		if (unit.getWeapon() == FFTAEquip.BLOOD_STRINGS || unit.getWeapon() == FFTAEquip.BLOOD_SWORD)
-			return FFTASkill.DRAIN_WEAPON;
+		if (unit.support == FFTASupport.DOUBLE_SWORD && unit.getWeapon(true).isWeapon() &&
+				!unit.getWeapon(true).isTwoHanded())
+			return FFTASkill.DOUBLE_SWORD;
+		else
+			return getWeaponSkill(false);
+	}
+	
+	public FFTASkill getWeaponSkill(boolean leftHand)
+	{
+		if (unit.getWeapon(leftHand) == FFTAEquip.BLOOD_STRINGS ||
+			unit.getWeapon(leftHand) == FFTAEquip.BLOOD_SWORD)
+		{
+			if (leftHand)
+				return FFTASkill.DRAIN_WEAPON_L;
+			else
+				return FFTASkill.DRAIN_WEAPON;
+		}
 		
-		return FFTASkill.FIGHT;
+		if (leftHand)
+			return FFTASkill.FIGHT_L;
+		else
+			return FFTASkill.FIGHT;
 	}
 }

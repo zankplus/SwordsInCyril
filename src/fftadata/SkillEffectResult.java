@@ -7,21 +7,19 @@ public class SkillEffectResult implements Serializable
 	public FFTASkill skill;
 	public SkillEffect effect;
 	
-	public int user, target, damage, hitChance, cover;
+	public int user, target, damage, hitChance, cover, slot;
 	public boolean success, critical, dependent, boost, reflect;
 	
-	public SkillEffectResult(int user, int target, FFTASkill skill, int effectIndex)
+	public SkillEffectResult(int user, int target, FFTASkill skill, SkillEffect effect)
 	{
 		this.user = user;
 		this.target = target;
 		this.skill = skill;
-		if (effectIndex >= 0)
-			this.effect = skill.EFFECTS[effectIndex];
-		else
-			this.effect = null;
+		this.effect = effect;
 		
 		damage = 0;
 		hitChance = 0;
+		slot = -1;
 		success = false;
 		critical = false;
 		dependent = false;

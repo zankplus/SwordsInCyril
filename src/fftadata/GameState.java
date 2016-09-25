@@ -238,12 +238,22 @@ public class GameState
 		target.status[sEff.ordinal()] = sEff.DEFAULT_DURATION;
 	}
 	
+	public void applyDelay(int targ)
+	{
+		units[targ].counter = 0;
+	}
+	
 	public void applyStatusRecovery(int targ, StatusEffect[] statuses)
 	{
 		ActiveUnit target = units[targ];
 		
 		for (StatusEffect sEff : statuses)
 			target.status[sEff.ordinal()] = 0;
+	}
+	
+	public void unequipUnit(int targ, int slot)
+	{
+		units[targ].unit.equips.unequip(slot);
 	}
 	
 	// Because this function is only called by the click handler when selecting a space it has
@@ -262,7 +272,7 @@ public class GameState
 		if (targ == Targeting.AS_WEAPON)
 		{
 			vertical = 3;
-			FFTAEquip weapon = units[currentUnit].unit.getWeapon();
+			FFTAEquip weapon = units[currentUnit].unit.getWeapon(false);
 			range = weapon.range;
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;

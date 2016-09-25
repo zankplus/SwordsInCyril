@@ -185,7 +185,7 @@ public class FFTACalc
 	
 	public static int getDamage(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
 			double damageFactor, boolean healing, boolean canCrit, boolean capToHP,
-			boolean capToMP, boolean preview)
+			boolean capToMP, boolean leftHand, boolean preview)
 	{
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
@@ -231,7 +231,10 @@ public class FFTACalc
 		if (attacker.status[StatusEffect.FROG.ordinal()] == 0)
 		{
 			if (skill.IS_PHYSICAL)
-				atk += attacker.unit.getWAtkEquipBonus();
+				if (!leftHand)
+					atk += attacker.unit.getWAtkEquipBonus();
+				else
+					atk += attacker.unit.getWAtkEquipBonusLeft();
 			else if (!skill.IS_PHYSICAL)
 				atk += attacker.unit.getMPowEquipBonus();
 		}
@@ -300,8 +303,10 @@ public class FFTACalc
 		int power;
 		if (skill.POWER == -1)
 		{
-			power = attacker.unit.getFightPower();
-			System.out.println("Power of EqAtk: " + power);
+			if (leftHand)
+				power = attacker.unit.getWAtkEquipBonusLeft();
+			else
+				power = attacker.unit.getWAtkEquipBonus();
 		}
 		else
 		{
@@ -320,7 +325,7 @@ public class FFTACalc
 			// a. Get attack element
 			Element element;
 			if (skill.ELEMENT == Element.AS_WEAPON)
-				element = attacker.unit.getWeapon().element;
+				element = attacker.unit.getWeapon(leftHand).element;
 			else
 				element = skill.ELEMENT;
 			
@@ -413,7 +418,7 @@ public class FFTACalc
 			dmg = 0;
 		
 		// 16. Weapon effects (basically just HEAL_HP since there is presently no way to inflict zombie)
-		FFTAEquip weapon = attacker.unit.getWeapon();
+		FFTAEquip weapon = attacker.unit.getWeapon(leftHand);
 		for (int i = 0; i < weapon.effects.length; i++)
 			if (skill == FFTASkill.FIGHT && weapon.effects[i] == ItemEffect.HEAL_HP)
 				dmg = -dmg;

@@ -5,8 +5,8 @@ import java.io.Serializable;
 public enum SkillEffect implements Serializable
 {
 	HEALING_1X																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, true, true);		}	public String applyEffect(SkillEffectResult result)
-	{	return applyHealing(result);															}	}),
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, true, false, true);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);																}	}),
 	
 	FULLY_HEAL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
@@ -79,53 +79,73 @@ public enum SkillEffect implements Serializable
 	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.ADVICE);										}	}),
 	
+	ADD_WATK_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.WATK_UP);										}	}),
+	
+	ADD_WDEF_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.WDEF_UP);										}	}),
+	
+	ADD_MPOW_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.MPOW_UP);										}	}),
+	
+	ADD_MRES_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return applyStatus(result, StatusEffect.MRES_UP);										}	}),
+	
 	COVER_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyCoverEffect(result);														}	}),
 	
-	FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	FIGHT_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	REGULAR_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	FIGHT_DAMAGE_LEFT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, true, false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
+	
+	REGULAR_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 
-	REGULAR_DAMAGE_CAPPED																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 1, preview, false, true, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	REGULAR_DAMAGE_CAPPED																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, true, false, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	DOUBLE_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 2, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	DOUBLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 2, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	TRIPLE_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 3, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	TRIPLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 3, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	HALF_FIGHT_DAMAGE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, .5, preview, true, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	HALF_FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, true, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	HALF_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE_NEVER_MISS																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, true);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	HALF_DAMAGE_NEVER_MISS																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false, true);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	DOUBLE_DAMAGE_HALF_HIT																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, .5, 2, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	DOUBLE_DAMAGE_HALF_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, .5, 2, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE_DOUBLE_HIT																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 2, .5, preview, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyDamage(result);																}	}),
+	HALF_DAMAGE_DOUBLE_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 2, .5, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																		}	}),
 
-	MP_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, true, false, false);	}	public String applyEffect(SkillEffectResult result)
-	{	return applyMPDamage(result);															}	}),
+	MP_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, true, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
+	{	return applyMPDamage(result);																	}	}),
 
 	QUARTER_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return fractionalDamage(result, 4, false, false);										}	public String applyEffect(SkillEffectResult result)
@@ -133,6 +153,10 @@ public enum SkillEffect implements Serializable
 	
 	HALVE_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return fractionalDamage(result, 2, true, false);										}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HP_LOST_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return healthLostDamage(result);														}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
 	FIXED_DAMAGE_30																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
@@ -150,6 +174,38 @@ public enum SkillEffect implements Serializable
 	FIERY_RECOIL																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return recoilDamage(result, prev, true);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyRecoilDamage(result);														}	}),
+	
+	DROP_WEAPON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 0, 0.5);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	BREAK_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 0, 0.5);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	BREAK_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 3, 0.5);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	STEAL_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 0, 1);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	STEAL_SHIELD																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 1, 1);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	STEAL_HELM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 2, 1);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	STEAL_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 3, 1);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
+	
+	STEAL_ACCESSORY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return targetEquipment(result, 4, 1);													}	public String applyEffect(SkillEffectResult result)
+	{	return stealEquipment(result);															}	}),
 	
 	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.POISON, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
@@ -281,7 +337,11 @@ public enum SkillEffect implements Serializable
 	
 	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
-	{	return applyHealing(result);															}	});
+	{	return applyHealing(result);															}	}),
+	
+	EFF1DEP_DELAY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return eff1DepGuaranteedSuccess(result, prev);											}	public String applyEffect(SkillEffectResult result)
+	{	return applyDelay(result);																}	});
 	
 	////////////////////////////////////////
 	
@@ -306,9 +366,9 @@ public enum SkillEffect implements Serializable
 	}
 		
 	// Server-side effect handlers
-	public static SkillEffectResult genericDamageEffect(SkillEffectResult result,
-			double hitFactor, double damageFactor, boolean preview,
-			boolean canCrit, boolean capToHP, boolean capToMP, boolean healing, boolean neverMiss)
+	public static SkillEffectResult genericDamageEffect(SkillEffectResult result, double hitFactor,
+			double damageFactor, boolean preview, boolean canCrit, boolean capToHP, boolean capToMP,
+			boolean healing, boolean leftHand, boolean neverMiss)
 	{
 		ActiveUnit user = state.units[result.user];
 		ActiveUnit target = state.units[result.target];
@@ -325,7 +385,8 @@ public enum SkillEffect implements Serializable
 		if (rand < hitRate || preview)
 		{
 			// Calc damage
-			int dmg = FFTACalc.getDamage(user, target, skill, damageFactor, healing, canCrit, capToHP, capToMP, preview);
+			int dmg = FFTACalc.getDamage(user, target, skill, damageFactor, healing, canCrit, capToHP,
+					capToMP, leftHand, preview);
 			result.critical = FFTACalc.wasCritical;
 			
 			// Save results
@@ -418,6 +479,105 @@ public enum SkillEffect implements Serializable
 
 		return result;
 	}
+
+	// A-Type: Deals damage equal to the difference between the user's max and current HP
+	public static SkillEffectResult healthLostDamage(SkillEffectResult result)
+	{
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
+		FFTASkill skill = result.skill;
+
+		int hitRate = FFTACalc.getATypeHitRate(user, target, skill, 1);
+		result.hitChance = hitRate;
+
+		int rand = (int) (100 * Math.random());
+		if (rand < hitRate)
+		{
+			result.damage = (int) user.unit.maxHP - user.currHP;
+			result.success = true;
+		}
+		else
+			result.success = false;
+
+		return result;
+	}
+	
+	// A-Type: Drops target's weapon
+	public static SkillEffectResult targetEquipment(SkillEffectResult result, int equipType,
+													double hitFactor)
+	{
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
+		FFTASkill skill = result.skill;
+
+		EquipSet equips = target.unit.equips;
+		int targetSlot = -1;
+		
+		switch(equipType)
+		{
+			case 0:	// weapon
+				for (int i = 0; i < 5; i++)
+					if (equips.slots[i] != FFTAEquip.NONE && equips.slots[i].isWeapon())
+					{
+						targetSlot = i;
+						break;
+					}
+				break;
+				
+			case 1:	// shield
+				for (int i = 0; i < 5; i++)
+					if (equips.slots[i] != FFTAEquip.NONE && equips.slots[i].isShield())
+					{
+						targetSlot = i;
+						break;
+					}
+				break;
+				
+			case 2:	// headwear
+				for (int i = 0; i < 5; i++)
+					if (equips.slots[i] != FFTAEquip.NONE && equips.slots[i].isHeadwear())
+					{
+						targetSlot = i;
+						break;
+					}
+				break;
+				
+			case 3:	// armor
+				for (int i = 0; i < 5; i++)
+					if (equips.slots[i] != FFTAEquip.NONE && equips.slots[i].isArmor())
+					{
+						targetSlot = i;
+						break;
+					}
+				break;
+				
+			case 4:	// accessory
+				for (int i = 0; i < 5; i++)
+					if (equips.slots[i] != FFTAEquip.NONE && equips.slots[i].isStealableAccessory())
+					{
+						targetSlot = i;
+						break;
+					}
+				break;
+		}
+		
+		if (targetSlot != -1 && target.unit.support != FFTASupport.MAINTENANCE)
+		{
+			int hitRate = FFTACalc.getATypeHitRate(user, target, skill, hitFactor);
+			result.hitChance = hitRate;
+
+			int rand = (int) (100 * Math.random());
+			if (rand < hitRate)
+			{
+				result.slot = targetSlot;
+				result.success = true;
+			}
+			else
+				result.success = false;
+		}
+
+		return result;
+	}
 	
 	// Effect resolvers
 	public static SkillEffectResult genericStatusEffect(SkillEffectResult result,
@@ -490,6 +650,20 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
+	
+	public static SkillEffectResult eff1DepGuaranteedSuccess(SkillEffectResult result, SkillEffectResult prev)
+	{
+		result.dependent = true;
+		ActiveUnit target = state.units[prev.target];
+		if (prev.success && target.currHP > 0)
+		{
+			result.hitChance = 100;
+			result.success = true;
+		}
+			
+		return result;
+	}
+	
 	public static SkillEffectResult eff1DepStatusEffect(SkillEffectResult result, SkillEffectResult prev,
 			double hitFactor, StatusEffect sEff, boolean preview, boolean neverMiss)
 	{
@@ -552,7 +726,9 @@ public enum SkillEffect implements Serializable
 				}
 			}
 		}
-		
+		else if (result.skill == FFTASkill.DOUBLE_SWORD || result.skill == FFTASkill.DOUBLESHOT)
+			report += "<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + result.hitChance + "%)";
 		return report;
 	}
 	
@@ -670,6 +846,21 @@ public enum SkillEffect implements Serializable
 		return report;
 	}
 	
+	public static String applyDelay(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			state.applyDelay(target.id);
+			report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					 "</strong> is <strong><span style=\"color:maroon\">delayed</span></strong>!";
+		}
+		
+		return report;
+	}
+	
 	public static String applyEsuna(SkillEffectResult result)
 	{
 		String report = "";
@@ -739,6 +930,22 @@ public enum SkillEffect implements Serializable
 			state.applyStatusRecovery(result.target, dispel);
 		}
 		
+		return report;
+	}
+	
+	public static String stealEquipment(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			FFTAEquip itemStolen = target.unit.equips.slots[result.slot];
+			state.unequipUnit(result.target, result.slot);
+			report = "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong>'s " + itemStolen + " was stolen!";
+			
+		}
 		return report;
 	}
 	

@@ -125,10 +125,15 @@ public class MapPanel extends JPanel
 							ActiveUnit au, curr = game.currentUnit();
 							for (Integer j : targetIDs)
 							{
+								for (int k = 0; k < game.getUnits().length; k++)
+									System.out.println(game.getUnits()[k].unit.name + " " + game.getUnits()[k].team);
+								
 								au = game.getUnits()[j];
+								
 								if (((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
 									 (au.currHP == 0 && window.selectedSkill.TARGET_DEAD)) &&
-									 (window.selectedSkill.TARGET_ENEMY || au.team == curr.team))
+									((window.selectedSkill.TARGET_ENEMY && au.team != curr.team) ||
+									 (window.selectedSkill.TARGET_ALLY && au.team == curr.team)) )
 								targets.add(game.getUnits()[j]);
 							}
 							
@@ -305,7 +310,7 @@ public class MapPanel extends JPanel
 		
 		if (targ == Targeting.AS_WEAPON)
 		{
-			FFTAEquip weapon = au.unit.getWeapon();
+			FFTAEquip weapon = au.unit.getWeapon(false);
 			range = weapon.range;
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;
