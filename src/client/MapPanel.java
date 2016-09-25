@@ -363,6 +363,15 @@ public class MapPanel extends JPanel
 				}
 			}
 		}
+		
+		else if (targ == Targeting.SELF_CENTER)
+		{
+			int x = au.x, y = au.y;
+			ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
+			hlTiles.add(fgo);
+			fgObjects.add(fgo);
+		}
+		
 		repaint();
 	}
 	

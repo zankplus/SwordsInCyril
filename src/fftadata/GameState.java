@@ -149,8 +149,6 @@ public class GameState
 		int temp = coverer.x;	coverer.x = covered.x;	covered.x = temp;
 		    temp = coverer.y;	coverer.y = covered.y;	covered.y = temp;
 		    temp = coverer.z;	coverer.z = covered.z;	covered.z = temp;
-		
-		System.out.println("Swapped " + coverer.unit.name + " and " + covered.unit.name);
 	}
 	
 	public void expendMP(FFTASkill sk)
@@ -281,10 +279,10 @@ public class GameState
 		}
 		
 		// If the skill uses free selection
-		if (targ == Targeting.FREE_SELECT)
+		if (targ == Targeting.FREE_SELECT || targ == Targeting.SELF_CENTER)
 			for (int i = 0; i < units.length; i++)
 			{
-				if (isValidTarget(units[i], sk))
+				if (isValidTarget(user, units[i], sk))
 				{
 					int dist = Math.abs(units[i].x - x) + Math.abs(units[i].y - y);
 					
@@ -303,7 +301,7 @@ public class GameState
 			
 			for (int i = 0; i < units.length; i++)
 			{
-				if (isValidTarget(units[i], sk))
+				if (isValidTarget(user, units[i], sk))
 				{
 					int dx2 = units[i].x - user.x, dy2 = units[i].y - user.y;
 					if (dx2 != 0) dx2 = dx2 / Math.abs(dx2);
@@ -322,18 +320,22 @@ public class GameState
 					}
 				}
 			}
-			
 		}	
 		return result;
 	}
 	
 	// Returns true if the selected skill can apply to the selected target, assuming they're in range
-	public boolean isValidTarget (ActiveUnit au, FFTASkill sk)
+	public boolean isValidTarget (ActiveUnit user, ActiveUnit target, FFTASkill sk)
 	{
-		boolean valid = (au.currHP > 0 && sk.TARGET_LIVE) 	||
-						(au.currHP == 0 && sk.TARGET_DEAD)	;
+		boolean valid = (target.currHP  > 0 && sk.TARGET_LIVE) 	||
+						(target.currHP == 0 && sk.TARGET_DEAD)	;
 		
-		if (sk == FFTASkill.COVER && au.covering != -1)
+		if (!sk.SELF_TARGET && target == user)
+		{
+			valid = false;
+		}
+		
+		else if (sk == FFTASkill.COVER && target.covering != -1)
 			valid = false;
 		
 		return valid;
@@ -388,7 +390,6 @@ public class GameState
 			if (units[i].covering == target && (coverer == -1 || units[coverer].turnCoverUsed > units[i].turnCoverUsed))
 			{
 				coverer = i;
-				System.out.println(units[coverer].unit.name + " is covering " + units[target].unit.name);
 			}
 		
 		return coverer;

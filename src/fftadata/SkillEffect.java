@@ -148,19 +148,23 @@ public enum SkillEffect implements Serializable
 	{	return applyMPDamage(result);																	}	}),
 
 	QUARTER_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return fractionalDamage(result, 4, false, false);										}	public String applyEffect(SkillEffectResult result)
+	{ 	return fractionalDamage(result, 4, false, preview);										}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
 	HALVE_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return fractionalDamage(result, 2, true, false);										}	public String applyEffect(SkillEffectResult result)
+	{ 	return fractionalDamage(result, 2, true, preview);										}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
 	HP_LOST_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return healthLostDamage(result);														}	public String applyEffect(SkillEffectResult result)
+	{ 	return healthLostDamage(result, preview);												}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	USER_HP_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return userHPDamage(result, preview);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
 	FIXED_DAMAGE_30																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return fixedDamage(result, 30);															}	public String applyEffect(SkillEffectResult result)
+	{ 	return fixedDamage(result, 30, preview);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
 	SUBDUE_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
@@ -341,7 +345,11 @@ public enum SkillEffect implements Serializable
 	
 	EFF1DEP_DELAY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
 	{ 	return eff1DepGuaranteedSuccess(result, prev);											}	public String applyEffect(SkillEffectResult result)
-	{	return applyDelay(result);																}	});
+	{	return applyDelay(result);																}	}),
+	
+	SELFDESTRUCT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	{	return selfDestruct(result);															}	});
 	
 	////////////////////////////////////////
 	
@@ -459,7 +467,7 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 
-	public static SkillEffectResult fixedDamage(SkillEffectResult result, int amt)
+	public static SkillEffectResult fixedDamage(SkillEffectResult result, int amt, boolean preview)
 	{
 		ActiveUnit user = state.units[result.user];
 		ActiveUnit target = state.units[result.target];
@@ -469,7 +477,7 @@ public enum SkillEffect implements Serializable
 		result.hitChance = hitRate;
 
 		int rand = (int) (100 * Math.random());
-		if (rand < hitRate)
+		if (rand < hitRate || preview)
 		{
 			result.damage = amt;
 			result.success = true;
@@ -481,7 +489,29 @@ public enum SkillEffect implements Serializable
 	}
 
 	// A-Type: Deals damage equal to the difference between the user's max and current HP
-	public static SkillEffectResult healthLostDamage(SkillEffectResult result)
+	public static SkillEffectResult healthLostDamage(SkillEffectResult result, boolean preview)
+	{
+		ActiveUnit user = state.units[result.user];
+		ActiveUnit target = state.units[result.target];
+		FFTASkill skill = result.skill;
+
+		int hitRate = FFTACalc.getATypeHitRate(user, target, skill, 1);
+		result.hitChance = hitRate;
+
+		int rand = (int) (100 * Math.random());
+		if (rand < hitRate || preview)
+		{
+			result.damage = (int) user.unit.maxHP - user.currHP;
+			result.success = true;
+		}
+		else
+			result.success = false;
+
+		return result;
+	}
+	
+	// A-Type: Deals damage equal to the user's current HP
+	public static SkillEffectResult userHPDamage(SkillEffectResult result, boolean preview)
 	{
 		ActiveUnit user = state.units[result.user];
 		ActiveUnit target = state.units[result.target];
@@ -493,7 +523,7 @@ public enum SkillEffect implements Serializable
 		int rand = (int) (100 * Math.random());
 		if (rand < hitRate)
 		{
-			result.damage = (int) user.unit.maxHP - user.currHP;
+			result.damage = (int) user.currHP;
 			result.success = true;
 		}
 		else
@@ -628,7 +658,6 @@ public enum SkillEffect implements Serializable
 	public static SkillEffectResult recoilDamage(SkillEffectResult result, SkillEffectResult prev,
 												 boolean takeDamageOnMiss)
 	{
-		result.target = prev.user;
 		if (prev.success)
 		{
 			int dmg = Math.abs(prev.damage / 4);
@@ -758,7 +787,7 @@ public enum SkillEffect implements Serializable
 	public static String applyRecoilDamage(SkillEffectResult result)
 	{
 		String report = "";
-		ActiveUnit target = state.units[result.target];
+		ActiveUnit user = state.units[result.user];
 		
 		// Here the deciding factor is not whether the skill was 'successful' or not (the recoil effect
 		// carries its parent's success value), but whether any damage was actually incurred.
@@ -767,8 +796,12 @@ public enum SkillEffect implements Serializable
 			state.applyDamage(result.target, result.damage);
 			report = "<em><span style=\"color:gray\">......<strong>";  
 			
-			report += target.unit.name + "</strong> takes </em><strong><span style=\"color:red\">" + 
+			report += user.unit.name + "</strong> takes </em><strong><span style=\"color:red\">" + 
 					result.damage + "</strong><em><span style=\"color:gray\"> damage from recoil!";
+			
+			if (user.currHP == 0)
+				report += "<br><em><span style=\"color:gray\">......<strong>" + user.unit.name +
+				" falls</strong>!";
 		}
 		
 		return report;
@@ -975,6 +1008,22 @@ public enum SkillEffect implements Serializable
 			report = "<em><span style=\"color:gray\">......<strong>" + user.unit.name +
 					"</strong> is <span style=\"color:blue\">covering</span> <strong>"
 					+ target.unit.name + "</strong>!";
+		}
+		return report;
+	}
+	
+	public static String selfDestruct(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit user = state.units[result.user];
+		
+		if (result.success && user.currHP > 0)
+		{
+			state.applyDamage(result.user, (int) user.unit.maxHP);
+			report += "<em><span style=\"color:gray\">......<strong>" + user.unit.name +
+					"</strong> self-destructs!";
+			report += "</br><em><span style=\"color:gray\">......<strong>" + user.unit.name +
+					" falls</strong>!";
 		}
 		return report;
 	}

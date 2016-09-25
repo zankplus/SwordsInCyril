@@ -16,6 +16,7 @@ import fftadata.FFTAJob;
 import fftadata.FFTASkill;
 import fftadata.FFTASupport;
 import fftadata.StatusEffect;
+import fftadata.Targeting;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
@@ -575,6 +576,11 @@ public class UnitActionPanel extends JPanel
 					if (sk != null && FFTASkill.canUseSkill(sk, au))
 					{
 						showSkillUsePanel(sk);
+						if (sk.TARGETING == Targeting.SELF_CENTER)
+						{
+							window.selectTile();
+						}
+						
 					}
 				}
 			});

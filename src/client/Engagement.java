@@ -331,7 +331,7 @@ public class Engagement
 		{	
 			if (!results[i].dependent || results[0].success)
 			{
-				boolean targetWasAlive = state.units[results[i].target].currHP > 0;
+				
 				String report = state.applyEffect(results[i]);
 				
 				// Update target sprite to reflect any changes in HP
@@ -342,15 +342,17 @@ public class Engagement
 				
 				// Append report to chat
 				window.appendToChat(report);
-				
-				
 			}
 		}
 		
-		// Check death
-		ActiveUnit au = state.units[results[0].target];
-		if (au.currHP == 0)
-			window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
+		// Update user sprite (in case of recoil, death. etc...)
+		ActiveUnit user = state.units[results[0].user];
+		window.updateSprite(user);
+		window.updateUnitPreview(user.id);
+
+		// Check target death
+		if (target.currHP == 0)
+			window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name + " falls!");
 		
 		
 		// Check auto-life trigger
