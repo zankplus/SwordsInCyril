@@ -4,352 +4,381 @@ import java.io.Serializable;
 
 public enum SkillEffect implements Serializable
 {
-	HEALING_1X																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HEALING_1X																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, true, false, true);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyHealing(result);																}	}),
 	
-	FULLY_HEAL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	FULLY_HEAL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
-		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+		return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return fullHealing(result);																}	}),
 	
-	ESUNA_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ESUNA_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyEsuna(result);																}	}),
 	
-	DISPEL_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	DISPEL_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return guaranteedSuccessIfNotPetrified(result);											}	public String applyEffect(SkillEffectResult result)
 	{	return applyDispel(result);																}	}),
 	
-	REVIVE_HALF_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	REVIVE_HALF_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	result.damage = (int) -(state.units[result.target].unit.maxHP / 2);
-		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+		return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyRevival(result, false);														}	}),
 	
-	REVIVE_FULL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	REVIVE_FULL_HP																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	result.damage = (int) -state.units[result.target].unit.maxHP;
-		return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+		return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyRevival(result, true);														}	}),
 	
-	ADD_REGEN																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_REGEN																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.REGEN);											}	}),
 	
-	ADD_SHELL																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_SHELL																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SHELL);											}	}),
 	
-	ADD_PROTECT																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_PROTECT																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.PROTECT);										}	}),
 	
-	ADD_HASTE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_HASTE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.HASTE);											}	}),
 	
-	ADD_QUICK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_QUICK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.QUICK);											}	}),
 
-	ADD_REFLECT																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_REFLECT																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.REFLECT);										}	}),
 	
-	ADD_ASTRA																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_ASTRA																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.ASTRA);											}	}),
 	
-	ADD_AUTO_LIFE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_AUTO_LIFE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.AUTO_LIFE);										}	}),
 	
-	ADD_DEFENSE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_DEFENSE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DEFENSE);										}	}),
 	
-	ADD_EXPERT_GUARD																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_EXPERT_GUARD																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.EXPERT_GUARD);									}	}),
 	
-	ADD_BOOST																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_BOOST																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.BOOST);											}	}),
 	
-	ADD_ADVICE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_ADVICE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.ADVICE);										}	}),
 	
-	ADD_WATK_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_WATK_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.WATK_UP);										}	}),
 	
-	ADD_WDEF_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_WDEF_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.WDEF_UP);										}	}),
 	
-	ADD_MPOW_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_MPOW_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.MPOW_UP);										}	}),
 	
-	ADD_MRES_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	ADD_MRES_UP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.MRES_UP);										}	}),
 	
-	COVER_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
+	COVER_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyCoverEffect(result);														}	}),
 	
-	FIGHT_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	FIGHT_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	FIGHT_DAMAGE_LEFT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	FIGHT_DAMAGE_LEFT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, true, false, false, false, true, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	REGULAR_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	REGULAR_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 
-	REGULAR_DAMAGE_CAPPED																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	REGULAR_DAMAGE_CAPPED																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, false, true, false, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	DOUBLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	DOUBLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 2, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	TRIPLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	TRIPLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 3, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	HALF_FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HALF_FIGHT_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, .5, preview, true, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HALF_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE_NEVER_MISS																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HALF_DAMAGE_NEVER_MISS																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, .5, preview, false, false, false, false, false, true);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	DOUBLE_DAMAGE_HALF_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	DOUBLE_DAMAGE_HALF_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, .5, 2, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 	
-	HALF_DAMAGE_DOUBLE_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HALF_DAMAGE_DOUBLE_HIT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 2, .5, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																		}	}),
 
-	MP_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	MP_DAMAGE																							(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericDamageEffect(result, 1, 1, preview, false, false, true, false, false,	false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyMPDamage(result);																	}	}),
 
-	QUARTER_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	QUARTER_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return fractionalDamage(result, 4, false, preview);										}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	HALVE_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HALVE_HP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return fractionalDamage(result, 2, true, preview);										}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	HP_LOST_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	HP_LOST_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return healthLostDamage(result, preview);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	USER_HP_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	USER_HP_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return userHPDamage(result, preview);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	FIXED_DAMAGE_30																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	FIXED_DAMAGE_30																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return fixedDamage(result, 30, preview);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	SUBDUE_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	SUBDUE_EFFECT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return subdueEffect(result, preview);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyDamage(result);																}	}),
 	
-	RECOIL_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return recoilDamage(result, prev, false);												}	public String applyEffect(SkillEffectResult result)
+	RECOIL_DAMAGE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return recoilDamage(result, first, false);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyRecoilDamage(result);														}	}),
 	
-	FIERY_RECOIL																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return recoilDamage(result, prev, true);												}	public String applyEffect(SkillEffectResult result)
+	FIERY_RECOIL																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return recoilDamage(result, first, true);												}	public String applyEffect(SkillEffectResult result)
 	{	return applyRecoilDamage(result);														}	}),
 	
-	DROP_WEAPON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	DROP_WEAPON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 0, 0.5);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	BREAK_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	BREAK_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 0, 0.5);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	BREAK_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	BREAK_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 3, 0.5);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	STEAL_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	STEAL_WEAPON																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 0, 1);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	STEAL_SHIELD																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	STEAL_SHIELD																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 1, 1);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	STEAL_HELM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	STEAL_HELM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 2, 1);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	STEAL_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	STEAL_ARMOR																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 3, 1);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	STEAL_ACCESSORY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	STEAL_ACCESSORY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return targetEquipment(result, 4, 1);													}	public String applyEffect(SkillEffectResult result)
 	{	return stealEquipment(result);															}	}),
 	
-	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_POISON																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.POISON, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.POISON);										}	}),
 	
-	ADD_BLIND																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_BLIND																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.DARKNESS, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DARKNESS);										}	}),
 	
-	ADD_SILENCE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_SILENCE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SILENCE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
 	
-	ADD_SLEEP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_SLEEP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SLEEP, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLEEP);											}	}),
 	
-	ADD_IMMOBILIZE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_IMMOBILIZE																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.IMMOBILIZE, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.IMMOBILIZE);									}	}),
 	
-	ADD_DISABLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_DISABLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.DISABLE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DISABLE);										}	}),
 	
-	ADD_SLOW																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_SLOW																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SLOW, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
 	
-	ADD_STOP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_STOP																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.STOP, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.STOP);											}	}),
 	
-	ADD_PETRIFY																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_PETRIFY																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.PETRIFY, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.PETRIFY);										}	}),
 	
-	ADD_FROG																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_FROG																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.FROG, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.FROG);											}	}),
 
-	ADD_ADDLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_ADDLE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.ADDLE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.ADDLE);											}	}),
 	
-	ADD_DOOM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_DOOM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.DOOM, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DOOM);											}	}),
 	
-	ADD_CONFUSE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_CONFUSE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.CONFUSE, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.CONFUSE);										}	}),
 	
-	ADD_CHARM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_CHARM																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.CHARM, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.CHARM);											}	}),
 	
-	ADD_BERSERK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_BERSERK																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.BERSERK, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.BERSERK);										}	}),
 	
-	ADD_WATK_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_WATK_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.WATK_DOWN, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.WATK_DOWN);										}	}),
 	
-	ADD_WDEF_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_WDEF_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.WDEF_DOWN, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.WDEF_DOWN);										}	}),
 	
-	ADD_MPOW_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_MPOW_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.MPOW_DOWN, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.MPOW_DOWN);										}	}),
 	
-	ADD_SPEED_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_SPEED_DOWN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.SPEED_DOWN, true, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SPEED_DOWN);									}	}),
 	
-	ADD_DEATH																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
+	ADD_DEATH																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
 	{ 	return genericStatusEffect(result, 1, StatusEffect.DEATH, false, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DEATH);											}	}),
 	
-	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_POISON																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.POISON, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.POISON);										}	}),
 	
-	EFF1DEP_ADD_BLIND																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.DARKNESS, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_BLIND																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.DARKNESS, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DARKNESS);										}	}),
 
-	EFF1DEP_ADD_SILENCE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SILENCE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_SILENCE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.SILENCE, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SILENCE);										}	}),
 
-	EFF1DEP_ADD_IMMOBILIZE																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.IMMOBILIZE, preview, false);	}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_IMMOBILIZE																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.IMMOBILIZE, preview, false);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.IMMOBILIZE);									}	}),
 	
-	EFF1DEP_ADD_DISABLE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.DISABLE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_DISABLE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.DISABLE, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.DISABLE);										}	}),
 	
-	EFF1DEP_ADD_SLOW																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.SLOW, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_SLOW																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.SLOW, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.SLOW);											}	}),
 	
-	EFF1DEP_ADD_STOP																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.STOP, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_STOP																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.STOP, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.STOP);											}	}),
 	
-	EFF1DEP_ADD_FROG																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.FROG, preview, false);			}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_FROG																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.FROG, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.FROG);											}	}),
 
-	EFF1DEP_ADD_MRES_DOWN																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.MRES_DOWN, preview, true);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_MRES_DOWN																			(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.MRES_DOWN, preview, true);	}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.MRES_DOWN);										}	}),
 	
-	EFF1DEP_ADD_CONFUSE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.CONFUSE, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_CONFUSE																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.CONFUSE, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.CONFUSE);										}	}),
 	
-	EFF1DEP_ADD_CHARM																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.CHARM, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_CHARM																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.CHARM, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.CHARM);											}	}),
 
-	EFF1DEP_ADD_BERSERK																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepStatusEffect(result, prev, 1, StatusEffect.BERSERK, preview, false);		}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_ADD_BERSERK																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepStatusEffect(result, first, 1, StatusEffect.BERSERK, preview, false);		}	public String applyEffect(SkillEffectResult result)
 	{	return applyStatus(result, StatusEffect.BERSERK);										}	}),
 	
-	EFF1DEP_DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepDrain(result, prev);														}	public String applyEffect(SkillEffectResult result)
+	DRAIN																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepDrain(result, previous);													}	public String applyEffect(SkillEffectResult result)
 	{	return applyHealing(result);															}	}),
 	
-	EFF1DEP_DELAY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return eff1DepGuaranteedSuccess(result, prev);											}	public String applyEffect(SkillEffectResult result)
+	EFF1DEP_DELAY																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return eff1DepGuaranteedSuccess(result, first);											}	public String applyEffect(SkillEffectResult result)
 	{	return applyDelay(result);																}	}),
 	
-	SELFDESTRUCT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult  prev, boolean preview)
-	{ 	return guaranteedSuccess(result);														}	public String applyEffect(SkillEffectResult result)
-	{	return selfDestruct(result);															}	});
+	SELFDESTRUCT																					(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 0);													}	public String applyEffect(SkillEffectResult result)
+	{	return selfDestruct(result);															}	}),
+	
+	FIXED_HEALING_25																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 25);													}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	}),
+	
+	FIXED_HEALING_50																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 50);													}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	}),
+	
+	FIXED_HEALING_150																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return guaranteedSuccess(result, 150);													}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	}),
+	
+	GOBLIN_PUNCH_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return goblinPunchEffect(result, preview);												}	public String applyEffect(SkillEffectResult result)
+	{	return applyDamage(result);																}	}),
+	
+	HASTEBREAK_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return hastebreakEffect(result, preview);												}	public String applyEffect(SkillEffectResult result)
+	{	return applyHastebreak(result);															}	}),
+	
+	MATRA_MAGIC_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return genericStatusEffect(result, 1, StatusEffect.MISC_EFFECT, false, preview, false);	}	public String applyEffect(SkillEffectResult result)
+	{	return switchHPandMP(result);															}	}),
+	
+	WHITE_WIND_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, boolean preview)
+	{ 	return userHPHealing(result);															}	public String applyEffect(SkillEffectResult result)
+	{	return applyHealing(result);															}	});
+	
 	
 	////////////////////////////////////////
 	
@@ -363,7 +392,7 @@ public enum SkillEffect implements Serializable
 	
 	public interface SkillEffectHandler
 	{
-		SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult prev, boolean preview); // determine effect
+		SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult first, SkillEffectResult prev, boolean preview); // determine effect
 		String applyEffect(SkillEffectResult result); // apply effect
 		// int[] predictEffect(SkillEffectResult result); // predict effect
 	}
@@ -637,10 +666,22 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
-	public static SkillEffectResult guaranteedSuccess(SkillEffectResult result)
+	// 100% Hit: Heals the target by an amount equal to the caster's current HP
+	public static SkillEffectResult userHPHealing(SkillEffectResult result)
+	{
+		result.hitChance = 100;
+		result.damage = state.units[result.user].currHP;
+		result.success = true;
+		
+		
+		return result;
+	}
+	
+	public static SkillEffectResult guaranteedSuccess(SkillEffectResult result, int amt)
 	{
 		result.hitChance = 100;
 		result.success = true;
+		result.damage = amt;
 		return result;
 	}
 	
@@ -679,7 +720,7 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
-	
+	// Conditional: 100% hit if eff1 succeeded, 0 otherwise
 	public static SkillEffectResult eff1DepGuaranteedSuccess(SkillEffectResult result, SkillEffectResult prev)
 	{
 		result.dependent = true;
@@ -715,7 +756,29 @@ public enum SkillEffect implements Serializable
 		return result;
 	}
 	
-	// Client-side effect handlers
+	public static SkillEffectResult hastebreakEffect(SkillEffectResult result, boolean preview)
+	{
+		ActiveUnit target = state.units[result.target];
+		if (preview || target.status[StatusEffect.HASTE.ordinal()] == 0)
+			return genericStatusEffect(result, 1, StatusEffect.SLOW, false, preview, false);
+
+		else
+			return genericStatusEffect(result, 1, StatusEffect.STOP, false, preview, false);
+	}
+	
+	public static SkillEffectResult goblinPunchEffect(SkillEffectResult result, boolean preview)
+	{
+		SkillEffectResult rResult = genericDamageEffect(result, 1, 1, preview, false, false, false,
+				false, false, false);
+		
+		if (!preview)
+			rResult.damage =  rResult.damage * (128 + (int) (Math.random() * 257)) / 256;
+		
+		return rResult;
+	}
+	
+	
+	////////////////////// Client-side effect handlers //////////////////////////
 	public static String applyDamage(SkillEffectResult result)
 	{
 		String report = "";
@@ -1028,5 +1091,28 @@ public enum SkillEffect implements Serializable
 		return report;
 	}
 
+	public static String switchHPandMP(SkillEffectResult result)
+	{
+		String report = "";
+		ActiveUnit target = state.units[result.target];
+		
+		if (result.success)
+		{
+			state.switchHPandMP(result.target);
+			report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
+					"</strong>'s HP and MP were switched!";
+		}
+		return report;
+	}
+	
+	public static String applyHastebreak(SkillEffectResult result)
+	{
+		ActiveUnit target = state.units[result.target];
+		
+		if (target.status[StatusEffect.HASTE.ordinal()] > 0)
+			return (applyStatus(result, StatusEffect.STOP));
+		else
+			return (applyStatus(result, StatusEffect.SLOW));
+	}
 }
 

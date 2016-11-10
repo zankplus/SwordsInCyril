@@ -576,11 +576,11 @@ public class UnitActionPanel extends JPanel
 					if (sk != null && FFTASkill.canUseSkill(sk, au))
 					{
 						showSkillUsePanel(sk);
-						if (sk.TARGETING == Targeting.SELF_CENTER)
+						if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES)
 						{
-							window.selectTile();
+							// window.selectTile();
+							window.selectTarget(0);
 						}
-						
 					}
 				}
 			});

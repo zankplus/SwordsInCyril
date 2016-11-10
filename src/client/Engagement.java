@@ -513,4 +513,9 @@ public class Engagement
 	{
 		return state.getTargets(x,  y, sk, user);
 	}
+	
+	public GameState getState()
+	{
+		return state;
+	}
 }

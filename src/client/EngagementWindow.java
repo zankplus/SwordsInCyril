@@ -430,6 +430,11 @@ public class EngagementWindow extends JFrame
 		// Close window
 		dispose();
 	}
+	
+	public void selectTarget(int clicks)
+	{
+		mapPanel.selectTarget(clicks);
+	}
 }
 
 class EngagementWindowRosterPanel extends ClanBuilderRosterPanel

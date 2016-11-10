@@ -293,6 +293,7 @@ public class GameState
 				}
 			}
 
+		// Directional targeting
 		else if (targ == Targeting.DIRECTIONAL)
 		{
 			int dx = x - user.x, dy = y - user.y;
@@ -321,6 +322,23 @@ public class GameState
 				}
 			}
 		}	
+		
+		// target all enemies
+		else if (targ == Targeting.ALL_ENEMIES)
+		{
+			int enemyTeamNumber;
+			if (user.team == 1)
+				enemyTeamNumber = 2;
+			else
+				enemyTeamNumber = 1;
+			
+			for (int i = 0; i < units.length; i++)
+			{
+				System.out.println(units[i].unit.name + " " + (units[i].team == enemyTeamNumber) + " " + isValidTarget(user, units[i], sk));
+				if (units[i].team == enemyTeamNumber && isValidTarget(user, units[i], sk))
+					result.add(i);
+			}
+		}
 		return result;
 	}
 	
@@ -328,7 +346,10 @@ public class GameState
 	public boolean isValidTarget (ActiveUnit user, ActiveUnit target, FFTASkill sk)
 	{
 		boolean valid = (target.currHP  > 0 && sk.TARGET_LIVE) 	||
-						(target.currHP == 0 && sk.TARGET_DEAD)	;
+						(target.currHP == 0 && sk.TARGET_DEAD);
+		
+		valid = valid && ((sk.TARGET_ENEMY && user.team != target.team) ||
+				 		  (sk.TARGET_ALLY  && user.team == target.team) );
 		
 		if (!sk.SELF_TARGET && target == user)
 		{
@@ -339,6 +360,21 @@ public class GameState
 			valid = false;
 		
 		return valid;
+	}
+	
+	public void switchHPandMP(int target)
+	{
+		ActiveUnit au = units[target];
+		
+		int temp = au.currHP;
+		au.currHP = (int) Math.min(au.unit.maxHP, au.currMP);
+		au.currMP = (int) Math.min(au.unit.maxMP, temp);
+		
+		if (au.currHP <= 0)
+		{
+			au.currHP = 0;
+			applyDeath(au, false);
+		}
 	}
 	
 	public void applyCover(int user, int target)

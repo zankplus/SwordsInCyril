@@ -288,15 +288,13 @@ public class ActiveGame
 				// Make new result
 				SkillEffectResult result = new SkillEffectResult(actor, target, sk, effects[j]);
 				
-				// Reference to result of first effect
-				SkillEffectResult eff1Result = results[0];
-				
 				// Determine the results of the current effect
-				results[j] = effects[j].handler.resolveEffect(result, eff1Result, false);
+				SkillEffectResult prev = results[Math.max(0, j - 1)];
+				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false);
 				
 				// Apply those results IF they are not effect1-dependent, or if they are but
-				// effect1 was successful
-				if (!results[j].dependent || results[0].success)
+				// effect1 was successful, or if it is prev-effect dependent and that was successful
+				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
 					effects[j].handler.applyEffect(results[j]);
 			}
 			

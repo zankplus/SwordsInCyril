@@ -7,8 +7,8 @@ public enum FFTASkill implements Serializable
 	//FIGHT("-", 0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	FIGHT			("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE	}),
 	FIGHT_L			("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE_LEFT}),
-	DRAIN_WEAPON	("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE, SkillEffect.EFF1DEP_DRAIN}),
-	DRAIN_WEAPON_L	("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE_LEFT, SkillEffect.EFF1DEP_DRAIN}),
+	DRAIN_WEAPON	("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE, SkillEffect.DRAIN}),
+	DRAIN_WEAPON_L	("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE_LEFT, SkillEffect.DRAIN}),
 	DOUBLE_SWORD	("Fight", 			 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIGHT_DAMAGE}),
 	CURE			("Cure",			 6, 40, 4, 0, 1, 1, Targeting.FREE_SELECT,	Element.HOLY,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X}),
 	CURA			("Cura", 			10, 60, 4, 0, 1, 2, Targeting.FREE_SELECT,	Element.HOLY,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X}),
@@ -26,7 +26,7 @@ public enum FFTASkill implements Serializable
 	BREAK			("Break", 			20,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	true,	true,	true,	false,	true,	new SkillEffect[] {SkillEffect.ADD_PETRIFY}),
 	WATER			("Water", 			12, 34, 3, 0, 1, 2, Targeting.FREE_SELECT,	Element.WATER,		true,	false,	true,	true,	false,	true,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
 	AERO			("Aero", 			12, 34, 3, 0, 1, 2, Targeting.FREE_SELECT,	Element.WIND,		true,	false,	true,	true,	false,	true,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
-	DRAIN			("Drain", 			12, 30, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.EFF1DEP_DRAIN}),
+	DRAIN			("Drain", 			12, 30, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.DRAIN}),
 	BLIND			("Blind", 			12,  0, 4, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	true,	true,	true,	false,	true,	new	SkillEffect[] {SkillEffect.ADD_BLIND}),
 	RAISE			("Raise",			22, 45, 4, 0, 1, 2, Targeting.FREE_SELECT,	Element.HOLY,		true,	true,	true,	true,	false,	true,	false,	false,	false,	false,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X, SkillEffect.REVIVE_HALF_HP}),
 	GIGA_FLARE		("Giga Flare",		40, 65, 3, 0, 1, 1, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
@@ -51,14 +51,14 @@ public enum FFTASkill implements Serializable
 	DEMI			("Demi", 			24,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	true,	true,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.HALVE_HP}),
 	SILENCE			("Silence", 		 8,  0, 3, 0, 1, 2,	Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	true,	false,	true,	new SkillEffect[] {SkillEffect.ADD_SILENCE}),
 	HASTE			("Haste", 			24,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_HASTE}),
-	PROMINENCE		("Prominence", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	TEMPEST			("Tempest", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	FREEZEBLINK		("Freezeblink", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	STAR_CROSS		("Starcross", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	STARDUST		("Stardust", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	DELUGE			("Deluge", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	SOIL_EVIDENCE	("Soil Evidence", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	WILD_TORNADO	("Wild Tornado", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	PROMINENCE		("Prominence", 		32, 20, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.FIRE,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	TEMPEST			("Tempest", 		32, 17, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.LIGHTNING,	true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	FREEZEBLINK		("Freezeblink", 	32, 20, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.ICE,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	STAR_CROSS		("Starcross", 		32, 17, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.HOLY,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	STARDUST		("Stardust", 		32, 20, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.FIRE,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	DELUGE			("Deluge", 			32, 17, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.WATER,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	SOIL_EVIDENCE	("Soil Evidence", 	32, 17, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.EARTH,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	WILD_TORNADO	("Wild Tornado", 	32, 17, 0, 0, 0, 0, Targeting.ALL_ENEMIES,	Element.WIND,		true,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	true,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
 	FIRE_WHIP		("Fire Whip", 		12, 30, 4, 0, 0, 0, Targeting.FREE_SELECT,	Element.FIRE,		true,	false,	true,	true,	false,	true,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE, SkillEffect.EFF1DEP_ADD_DISABLE}),
 	EARTH_HEAL		("Earth Heal", 		12, 40, 4, 0, 0, 0, Targeting.FREE_SELECT,	Element.HOLY,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X}),
 	WHITE_FLAME		("White Flame", 	24, 40, 3, 0, 1, 2, Targeting.FREE_SELECT,	Element.FIRE,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X}),
@@ -129,8 +129,8 @@ public enum FFTASkill implements Serializable
 	CHEER			("Cheer", 			 0,  0, 0, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_BOOST}),
 	SOUL_SPHERE		("Soul Sphere", 	 0, -1, 4, 0, 1, 2, Targeting.FREE_SELECT,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.MP_DAMAGE}),
 	LIFEBREAK		("Lifebreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.DARK,		true,	false,	true,	true,	false,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HP_LOST_DAMAGE}), 
-	JUMP			("Jump", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	LANCET			("Lancet", 			0, 35, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.EFF1DEP_DRAIN}),
+	JUMP			("Jump", 			 0, -1, 4, 0, 0, 0,	Targeting.FREE_SELECT,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
+	LANCET			("Lancet", 			0, 35, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.DRAIN}),
 	WYRMTAMER		("Wyrmtamer", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	FIRE_BREATH		("Fire Breath", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	BOLT_BREATH		("Bolt Breath", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
@@ -242,9 +242,9 @@ public enum FFTASkill implements Serializable
 	BLACK_INGOT		("Black Ingot", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	CHROMA_GEM		("Chroma Gem", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	YELLOW_SPRING	("Yellow Spring", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	POTION			("Potion", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	HI_POTION		("Hi-Potion", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	X_POTION		("X-Potion", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	POTION			("Potion", 			 0, 0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIXED_HEALING_25}),
+	HI_POTION		("Hi-Potion", 		 0, 0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIXED_HEALING_50}),
+	X_POTION		("X-Potion", 		 0, 0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.FIXED_HEALING_150}),
 	ETHER			("Ether", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	ELIXIR			("Elixir", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	PHOENIX_DOWN	("Phoenix Down", 	 0, 0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		false,	true,	true,	true,	false,	false,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.REVIVE_HALF_HP}),
@@ -257,7 +257,7 @@ public enum FFTASkill implements Serializable
 	BANDAGE			("Bandage", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	CUREALL			("Cureall", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	DRAW_WEAPON		("Draw Weapon", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	GOBLIN_PUNCH	("Goblin Punch", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	GOBLIN_PUNCH	("Goblin Punch", 	 8, 30, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	true,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.GOBLIN_PUNCH_EFFECT}),
 	MAGIC_HAMMER	("Magic Hammer", 	 8, 38, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	true,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.MP_DAMAGE}),
 	MUTILATE		("Mutilate", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	ACID			("Acid", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
@@ -278,10 +278,10 @@ public enum FFTASkill implements Serializable
 	SUFFOCATE		("Suffocate", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	RESONATE		("Resonate", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	LIMIT_GLOVE		("Limit Glove", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	MATRA_MAGIC		("Matra Magic", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	MATRA_MAGIC		("Matra Magic", 	24,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.MATRA_MAGIC_EFFECT}),
 	MUNCH			("Munch", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	POISON_CLAW		("Poison Claw", 	 8, 30, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	true,	false,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE, SkillEffect.EFF1DEP_ADD_POISON}),
-	HASTEBREAK		("Hastebreak", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	HASTEBREAK		("Hastebreak", 		12,  0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	false,	false,	true,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.HASTEBREAK_EFFECT}),
 	REND			("Rend", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	BLASTER			("Blaster", 		 0,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	false,	false,	false,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_PETRIFY}),
 	BAD_BREATH		("Bad Breath", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
@@ -289,9 +289,9 @@ public enum FFTASkill implements Serializable
 	ROULETTE		("Roulette", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	DEVIL_GAZE		("Devil Gaze", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	CIRCLE			("Circle", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	DRAIN_TOUCH		("Drain Touch", 	10, 20, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	true,	false,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.EFF1DEP_DRAIN}),
+	DRAIN_TOUCH		("Drain Touch", 	10, 20, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	true,	false,	false,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE_CAPPED, SkillEffect.DRAIN}),
 	LVQ_S_FLARE		("LV? S-Flare", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
-	WHITE_WIND		("White Wind", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	WHITE_WIND		("White Wind", 		12,  0, 3, 0, 1, 2, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	true,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.WHITE_WIND_EFFECT}),
 	ANGEL_WHISPER	("Angel Whisper", 	24, 30, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.HOLY,		true,	false,	true,	true,	false,	true,	false,	false,	false,	false,	true,	false,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X, SkillEffect.ADD_AUTO_LIFE}),
 	ADRAMMALECH		("Adrammalech", 	0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	MATEUS			("Mateus", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
@@ -365,6 +365,7 @@ public enum FFTASkill implements Serializable
 	{
 		boolean result;
 		
+		// Calculate MP required for skill
 		int mpCost = sk.MP_COST;
 		if (au.unit.support == FFTASupport.HALF_MP)
 			mpCost /= 2;
@@ -383,6 +384,10 @@ public enum FFTASkill implements Serializable
 		// Has this skill actually been implemented by the developer?
 		result = result && sk.IMPLEMENTED;
 		
+		// Is this unit not trying to use Jump without a spear?
+		result = result && (sk != FFTASkill.JUMP || au.unit.getWeapon(false).type == EquipType.SPEAR);
+		
+		// Return result
 		return result;
 	}
 }

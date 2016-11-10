@@ -114,39 +114,21 @@ public class MapPanel extends JPanel
 				{
 					selectTile(selectedTile);
 					
-					for (int i = 0; i < hlTiles.size(); i++)
-						if (selectedTile != null && selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile)
-						{
-							ArrayList<Integer> targetIDs = game.getTargets(selectedTile.x, selectedTile.y,
-									window.selectedSkill, game.currentUnit());
-							ArrayList<ActiveUnit> targets = new ArrayList<ActiveUnit>();
-							
-							
-							ActiveUnit au, curr = game.currentUnit();
-							for (Integer j : targetIDs)
+					// If using a target-all skill, clicking anywhere will do
+					if (window.selectedSkill.TARGETING == Targeting.ALL_ENEMIES)
+						selectTarget(e.getClickCount());
+					
+					else
+					{
+						for (int i = 0; i < hlTiles.size(); i++)
+							if ((selectedTile != null && selectedTile.x == hlTiles.get(i).xTile && selectedTile.y == hlTiles.get(i).yTile))
 							{
-								for (int k = 0; k < game.getUnits().length; k++)
-									System.out.println(game.getUnits()[k].unit.name + " " + game.getUnits()[k].team);
-								
-								au = game.getUnits()[j];
-								
-								if (((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
-									 (au.currHP == 0 && window.selectedSkill.TARGET_DEAD)) &&
-									((window.selectedSkill.TARGET_ENEMY && au.team != curr.team) ||
-									 (window.selectedSkill.TARGET_ALLY && au.team == curr.team)) )
-								targets.add(game.getUnits()[j]);
+								selectTarget(e.getClickCount());
+								i = hlTiles.size();
 							}
-							
-							if (targets.size() > 0)
-							{
-								window.showDamagePreview(targets);
-								
-								if (e.getClickCount() == 2)
-									window.commitAction(targetIDs);
-							}
-							
-							i = hlTiles.size();
-						}
+					}
+					
+					
 				}
 			}
 			
@@ -218,6 +200,44 @@ public class MapPanel extends JPanel
 		}
 		
 		repaint();
+	}
+	
+	public void selectTarget(int clicks)
+	{
+		int x = -1, y = -1;
+		if (selectedTile != null)
+		{
+			x = selectedTile.x;
+			y = selectedTile.y;
+		}
+		
+		ArrayList<Integer> targetIDs = game.getTargets(x, y, window.selectedSkill, game.currentUnit());
+		ArrayList<ActiveUnit> targets = new ArrayList<ActiveUnit>();
+		
+		ActiveUnit au, curr = game.currentUnit();
+		for (Integer j : targetIDs)
+		{
+			for (int k = 0; k < game.getUnits().length; k++)
+				System.out.println(game.getUnits()[k].unit.name + " " + game.getUnits()[k].team);
+			
+			au = game.getUnits()[j];
+			
+//			if (((au.currHP > 0 && window.selectedSkill.TARGET_LIVE) ||
+//				 (au.currHP == 0 && window.selectedSkill.TARGET_DEAD)) &&
+//				((window.selectedSkill.TARGET_ENEMY && au.team != curr.team) ||
+//				 (window.selectedSkill.TARGET_ALLY && au.team == curr.team)) )
+			if (game.getState().isValidTarget(curr, au, window.selectedSkill))
+				targets.add(game.getUnits()[j]);
+		}
+		
+		if (targets.size() > 0)
+		{
+			window.showDamagePreview(targets);
+			
+			if (clicks == 2)
+				window.commitAction(targetIDs);
+		}
+
 	}
 	
 	public void placeUnit()

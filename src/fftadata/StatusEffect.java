@@ -49,7 +49,7 @@ public enum StatusEffect
 	MRES_UP 		("MRes UP",			1,	true,	"'s <strong><span style=\"color:cyan\">MRes rises</strong></span>!"),
 	
 	
-	HIBERNATE 		("Hibernate",			1,	true,	""),
+	HIBERNATE 		("Hibernate",		1,	true,	""),
 	
 	
 	
@@ -59,7 +59,7 @@ public enum StatusEffect
 	
 	
 	
-	
+	MISC_EFFECT		("",				0,	false,	""),
 	
 	// Status effects that persist after death
 	FROG 			("Frog",			1,	false,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
