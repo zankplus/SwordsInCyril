@@ -15,7 +15,7 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
-import client.ZankMapTile.Terrain;
+import fftamap.*;
 import fftadata.ActiveUnit;
 import fftadata.EquipType;
 import fftadata.FFTAEquip;
@@ -28,14 +28,14 @@ public class MapPanel extends JPanel
 {
 	Engagement game;
 	EngagementWindow window;
-	ZankGameMap map;
+	FFTAMap map;
 	
 	boolean drawTile = false;
 	ClanBuilderRoster roster;
 	int player;
 	ArrayList<ActiveUnit> mpUnits;
 	TreeSet<ForegroundObject> fgObjects;
-	ZankMapTile selectedTile;
+	FFTAMapTile selectedTile;
 	ActiveUnit selectedUnit;
 	
 	static ForegroundObject selector = new ForegroundObject("resources/maps/selector.png", 0, 0, 0, 0, -31, false, FGObjectType.SELECTOR);
@@ -70,7 +70,7 @@ public class MapPanel extends JPanel
 			{ 
 				// Select the clicked tile
 				selectedTile = null;
-				for (ZankMapTile tile : map.tileList)
+				for (FFTAMapTile tile : map.tileList)
 				{
 					int dist = (Math.abs(e.getX() - tile.renderCenterX())) + Math.abs((e.getY() - tile.renderCenterY())) * 2;
 					if (dist <= 16)
@@ -143,13 +143,13 @@ public class MapPanel extends JPanel
 		mode = 1;	// 1 = placement mode
 		// fgObjects.remove(selector);
 
-		ZankMapTile[] startingTiles;
+		FFTAMapTile[] startingTiles;
 		if (player == 1) startingTiles = map.p1StartingTiles;
 		else if (player == 2) startingTiles = map.p2StartingTiles;
-		else startingTiles = new ZankMapTile[0];
+		else startingTiles = new FFTAMapTile[0];
 		
 		
-		for (ZankMapTile tile : startingTiles)
+		for (FFTAMapTile tile : startingTiles)
 		{
 			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
@@ -171,7 +171,7 @@ public class MapPanel extends JPanel
 		
 	}
 	
-	public void selectTile(ZankMapTile tile)
+	public void selectTile(FFTAMapTile tile)
 	{
 		if (selectedTile != null)
 			System.out.println("Selected " + selectedTile.x + ", " + selectedTile.y + ", " + selectedTile.z);
@@ -310,8 +310,8 @@ public class MapPanel extends JPanel
 	{
 		ActiveUnit au = game.currentUnit();
 		hlTiles.clear();
-		ArrayList<ZankMapTile> reachableTiles = map.getReachableTiles(au);
-		for (ZankMapTile tile : reachableTiles)
+		ArrayList<FFTAMapTile> reachableTiles = map.getReachableTiles(au);
+		for (FFTAMapTile tile : reachableTiles)
 		{
 			ForegroundObject fgo = new ForegroundObject("resources/maps/hltile.png", tile.x, tile.y, tile.z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
@@ -323,70 +323,11 @@ public class MapPanel extends JPanel
 	public void highlightTargetableTiles(FFTASkill sk)
 	{
 		ActiveUnit au = game.currentUnit();
-		Targeting targ = sk.TARGETING;
-		int range = sk.H_RANGE;
-		
+		ArrayList<int[]> targetableTiles = game.getState().getTargetableTiles(au, sk);
 		hlTiles.clear();
-		
-		if (targ == Targeting.AS_WEAPON)
+		for (int[] tile : targetableTiles)
 		{
-			FFTAEquip weapon = au.unit.getWeapon(false);
-			range = weapon.range;
-			if (weapon.type == EquipType.SPEAR)
-				targ = Targeting.DIRECTIONAL;
-			else
-				targ = Targeting.FREE_SELECT;
-		}
-		
-		// Free Select targeting
-		if (targ == Targeting.FREE_SELECT)
-		{
-			int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
-					ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
-			
-			for (int x = xmin; x <= xmax; x++)
-				for (int y = ymin; y <= ymax; y++)
-				{
-					int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
-					if (map.mapData[x][y] != null && dist <= range && (dist > 0 || sk.SELF_TARGET))
-					{
-						ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
-						hlTiles.add(fgo);
-						fgObjects.add(fgo);
-					}
-				}
-		}
-		
-		else if (targ == Targeting.DIRECTIONAL)
-		{
-			// Add targets in same x-dimension
-			int y = au.y;
-			for (int x = au.x + range; x >= au.x - range; x--)
-			{	
-				if (x < 15 && x >= 0 && x != au.x && map.mapData[x][y] != null)
-				{
-					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
-					hlTiles.add(fgo);
-					fgObjects.add(fgo);
-				}
-			}
-			
-			// Add targets in same y-dimension
-			int x = au.x;
-			for (y = au.y + range; y >= au.y - range; y--)
-			{	
-				if (y < 15 && y >= 0 && y != au.y && map.mapData[x][y] != null)
-				{
-					ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
-					hlTiles.add(fgo);
-					fgObjects.add(fgo);
-				}
-			}
-		}
-		
-		else if (targ == Targeting.SELF_CENTER)
-		{
-			int x = au.x, y = au.y;
+			int x = tile[0], y = tile[1];
 			ForegroundObject fgo = new ForegroundObject("resources/maps/hltarget.png", x, y, map.mapData[x][y].z, 0, 1, false, FGObjectType.HIGHLIGHT);
 			hlTiles.add(fgo);
 			fgObjects.add(fgo);
@@ -410,7 +351,7 @@ public class MapPanel extends JPanel
 	// Add a unit's fgobject to the treeset at a certain location
 	public void addUnit(ActiveUnit au)
 	{
-		ZankMapTile tile = map.mapData[au.x][au.y];
+		FFTAMapTile tile = map.mapData[au.x][au.y];
 		tile.unit = au;
 		tile.fgobj = ForegroundObject.makeFGObject(au);
 		fgObjects.add(tile.fgobj);
@@ -418,7 +359,7 @@ public class MapPanel extends JPanel
 	
 	public void removeUnit(ActiveUnit au)
 	{
-		ZankMapTile tile = map.mapData[au.x][au.y];
+		FFTAMapTile tile = map.mapData[au.x][au.y];
 		tile.unit = null;
 		
 		Iterator<ForegroundObject> itr = fgObjects.iterator();
@@ -451,7 +392,7 @@ public class MapPanel extends JPanel
 		}
 	}
 
-	public void moveUnit(ActiveUnit au, ZankMapTile dest)
+	public void moveUnit(ActiveUnit au, FFTAMapTile dest)
 	{
 		// au = gamePanel.units[gamePanel.currentUnit]; 
 		removeUnit(au);
@@ -506,217 +447,3 @@ public class MapPanel extends JPanel
 		
 	}
 }
-
-//Representation of the game map. Contains back-end logic and resources for drawing the base map
-class ZankGameMap
-{
-	BufferedImage background, ground;
-	TreeSet<ForegroundObject> mapObjects;
-	ZankMapTile[][] mapData;
-	ZankMapTile[] tileList, p1StartingTiles, p2StartingTiles;
-	
-	public ArrayList<ZankMapTile> getReachableTiles(ActiveUnit au)
-	{
-		
-		ArrayList<ZankMapTile> reachableTiles = new ArrayList<ZankMapTile>();
-		ZankMapTile start = mapData[au.x][au.y];
-		
-		getReachableTiles(reachableTiles, start, au.unit.getTotalMove(), au);
-		
-		return reachableTiles;
-	}
-	
-	private void getReachableTiles(ArrayList<ZankMapTile> reachableTiles, ZankMapTile curr, int move, ActiveUnit au)
-	{
-		
-		FFTAEquip shoes = au.unit.equips.getShoes();
-		if (move >= 0)
-		{
-//			System.out.println("\t(" + move + ") Can move to " + curr.x + ", " + curr.y  + ", " + curr.z);
-			if (!reachableTiles.contains(curr) && (curr.unit == null))
-				reachableTiles.add(curr);
-			
-			ArrayList<ZankMapTile> checkNext = new ArrayList<ZankMapTile>();
-			if (tileIsWalkable(curr.x+1, curr.y, au))
-				checkNext.add(mapData[curr.x+1][curr.y]);
-			if (tileIsWalkable(curr.x, curr.y+1, au))
-				checkNext.add(mapData[curr.x][curr.y+1]);
-			if (tileIsWalkable(curr.x-1, curr.y, au))
-				checkNext.add(mapData[curr.x-1][curr.y]);
-			if (tileIsWalkable(curr.x, curr.y-1, au))
-				checkNext.add(mapData[curr.x][curr.y-1]);
-			
-			for (ZankMapTile zt : checkNext)
-			{
-				if ((zt.z <= curr.z + au.unit.getTotalJump() && zt.z >= curr.z - (au.unit.getTotalJump() + 1))
-						|| shoes == FFTAEquip.FAIRY_SHOES || shoes == FFTAEquip.GALMIA_SHOES)
-					getReachableTiles(reachableTiles, zt, move - 1, au);
-			}
-		}
-		
-	}
-	
-	public boolean tileExists(int x, int y)
-	{
-		return 	x >= 0 && x < 15 &&
-				y >= 0 && y < 15 &&
-				mapData[x][y] != null;
-	}
-	
-	public boolean tileIsWalkable(int x, int y, ActiveUnit au)
-	{
-		try
-		{
-			return (tileExists(x, y) &&
-					(mapData[x][y].unit == null || mapData[x][y].unit.team == au.team || 
-					mapData[x][y].unit.currHP == 0 || au.unit.equips.getShoes() == FFTAEquip.FAIRY_SHOES));
-		}
-		catch(NullPointerException e) { System.err.println(x + ", " + y + " | " + mapData[x][y]); return false;}
-		
-	}
-}
-
-class ForegroundObject implements Comparable<ForegroundObject>
-{
-	BufferedImage img;
-	int x, y, z, xOffset, yOffset;
-	int xTile, yTile;
-	int depth;
-	int reflectX;
-	FGObjectType type;
-	String name;
-	
-	// TODO: Have this constructor take an image instead of a URL for one to avoid loading the same image multiple times
-	public ForegroundObject(String url, int x, int y, int z, int xOffset, int yOffset, boolean reflectX, FGObjectType type)
-	{
-		try
-		{
-			img = ImageIO.read(new File(url));
-		}
-		catch (IOException e) { System.err.println("ForegroundObject couldn't find image: " + url); }
-		name = url;
-		if (reflectX)
-			this.reflectX = -1;
-		else
-			this.reflectX = 1;
-		
-		this.type = type;
-		this.xOffset = xOffset;
-		this.yOffset = yOffset;
-		moveTo(x,y,z);		
-	}
-	
-	public void moveTo(ZankMapTile selected)
-	{
-		moveTo(selected.x, selected.y, selected.z);
-	}
-
-	public void moveTo(int x, int y, int z)
-	{
-		xTile = x;
-		yTile = y;
-		
-		this.x = 224 - 16*x + 16*y + xOffset;
-		this.y = 152 + 8*(x + y - z) + yOffset;
-		this.z = z;
-		
-		depth = (x + y) * 10;
-		if (type == FGObjectType.HIGHLIGHT)
-			depth += 2;
-		else if (type == FGObjectType.SELECTOR)
-			depth += 4;
-		else if (type == FGObjectType.UNIT)
-			depth += 6;
-		
-		if (reflectX == -1)
-			this.x += img.getWidth();
-	}
-	
-	@Override
-	public int compareTo(ForegroundObject other)
-	{
-		int diff = this.depth - other.depth;
-//		System.out.println(this + " vs " + other);
-		if (this == other)	// Comparing two identical objects returns a 0
-			return 0;
-		
-		if (diff == 0 && type != FGObjectType.SELECTOR && other.type != FGObjectType.SELECTOR)	// Non-selectors should be allowed to share depths.
-			return 1;																			// However, it needs to return 0 for comparisons with the selector or it'll never get removed
-		return this.depth - other.depth;
-	}
-	
-	public void setImage(String url)
-	{
-		name = url;
-		try
-		{
-			img = ImageIO.read(new File(url));
-		}
-		catch (IOException e) { System.err.println("ForegroundObject couldn't find image: " + url); }
-	}
-	
-	public static ForegroundObject makeFGObject(ActiveUnit au)
-	{
-		return new ForegroundObject(au.getSpriteURL(), au.x, au.y, au.z, 8, -18, au.isSpriteReflected(), FGObjectType.UNIT);
-	}
-	
-	public String toString()
-	{
-		return x + "\t" + y + "\t" + name;
-	}
-}
-
-enum FGObjectType { GROUND, UNIT, OBJECT, SELECTOR, HIGHLIGHT; }
-
-//Sorted list that orders ForegroundObjects by their depth
-class ZankMapTile
-{
-	int x, y, z;
-	Terrain terrain;
-	ActiveUnit unit;
-	ForegroundObject fgobj;
-	
-	public ZankMapTile(int x, int y, int z, Terrain terrain)
-	{
-		this.x = x;
-		this.y = y;
-		this.z = z;
-		this.terrain = terrain;
-		unit = null;
-	}
-
-	public ZankMapTile(int x, int y, int z)
-	{
-		this(x, y, z, Terrain.NORMAL);
-	}
-	
-	public int renderCenterX()
-	{
-		return 240 - 16*x + 16*y;
-	}
-	
-	public int renderCenterY()
-	{
-		return 160 + 8*(x + y - z);
-	}
-	
-	public int renderCornerX()
-	{
-		return renderCenterX() - 16;
-	}
-	
-	public int renderCornerY()
-	{
-		return renderCenterY() - 8;
-	}
-	
-	public String toString()
-	{
-		return x + ", " + y + ", " + z + ". " + terrain;
-	}
-	
-	
-	
-	enum Terrain { NORMAL, WATER, BLOCK };
-}
-

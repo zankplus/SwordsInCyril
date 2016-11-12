@@ -1,14 +1,19 @@
 package client;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import javax.swing.JTextField;
@@ -16,18 +21,25 @@ import javax.swing.JTextPane;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.MatteBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
+import fftadata.SkillEffectResult;
 import fftadata.StatusEffect;
 
 import javax.swing.JButton;
+import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
+import java.awt.Insets;
+
+import fftamap.*;
 
 public class EngagementWindow extends JFrame
 {
@@ -206,7 +218,7 @@ public class EngagementWindow extends JFrame
 		mapPanel.updateSprite(au);
 	}
 	
-	public void moveUnit(ActiveUnit au, ZankMapTile dest)
+	public void moveUnit(ActiveUnit au, FFTAMapTile dest)
 	{
 		mapPanel.moveUnit(au, dest);
 	}
@@ -231,13 +243,13 @@ public class EngagementWindow extends JFrame
 	public void showDamagePreview(ArrayList<ActiveUnit> targets)
 	{
 		previewDeck.remove(damagePreviewPanel);
-		damagePreviewPanel = new DamagePreviewPanel(game.currentUnit(), targets, selectedSkill);
+		damagePreviewPanel = new DamagePreviewPanel(game.currentUnit(), targets, selectedSkill, game.getState());
 		previewDeck.add(damagePreviewPanel, "Damage Preview");
 		deck.last(previewDeck);
 		revalidate();
 	}
 	
-	public void selectTile(ZankMapTile tile)
+	public void selectTile(FFTAMapTile tile)
 	{
 		mapPanel.selectTile(tile);
 	}
@@ -327,7 +339,7 @@ public class EngagementWindow extends JFrame
 	public void undoMovement()
 	{
 		ActiveUnit au = game.currentUnit();
-		ZankMapTile old = game.map.mapData[au.oldX][au.oldY];
+		FFTAMapTile old = game.map.mapData[au.oldX][au.oldY];
 		mapPanel.moveUnit(au, old);
 		repaint();
 	}
@@ -435,59 +447,60 @@ public class EngagementWindow extends JFrame
 	{
 		mapPanel.selectTarget(clicks);
 	}
-}
-
-class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
-{
-	Engagement game;
-	EngagementWindow window;
 	
-	public EngagementWindowRosterPanel(EngagementWindow window)
+	class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 	{
-		this.window = window;
-		game = window.game;
+		Engagement game;
+		EngagementWindow window;
 		
-		setPreferredSize(new Dimension(1, 162));
-		JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
-		padding.setPreferredSize(new Dimension(36, 1));
-		padding2.setPreferredSize(new Dimension(1, 22));
-		padding3.setPreferredSize(new Dimension(80, 1));
-		add(padding, BorderLayout.WEST);
-		add(padding2, BorderLayout.SOUTH);
-		rightPanel.add(padding3, BorderLayout.EAST);
-		btnNewUnit.setEnabled(false);
-		btnDelete.setEnabled(false);
-		btnSwapLeft.setEnabled(false);
-		btnSwapRight.setEnabled(false);
-		
-		JPanel readyPanel = new JPanel(new FlowLayout());
-		JButton btnReady = new JButton("Ready!");
-		btnReady.setPreferredSize(new Dimension(100, 30));
-		readyPanel.add(btnReady);
-		add(readyPanel, BorderLayout.NORTH);
-		
-		btnReady.addActionListener(new ActionListener() {
+		public EngagementWindowRosterPanel(EngagementWindow window)
+		{
+			this.window = window;
+			if (window != null)
+				game = window.game;
 			
-			@Override
-			public void actionPerformed(ActionEvent e)
-			{
-				ArrayList<ActiveUnit> units = window.getYourUnits();
-				if (units.size() > 0)
+			setPreferredSize(new Dimension(1, 162));
+			JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
+			padding.setPreferredSize(new Dimension(36, 1));
+			padding2.setPreferredSize(new Dimension(1, 22));
+			padding3.setPreferredSize(new Dimension(80, 1));
+			add(padding, BorderLayout.WEST);
+			add(padding2, BorderLayout.SOUTH);
+			rightPanel.add(padding3, BorderLayout.EAST);
+			btnNewUnit.setEnabled(false);
+			btnDelete.setEnabled(false);
+			btnSwapLeft.setEnabled(false);
+			btnSwapRight.setEnabled(false);
+			
+			JPanel readyPanel = new JPanel(new FlowLayout());
+			JButton btnReady = new JButton("Ready!");
+			btnReady.setPreferredSize(new Dimension(100, 30));
+			readyPanel.add(btnReady);
+			add(readyPanel, BorderLayout.NORTH);
+			
+			btnReady.addActionListener(new ActionListener() {
+				
+				@Override
+				public void actionPerformed(ActionEvent e)
 				{
-					try
+					ArrayList<ActiveUnit> units = window.getYourUnits();
+					if (units.size() > 0)
 					{
-						game.sendReady();
-						if (game.playerNumber == 1)
-							game.p1Units = units;
-						else if (game.playerNumber == 2)
-							game.p2Units = units;
-						
-						btnReady.setEnabled(false);
-						btnReady.setText("Waiting for other player...");
+						try
+						{
+							game.sendReady();
+							if (game.playerNumber == 1)
+								game.p1Units = units;
+							else if (game.playerNumber == 2)
+								game.p2Units = units;
+							
+							btnReady.setEnabled(false);
+							btnReady.setText("Waiting for other player...");
+						}
+						catch (IOException ex) { ex.printStackTrace(); }
 					}
-					catch (IOException ex) { ex.printStackTrace(); }
 				}
-			}
-		});
+			});
+		}
 	}
 }

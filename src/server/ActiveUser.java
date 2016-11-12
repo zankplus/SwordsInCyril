@@ -13,6 +13,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
+import fftamap.MuscadetMapLoader;
 import server.ActiveGame.GameStatus;
 import zank.*;
 
@@ -155,7 +156,7 @@ public class ActiveUser extends Thread
 									System.out.println("player 1 = " + player1.nickname);
 									System.out.println("player 2 = " + player2.nickname);
 									
-									game = new ActiveGame(player1, player2);
+									game = new ActiveGame(player1, player2, MuscadetMapLoader.getMap(false));
 									ChatServer.gamelist.add(game);
 									ZankMessage startMessage = game.getStartMessage();
 									player1.messageQueue.put(startMessage);

@@ -1,6 +1,7 @@
 package fftadata;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public enum FFTASkill implements Serializable
 {
@@ -389,6 +390,37 @@ public enum FFTASkill implements Serializable
 		
 		// Return result
 		return result;
+	}
+	
+	public static boolean reactionApplies(ActiveUnit user, ActiveUnit target, FFTASkill sk, GameState state)
+	{
+		FFTAReaction rx = target.unit.reaction;
+		
+		switch(rx)
+		{
+			case COUNTER:
+			{
+				if (sk.IS_PHYSICAL)
+				{
+					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
+					for (int[] tile : targetableTiles)
+					{
+						System.out.println(tile[0] + ", " + tile[1] + " vs. " + user.x + ", " + user.y);
+						if (tile[0] == user.x && tile[1] == user.y)
+							return true;
+					}
+				}
+									
+				return false;
+			}
+				
+				
+			
+			default:
+			{
+				return false;
+			}
+		}
 	}
 }
 

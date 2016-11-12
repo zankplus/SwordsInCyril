@@ -2,13 +2,16 @@ package fftadata;
 
 import java.util.ArrayList;
 
+import fftamap.FFTAMap;
+
 public class GameState
 {
 	public ActiveUnit[] units;
 	public int currentUnit;
 	public int currentTurn;
+	public FFTAMap map;
 	
-	public GameState(ActiveUnit[] units)
+	public GameState(ActiveUnit[] units, FFTAMap map)
 	{
 		this.units = units;
 		SkillEffect.setGameState(this);
@@ -17,6 +20,8 @@ public class GameState
 			units[i].id = i;
 		
 		currentTurn = 0;
+		
+		this.map = map;
 	}
 	
 	public int[] startOfTurnEffects(int poisonVariance, int regenVariance)
@@ -253,6 +258,89 @@ public class GameState
 	{
 		units[targ].unit.equips.unequip(slot);
 	}
+	
+	// Returns a list of tiles that could contain valid targets for a given skill by a given user
+	public ArrayList<int[]> getTargetableTiles(ActiveUnit au, FFTASkill sk)
+	{
+		Targeting targ = sk.TARGETING;
+		int range = sk.H_RANGE;
+		ArrayList<int[]> targetableTiles = new ArrayList<int[]>();
+		
+		if (targ == Targeting.AS_WEAPON)
+		{
+			FFTAEquip weapon = au.unit.getWeapon(false);
+			range = weapon.range;
+			
+			if (weapon.type == EquipType.SPEAR)
+				targ = Targeting.DIRECTIONAL;
+			else
+				targ = Targeting.FREE_SELECT;
+		}
+		
+		switch(targ)
+		{
+			// Free Select targeting
+			case FREE_SELECT:
+			{
+				System.out.println("case FREE_SELECT");
+				int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
+						ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
+				
+				for (int x = xmin; x <= xmax; x++)
+					for (int y = ymin; y <= ymax; y++)
+					{
+						int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
+						if (map.mapData[x][y] != null && dist <= range && (dist > 0 || sk.SELF_TARGET))
+						{
+							targetableTiles.add(new int[] {x, y});
+						}
+					}
+				break;
+			}
+			
+			case DIRECTIONAL:
+			{
+				System.out.println("case DIRECTIONAL");
+				// Add targets in same x-dimension
+				int y = au.y;
+				for (int x = au.x + range; x >= au.x - range; x--)
+				{	
+					if (x < 15 && x >= 0 && x != au.x && map.mapData[x][y] != null)
+					{
+						targetableTiles.add(new int[] {x, y});
+					}
+				}
+				
+				// Add targets in same y-dimension
+				int x = au.x;
+				for (y = au.y + range; y >= au.y - range; y--)
+				{	
+					if (y < 15 && y >= 0 && y != au.y && map.mapData[x][y] != null)
+					{
+						targetableTiles.add(new int[] {x, y});
+					}
+				}
+				break;
+			}
+			
+			case SELF_CENTER:
+			{
+				System.out.println("case SELF_CENTER");
+				int x = au.x, y = au.y;
+				targetableTiles.add(new int[] {au.x, au.y});
+				break;
+			}
+			
+			default:
+			{
+				System.err.println("getTargetableTiles entered switch case with targ = " + targ);
+				break;
+			}
+		}
+		
+		return targetableTiles;
+	}
+	
 	
 	// Because this function is only called by the click handler when selecting a space it has
 	// already confirmed is within your targeting range, the getTargets() method can safely

@@ -12,7 +12,7 @@ import javax.swing.JOptionPane;
 
 import fftadata.*;
 import zank.*;
-
+import fftamap.*;
 
 public class ActiveGame
 {
@@ -20,6 +20,7 @@ public class ActiveGame
 	ActiveUser player1, player2;
 	List<ActiveUser> userlist;
 	GameStatus status;
+	FFTAMap map;
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	boolean finishedPrep1, finishedPrep2;
 	
@@ -28,7 +29,7 @@ public class ActiveGame
 	Lock gameLock;
 	int turn;
 	
-	public ActiveGame (ActiveUser p1, ActiveUser p2)
+	public ActiveGame (ActiveUser p1, ActiveUser p2, FFTAMap map)
 	{
 		StringBuilder pID = new StringBuilder();
 		for (int i = 0; i < 5; i++)
@@ -41,6 +42,7 @@ public class ActiveGame
 		id = pID.toString();
 		player1 = p1;
 		player2 = p2;
+		this.map = map;
 //		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
@@ -98,7 +100,7 @@ public class ActiveGame
 	public void initializeTurnOrder()
 	{
 		turnOrder = new TurnOrder(p1Units, p2Units);
-		state = new GameState(turnOrder.units);
+		state = new GameState(turnOrder.units, map);
 	}
 	
 	public ZankMessage getStartMessage()

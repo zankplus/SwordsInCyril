@@ -22,6 +22,7 @@ import fftadata.SkillEffect;
 import fftadata.SkillEffectResult;
 import fftadata.StatusEffect;
 import fftadata.Targeting;
+import fftamap.*;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
 import zank.ZankMessage;
@@ -39,7 +40,7 @@ public class Engagement
 	
 	ObjectInputStream in;
 	ObjectOutputStream out;
-	ZankGameMap map;
+	FFTAMap map;
 	ZankGameAction action;
 	ZankMessage message;
 	ZankClient client;
@@ -61,7 +62,7 @@ public class Engagement
 		this.out = client.out;
 		gameOver = false;
 		
-		map = MuscadetMapLoader.getMap();
+		map = MuscadetMapLoader.getMap(true);
 		window = new EngagementWindow(this);
 	}
 	
@@ -165,7 +166,7 @@ public class Engagement
 			aus[i + p1Units.size()].id = i + p1Units.size();
 		}
 		
-		state = new GameState(aus);
+		state = new GameState(aus, map);
 		beginGame();
 		window.setupPreviews();
 		System.out.println("Finished setting up previews, now beginning game");
@@ -269,7 +270,7 @@ public class Engagement
 	public void receiveMove(int[] data)
 	{
 		ActiveUnit au = state.units[data[0]];
-		ZankMapTile dest = map.mapData[data[1]][data[2]];
+		FFTAMapTile dest = map.mapData[data[1]][data[2]];
 		window.moveUnit(au, dest);
 	}
 	
@@ -448,7 +449,7 @@ public class Engagement
 		window.beginGame(otherTeam);
 	}
 	
-	public void faceTowardTile(ActiveUnit unit, ZankMapTile tile)
+	public void faceTowardTile(ActiveUnit unit, FFTAMapTile tile)
 	{
 		int x1 = unit.x, y1 = unit.y;
 		int x2 = tile.x, y2 = tile.y;
