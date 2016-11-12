@@ -19,6 +19,10 @@ public class ActiveUnit implements Serializable
 	public int jp;
 	public int id;
 	
+	public int covering;
+	public int switchedInFor;
+	public int turnCoverUsed;
+	
 	public int[] status;
 		
 	public ActiveUnit(FFTAUnit unit, int x, int y, int z, int team)
@@ -39,13 +43,21 @@ public class ActiveUnit implements Serializable
 		reserve = 0;
 		jp = 0;
 		
-		status = new int[40];
+		status = new int[StatusEffect.values().length];
+		
+		covering = -1;
+		switchedInFor = -1;
+		turnCoverUsed = -1;
 	}
 	
 	public String getSpriteURL()
 	{
 		StringBuilder url = new StringBuilder();
-		url.append("resources/jobs/" + unit.job.name());
+		
+		if (status[StatusEffect.FROG.ordinal()] > 0)
+			url.append("resources/jobs/frog");
+		else
+			url.append("resources/jobs/" + unit.job.name());
 		
 		if (team == 1)
 			url.append("_ally");
@@ -78,12 +90,18 @@ public class ActiveUnit implements Serializable
 	public int getTickSpeed()
 	{
 		double modifier = 1.0;
-//		if (status[HASTE] > 0)
-//			modifier *= 2;
-//		else if (status[SLOW] > 0)
-//			modifier *= 0.5;
-//		if (status[SPEED_DOWN] > 0)
-//			modifier *= 0.5;
+		
+		// Petrified units do not accumulate counter
+		if (status[StatusEffect.PETRIFY.ordinal()] > 0)
+			return 0;
+		
+		// Consider speed-affecting status effects
+		if (status[StatusEffect.HASTE.ordinal()] > 0)
+			modifier *= 2;
+		else if (status[StatusEffect.SLOW.ordinal()] > 0)
+			modifier *= 0.5;
+		if (status[StatusEffect.SPEED_DOWN.ordinal()] > 0)
+			modifier *= 0.5;
 		
 		return (int) (modifier * unit.getTotalSpeed());
 	}
@@ -107,9 +125,27 @@ public class ActiveUnit implements Serializable
 	
 	public FFTASkill getFightSkill()
 	{
-		if (unit.getWeapon() == FFTAEquip.BLOOD_STRINGS || unit.getWeapon() == FFTAEquip.BLOOD_SWORD)
-			return FFTASkill.DRAIN_WEAPON;
+		if (unit.support == FFTASupport.DOUBLE_SWORD && unit.getWeapon(true).isWeapon() &&
+				!unit.getWeapon(true).isTwoHanded())
+			return FFTASkill.DOUBLE_SWORD;
+		else
+			return getWeaponSkill(false);
+	}
+	
+	public FFTASkill getWeaponSkill(boolean leftHand)
+	{
+		if (unit.getWeapon(leftHand) == FFTAEquip.BLOOD_STRINGS ||
+			unit.getWeapon(leftHand) == FFTAEquip.BLOOD_SWORD)
+		{
+			if (leftHand)
+				return FFTASkill.DRAIN_WEAPON_L;
+			else
+				return FFTASkill.DRAIN_WEAPON;
+		}
 		
-		return FFTASkill.FIGHT;
+		if (leftHand)
+			return FFTASkill.FIGHT_L;
+		else
+			return FFTASkill.FIGHT;
 	}
 }

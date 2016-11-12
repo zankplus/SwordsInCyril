@@ -11,10 +11,11 @@ import zank.*;
 public class ChatServer
 {
 	private ExecutorService pool;
+	private ScheduledExecutorService heartbeater;
 	protected static List<ActiveUser> userlist;
 	protected static List<ActiveGame> gamelist;
 	protected static LinkedBlockingQueue<ZankMessage> masterMessageQueue;
-
+	
 	public ChatServer()
 	{
 		pool = Executors.newFixedThreadPool(10);
@@ -31,6 +32,10 @@ public class ChatServer
 			MessageHandler msgh = new MessageHandler();
 			pool.submit(msgh);
 			
+			// Start heartbeat
+			startHeartbeat();
+			
+			// Listen for new connections
 			while(true)
 			{
 				Socket connection = server.accept();
@@ -40,6 +45,28 @@ public class ChatServer
 			}
 		}
 		catch (IOException e) { System.err.println(e); }
+	}
+	
+	public void startHeartbeat()
+	{
+		ZankMessage beep = new ZankMessage(ZankMessageType.BEEP, null, null);
+		
+		heartbeater = Executors.newSingleThreadScheduledExecutor();
+		heartbeater.scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run()
+			{
+				try
+				{
+					if (userlist.size() > 0)
+						masterMessageQueue.put(beep);	
+				}
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}, 0, 4000, TimeUnit.MILLISECONDS);
 	}
 	
 	public static ActiveUser findUser(String name)

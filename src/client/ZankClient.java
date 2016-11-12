@@ -5,6 +5,7 @@ import java.net.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.*;
 import net.miginfocom.swing.MigLayout;
 import zank.*;
@@ -31,36 +32,27 @@ public class ZankClient
 	public LoginWindow loginWindow;
 	public ChatWindow chatWindow;
 	public ClanBuilder clanBuilder;
-
+	
+	public ScheduledExecutorService heartbeater;
+	
 	public ZankClient()
 	{
 		message = null;
 		clanBuilder = null;
 		loginWindow = new LoginWindow(this);
-		EngagementWindow gameWindow = null;
+		chatWindow = null;
 	}
-	
+
 	public void sendChallenge(String user) throws IOException
 	{
 		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.username, user);
-		System.out.println("OUT:\t" + message);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-			
-		}
+		sendZankMessage(message);
 	}
 	
 	public void sendEngage(String user) throws IOException
 	{
 		message = new ZankMessage(ZankMessageType.ENGAGE, zu.username, user);
-		System.out.println("OUT:\t" + message);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		sendZankMessage(message);
 	}
 	
 	public void launchEngagementWindow(ZankGameAction startMsg)
@@ -81,7 +73,7 @@ public class ZankClient
 		}
 		
 		
-		game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, in, out);
+		game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
 		game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
 		game.window.setVisible(true);	
 	}
@@ -107,10 +99,65 @@ public class ZankClient
 		
 	}
 	
+	public void sendZankMessage(ZankMessage zm)
+	{
+		if (zm.type != ZankMessageType.BEEP)
+		 	System.out.println(Thread.currentThread().getName() + "\tOUT:\t" + zm);
+		synchronized(out)
+		{
+			try
+			{
+				out.writeObject(zm);
+				out.flush();
+			}
+			
+			catch (SocketException e)
+			{
+				System.out.println("but it failed!");
+				shutdownPrep();
+			}
+			
+			catch (Exception e)
+			{
+				e.printStackTrace();
+			}
+			
+		}
+	}
+	
 	public void launchSocketMonitor()
 	{
-		SocketMonitor dispatch = new SocketMonitor(this);
+		dispatch = new SocketMonitor(this);
 		dispatch.execute();
+	}
+	
+	public void startHeartbeat()
+	{
+		heartbeater = Executors.newSingleThreadScheduledExecutor();
+		heartbeater.scheduleAtFixedRate(
+		    new Runnable() {
+		        @Override
+		        public void run()
+		        {
+		        	message = new ZankMessage(ZankMessageType.BEEP, null, null);
+		        	sendZankMessage(message);
+		        }
+		    }, 
+		    0, 4000, TimeUnit.MILLISECONDS);
+	}
+	
+	public void shutdownPrep()
+	{
+		try
+		{
+			socket.close();
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		dispatch.done = true;
+		heartbeater.shutdown();
+		chatWindow.appendToChat("<br><span style=\"color: red\">oh no, disconnectio!");
+		chatWindow.chatLine.setEnabled(false);
+		chatWindow.userlist.setEnabled(false);
 	}
 	
 	public static void main(String[] args)
@@ -130,6 +177,4 @@ public class ZankClient
 		System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");	// Lets the program close on command-Q on macs
 			
 	}
-	
-	
 }

@@ -816,7 +816,7 @@ public class ClanBuilder extends JFrame
 		lblMoveScore.setText(Integer.toString(unit.getTotalMove()));
 		lblJumpScore.setText(Integer.toString(unit.getTotalJump()));
 		lblEvadeScore.setText(Integer.toString(unit.getTotalEvade()));
-		lblFPowScore.setText(Integer.toString(unit.getFightPower()));
+		lblFPowScore.setText(Integer.toString(unit.getWAtkEquipBonus()));
 	}
 	
 	class SecondaryAbilityCellRenderer implements ListCellRenderer<FFTACommand>
@@ -1283,13 +1283,14 @@ public class ClanBuilder extends JFrame
 				else
 					newSet.equip(eq, slot);
 				
-				System.out.println("RIGHT: " + newSet.rightHand);
-				System.out.println("LEFT:  " + newSet.leftHand);
-				System.out.println("HEAD:  " + newSet.head);
-				System.out.println("BODY:  " + newSet.body);
-				System.out.println("ARMS:  " + newSet.arms);
-				System.out.println("FEET:  " + newSet.feet);
-				System.out.println();
+//				System.out.println("RIGHT: " + newSet.rightHand);
+//				System.out.println("LEFT:  " + newSet.leftHand);
+//				System.out.println("HEAD:  " + newSet.head);
+//				System.out.println("BODY:  " + newSet.body);
+//				System.out.println("ARMS:  " + newSet.arms);
+//				System.out.println("FEET:  " + newSet.feet);
+//				System.out.println();
+				System.out.println(newSet);
 				
 				updateEquippedList();
 			}

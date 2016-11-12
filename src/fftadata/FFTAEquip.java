@@ -5,7 +5,7 @@ import javax.swing.ImageIcon;
 
 public enum FFTAEquip implements Serializable
 {
-	NONE			(" -",				null,					0,	0,	0,	0,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {}),
+	NONE			(" -",				EquipType.NONE,			0,	0,	0,	0,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {}),
 	
 	UNARMED			("Unarmed",			EquipType.UNARMED,		10,	0,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		0,	new ItemEffect[] {}),		
 	
@@ -467,9 +467,32 @@ public enum FFTAEquip implements Serializable
 	
 	public boolean isWeapon()
 	{
-		return (type.ordinal() <= EquipType.GUN.ordinal());
+		return type.ordinal() <= EquipType.GUN.ordinal();
 	}
 		
+	public boolean isShield()
+	{
+		return type.ordinal() == EquipType.SHIELD.ordinal();
+	}
+	
+	public boolean isHeadwear()
+	{
+		return type.ordinal() >= EquipType.HELM.ordinal() && 
+			   type.ordinal() <= EquipType.HAT.ordinal();
+	}
+	
+	public boolean isArmor()
+	{
+		return type.ordinal() >= EquipType.ARMOR.ordinal() &&
+			   type.ordinal() <= EquipType.ROBE.ordinal();
+	}
+	
+	public boolean isStealableAccessory()
+	{
+		return type.ordinal() == EquipType.GLOVES.ordinal() || 
+			   type.ordinal() == EquipType.ACCESSORY.ordinal();
+	}
+	
 	public String getEffectString()
 	{
 		StringBuilder effect = new StringBuilder();

@@ -302,7 +302,7 @@ public class DamagePreviewPanel extends JPanel
 			else
 				whichEffect = 0;
 			
-			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
+			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, sk.EFFECTS[0]), null, null, true);
 			
 			
 			hit = String.valueOf(result.hitChance);
@@ -311,7 +311,7 @@ public class DamagePreviewPanel extends JPanel
 			else
 				dmg = String.valueOf(result.damage);
 			
-			if (target.team == au.team)
+			if (target.team == 1)
 				setBackground(new Color(192, 192, 248));
 			else
 				setBackground(new Color(248, 192, 192));

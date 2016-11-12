@@ -2,11 +2,15 @@ package client;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.SwingWorker;
 
@@ -18,12 +22,14 @@ import zank.ZankMessage;
 import zank.ZankMessageType;
 import zank.ZankUser;
 
-public class SocketMonitor extends SwingWorker<Void, Object>
+public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 {
 	ZankClient client;
 	Socket socket;
 	ObjectOutputStream out;
 	ObjectInputStream in;
+	InputStreamReader readyChecker;
+	boolean done;
 	
 	public SocketMonitor(ZankClient client)
 	{
@@ -31,7 +37,7 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 		this.client = client;
 	}
 	
-	public Void doInBackground()
+	public List<ZankMessage> doInBackground()
 	{
 		// Connect to server
 		try
@@ -46,12 +52,6 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 			
 			// Let the client have a copy of the reference, too
 			client.out = out;
-			
-			// Show user that connection succeeded
-			client.loginWindow.connectSuccess();
-			
-			// Pause for a sec?
-			// try { Thread.sleep(150); } catch (InterruptedException e) {}
 		}
 		catch (IOException e)
 		{
@@ -61,148 +61,185 @@ public class SocketMonitor extends SwingWorker<Void, Object>
 		}
 		
 		// Watch for incoming messages and deal with them accordingly
+		done = false;
 		try
 		{
-			boolean done = false;
+			
 			in = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
+			readyChecker = new InputStreamReader(new BufferedInputStream(socket.getInputStream()));
 			System.out.println("Watching for incoming messages.");
-			ChatWindow cw = client.chatWindow;
+			ZankMessage msg;
+			
 			while (!done)
 			{
-				ZankMessage msg = null;
-				ZankUser zu = client.zu;
-				
+				msg = null;
 				
 				while ((msg = (ZankMessage) in.readObject()) != null)
 				{
-					try
-					{
-						System.out.println("IN:\t" + msg);
-						ZankMessageType type = msg.type;
-						String user = msg.user;
-						
-						
-						// CHAT: a user has sent a message for the lobby chat
-						if (type.equals(ZankMessageType.CHAT))
-						{
-							cw.receiveChat(user, (String) msg.data);
-						}
-												
-						// LOGIN: another user has logged in to the server
-						else if (type.equals(ZankMessageType.LOGIN))
-						{
-							cw.receiveLogin(user);
-						}
-						
-						// LOGIN: a user has logged out of the server
-						else if (type.equals(ZankMessageType.LOGOUT))
-						{
-							cw.receiveLogout(msg.user);
-						}	
-						
-						// ONLINE: the server has notified the client of which users are online
-						else if (type.equals(ZankMessageType.ONLINE))
-						{
-							cw.receiveOnline((String) msg.data);
-						}
-						
-						// CHALLENGE: another user has issued a challenge to the client
-						else if (type.equals(ZankMessageType.CHALLENGE))
-						{
-							cw.receiveChallenge(msg.user);
-						}
-						
-						// ENGAGE: two users are engaging in a battle
-						else if (type.equals(ZankMessageType.ENGAGE))
-						{
-							cw.receiveEngage(msg.user, (String) msg.data);
-						}
-						
-						// GAME: a category of actions, indicating that some action has been taken pertaining to the client in a game they are a part of
-						else if (type.equals(ZankMessageType.GAME))
-						{
-							ZankGameAction action = (ZankGameAction) msg.data;
-							Engagement game = client.game;
-							
-							// START: the challenge has been accepted and the client's game is beginning
-							if (action.type.equals(ZankGameActionType.START))
-							{
-								client.launchEngagementWindow(action);
-							}
-							
-							// CHAT: a user in the engagement has sent a message to the engagement chat 
-							else if (action.type.equals(ZankGameActionType.CHAT))
-							{
-								game.receiveChat(user, (String) action.data); 
-							}
-							
-							// READY: the server has sent confirmation that both players are ready to begin the battle
-							else if (action.type.equals(ZankGameActionType.READY))
-							{
-								game.receiveReady((ArrayList<ActiveUnit>) action.data);
-							}
-							
-							// NEXT: the server has indicated that a new unit's turn should begin
-							else if (action.type.equals(ZankGameActionType.NEXT))
-							{
-								game.receiveNext((int[]) action.data);
-							}
-							
-							// MOVE: the server has indicated that one of the participants in the engagement has moved a unit
-							else if (action.type.equals(ZankGameActionType.MOVE))
-							{
-								game.receiveMove((int[]) action.data);
-							}
-							
-							// ACT: the server has indicated that a unit has taken an action
-							else if (action.type.equals(ZankGameActionType.ACT))
-							{
-								game.receiveAct((int[]) action.data);
-							}
-							
-							// HIT: the server has indicated that a unit in combat has taken damage
-							else if (action.type.equals(ZankGameActionType.HIT))
-							{
-								System.out.println("Received HIT: " + action);
-								game.receiveHit((SkillEffectResult[]) action.data);
-							}
-								
-							// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
-							else if (action.type.equals(ZankGameActionType.WAIT))
-							{
-								game.receiveWait((int[]) action.data);
-							}
-							
-							// GAMEOVER: the server has declared the outcome of the battle
-							else if (action.type.equals(ZankGameActionType.GAMEOVER))
-							{
-								game.receiveGameOver((boolean[]) action.data);
-							}
-							
-							// EXIT: Another player has left the room
-							else if (action.type.equals(ZankGameActionType.EXIT))
-							{
-								game.receiveExit((String) action.data);
-							}
-						}
-						else
-							System.out.println("received bad game message from server: " + msg);
-
-						cw.chat.setCaretPosition(cw.chat.getDocument().getLength());							
-					}
-					catch (NullPointerException e) { System.err.println("received bad message from server: " + msg); e.printStackTrace(); }
+					publish(msg);
 				}
 				done = true;
-				
-				// Disconnection handler
-				// TODO: idk do something about this
-				cw.appendToChat("<br><span style=\"color:red\"><em>* you have been disconnected from the server");					
+//				
+//				// Disconnection handler
+//				// TODO: idk do something about this
+//				client.chatWindow.appendToChat("<br><span style=\"color:red\"><em>* you have been disconnected from the server");					
 			}
-		} catch (Exception e)
+		}
+		
+		catch (EOFException | SocketException e)
+		{
+			done = false;
+			client.shutdownPrep();
+		}
+		
+		catch (Exception e)
 		{
 			e.printStackTrace(); 
 		}		
+		
 		return null;
+	}
+	
+	public void process(List<ZankMessage> messages)
+	{
+		for (ZankMessage msg : messages)
+		{
+			try
+			{
+				ZankMessageType type = msg.type;
+				if (msg.type != ZankMessageType.BEEP)
+					System.out.println("IN:\t" + msg);
+				
+				String user = msg.user;
+				
+				// CHAT: a user has sent a message for the lobby chat
+				if (type.equals(ZankMessageType.READY))
+				{
+					// Show user that connection succeeded
+					client.loginWindow.connectSuccess();
+				}
+				
+				else if (type.equals(ZankMessageType.CHAT))
+				{
+					client.chatWindow.receiveChat(user, (String) msg.data);
+				}
+										
+				// LOGIN: another user has logged in to the server
+				else if (type.equals(ZankMessageType.LOGIN))
+				{
+					client.chatWindow.receiveLogin(user);
+				}
+				
+				// LOGIN: a user has logged out of the server
+				else if (type.equals(ZankMessageType.LOGOUT))
+				{
+					client.chatWindow.receiveLogout(msg.user);
+				}	
+				
+				// ONLINE: the server has notified the client of which users are online
+				else if (type.equals(ZankMessageType.ONLINE))
+				{
+					client.chatWindow.receiveOnline((String) msg.data);
+				}
+				
+				// CHALLENGE: another user has issued a challenge to the client
+				else if (type.equals(ZankMessageType.CHALLENGE))
+				{
+					client.chatWindow.receiveChallenge(msg.user);
+				}
+				
+				// ENGAGE: two users are engaging in a battle
+				else if (type.equals(ZankMessageType.ENGAGE))
+				{
+					client.chatWindow.receiveEngage(msg.user, (String) msg.data);
+				}
+				
+				// BEEP: server has sent a heartbeat
+				else if (type.equals(ZankMessageType.BEEP))
+				{
+					//
+				}
+				
+				// BEEP: the server has sent a heartbeat
+				else if (type.equals(ZankMessageType.ENGAGE))
+				{
+					System.out.println("dub");
+				}
+				
+				// GAME: a category of actions, indicating that some action has been taken pertaining to the client in a game they are a part of
+				else if (type.equals(ZankMessageType.GAME))
+				{
+					ZankGameAction action = (ZankGameAction) msg.data;
+					Engagement game = client.game;
+					
+					// START: the challenge has been accepted and the client's game is beginning
+					if (action.type.equals(ZankGameActionType.START))
+					{
+						client.launchEngagementWindow(action);
+					}
+					
+					// CHAT: a user in the engagement has sent a message to the engagement chat 
+					else if (action.type.equals(ZankGameActionType.CHAT))
+					{
+						game.receiveChat(user, (String) action.data); 
+					}
+					
+					// READY: the server has sent confirmation that both players are ready to begin the battle
+					else if (action.type.equals(ZankGameActionType.READY))
+					{
+						game.receiveReady((ArrayList<ActiveUnit>) action.data);
+					}
+					
+					// NEXT: the server has indicated that a new unit's turn should begin
+					else if (action.type.equals(ZankGameActionType.NEXT))
+					{
+						game.receiveNext((int[]) action.data);
+					}
+					
+					// MOVE: the server has indicated that one of the participants in the engagement has moved a unit
+					else if (action.type.equals(ZankGameActionType.MOVE))
+					{
+						game.receiveMove((int[]) action.data);
+					}
+					
+					// ACT: the server has indicated that a unit has taken an action
+					else if (action.type.equals(ZankGameActionType.ACT))
+					{
+						game.receiveAct((int[]) action.data);
+					}
+					
+					// HIT: the server has indicated that a unit in combat has taken damage
+					else if (action.type.equals(ZankGameActionType.HIT))
+					{
+						game.receiveHit((SkillEffectResult[]) action.data);
+					}
+						
+					// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
+					else if (action.type.equals(ZankGameActionType.WAIT))
+					{
+						game.receiveWait((int[]) action.data);
+					}
+					
+					// GAMEOVER: the server has declared the outcome of the battle
+					else if (action.type.equals(ZankGameActionType.GAMEOVER))
+					{
+						game.receiveGameOver((boolean[]) action.data);
+					}
+					
+					// EXIT: Another player has left the room
+					else if (action.type.equals(ZankGameActionType.EXIT))
+					{
+						game.receiveExit((String) action.data);
+					}
+				}
+				else
+					System.out.println("received bad game message from server: " + msg);
+
+				if (client.chatWindow != null)
+					client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());							
+			}
+			catch (NullPointerException e) { e.printStackTrace(); }
+		}
 	}
 	
 	public void done()

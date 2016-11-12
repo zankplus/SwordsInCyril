@@ -83,11 +83,11 @@ public class FFTACalc
 			evade /= getRelativeFacing(attacker, defender);
 			
 			// 5. Status check
-			if (defender.status[StatusEffect.BLIND.ordinal()] != 0)
+			if (defender.status[StatusEffect.DARKNESS.ordinal()] != 0)
 				evade -= 20;
 			if (defender.status[StatusEffect.CONFUSE.ordinal()] != 0)
 				evade -= 10;
-			if (attacker.status[StatusEffect.BLIND.ordinal()] != 0)
+			if (attacker.status[StatusEffect.DARKNESS.ordinal()] != 0)
 				evade += 50;
 			
 			// 6. Support check
@@ -126,6 +126,10 @@ public class FFTACalc
 		// 1. Retrieve target's Status Resistance
 		int sRes = 50;
 		
+		// 1.5. Return 0 if attempting to charm
+		if (sEff == StatusEffect.CHARM && attacker.team == defender.team)
+			hitRate = 0;
+		
 		// 2. Status check | 3. Equipment check | 4. Immunity check
 		if (statusNegates(defender, sEff) || equipmentNegates(defender, sEff) ||
 				supportNegates(defender, sEff))
@@ -140,7 +144,7 @@ public class FFTACalc
 					defender.status[StatusEffect.SLEEP.ordinal()] != 0 ||
 					defender.status[StatusEffect.EXPERT_GUARD.ordinal()] != 0)
 			{
-				hitRate = 0;
+				hitRate = 100;
 			}
 			else
 			{
@@ -181,7 +185,7 @@ public class FFTACalc
 	
 	public static int getDamage(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
 			double damageFactor, boolean healing, boolean canCrit, boolean capToHP,
-			boolean capToMP, boolean preview)
+			boolean capToMP, boolean leftHand, boolean preview)
 	{
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
@@ -210,7 +214,7 @@ public class FFTACalc
 			atk = atk * 307 / 256;
 		if (attacker.status[StatusEffect.FROG.ordinal()] != 0)
 			atk = atk * 25 / 256;
-		if (attacker.status[StatusEffect.BOOST.ordinal()] != 0 && skill.IS_PHYSICAL)
+		if (attacker.status[StatusEffect.BOOST.ordinal()] > 0 && skill.IS_PHYSICAL)
 			atk = atk * 384 / 256;
 		if (attacker.status[StatusEffect.WATK_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 281 / 256;
@@ -227,7 +231,10 @@ public class FFTACalc
 		if (attacker.status[StatusEffect.FROG.ordinal()] == 0)
 		{
 			if (skill.IS_PHYSICAL)
-				atk += attacker.unit.getWAtkEquipBonus();
+				if (!leftHand)
+					atk += attacker.unit.getWAtkEquipBonus();
+				else
+					atk += attacker.unit.getWAtkEquipBonusLeft();
 			else if (!skill.IS_PHYSICAL)
 				atk += attacker.unit.getMPowEquipBonus();
 		}
@@ -271,10 +278,10 @@ public class FFTACalc
 		if (defender.status[StatusEffect.MRES_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && !skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
 		// 9. Target's equipment check
@@ -296,8 +303,10 @@ public class FFTACalc
 		int power;
 		if (skill.POWER == -1)
 		{
-			power = attacker.unit.getFightPower();
-			System.out.println("Power of EqAtk: " + power);
+			if (leftHand)
+				power = attacker.unit.getWAtkEquipBonusLeft();
+			else
+				power = attacker.unit.getWAtkEquipBonus();
 		}
 		else
 		{
@@ -316,7 +325,7 @@ public class FFTACalc
 			// a. Get attack element
 			Element element;
 			if (skill.ELEMENT == Element.AS_WEAPON)
-				element = attacker.unit.getWeapon().element;
+				element = attacker.unit.getWeapon(leftHand).element;
 			else
 				element = skill.ELEMENT;
 			
@@ -365,7 +374,7 @@ public class FFTACalc
 			resistance = Math.max(resistance - enhanced, 1);
 			
 			// d. Geomancy check
-			if (attacker.unit.support == FFTASupport.GEOMANCY)
+			if (element != Element.NULL && attacker.unit.support == FFTASupport.GEOMANCY)
 				resistance = Math.max(resistance - 1, 1);
 			
 			// System.out.println("resistance: " + resistance);
@@ -392,7 +401,7 @@ public class FFTACalc
 			if (canCrit)
 			{
 				int rand = (int) (100 * Math.random());
-				if (rand < 5)
+				if (rand < 5 || (rand < 25 && attacker.status[StatusEffect.ADVICE.ordinal()] > 0))
 				{
 					wasCritical = true;
 					dmg = dmg * 3 / 2;
@@ -409,7 +418,7 @@ public class FFTACalc
 			dmg = 0;
 		
 		// 16. Weapon effects (basically just HEAL_HP since there is presently no way to inflict zombie)
-		FFTAEquip weapon = attacker.unit.getWeapon();
+		FFTAEquip weapon = attacker.unit.getWeapon(leftHand);
 		for (int i = 0; i < weapon.effects.length; i++)
 			if (skill == FFTASkill.FIGHT && weapon.effects[i] == ItemEffect.HEAL_HP)
 				dmg = -dmg;
@@ -445,6 +454,13 @@ public class FFTACalc
 	
 	public static boolean statusNegates(ActiveUnit defender, StatusEffect sEff)
 	{
+		// I
+		if (defender.status[sEff.ordinal()] > 0)
+			return true;
+		
+		// TODO: STOP prevents SLOW
+		// TODO: does it also prevent HASTE?
+		
 		return false;
 	}
 	

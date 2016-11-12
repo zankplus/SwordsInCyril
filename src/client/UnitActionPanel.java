@@ -15,11 +15,14 @@ import fftadata.FFTAEquip;
 import fftadata.FFTAJob;
 import fftadata.FFTASkill;
 import fftadata.FFTASupport;
+import fftadata.StatusEffect;
+import fftadata.Targeting;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -230,7 +233,19 @@ public class UnitActionPanel extends JPanel
 		btnWaitCancel.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				showActionsPanel();
+				if(unitHasActed && unitHasMoved)
+				{
+					// undo the movement
+					sendMove = false;
+					window.undoMovement();
+					unitHasMoved = false;
+					
+					// assume start of new movement
+					showMovePanel();
+					
+				}
+				else
+					showActionsPanel();
 			}
 		});
 		
@@ -265,6 +280,7 @@ public class UnitActionPanel extends JPanel
 		
 		// Add first skillset button
 		btnSkillset_1 = new JButton("" + au.unit.job.command);
+		btnSkillset_1.setMargin(new Insets(2, 5, 2, 5));
 		actSkillsetPanel.add(btnSkillset_1);
 		btnSkillset_1.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent arg0)
@@ -274,6 +290,10 @@ public class UnitActionPanel extends JPanel
 			}
 		});
 		add(new SkillPanel(au.unit.job.command), "Skillset 1");
+		if (au.status[StatusEffect.FROG.ordinal()] > 0 || au.status[StatusEffect.ADDLE.ordinal()] > 0)
+			btnSkillset_1.setEnabled(false);
+		else
+			btnSkillset_1.setEnabled(true);
 		
 		// Add second skillset button
 		if (au.unit.secondary != FFTACommand.NONE)
@@ -287,8 +307,16 @@ public class UnitActionPanel extends JPanel
 					cl.show(thisRef, "Skillset 2");
 				}
 			});
+			
+			if ((au.status[StatusEffect.FROG.ordinal()] > 0 && au.unit.secondary != FFTACommand.ITEM) ||
+					 au.status[StatusEffect.ADDLE.ordinal()] > 0)
+					btnSkillset_2.setEnabled(false);
+				else
+					btnSkillset_2.setEnabled(true);
+			
 			add(new SkillPanel(au.unit.secondary), "Skillset 2");
 		}
+		
 		
 		// Add Item skillset button, if the user is an alchemist
 		if (au.unit.job == FFTAJob.ALCHEMIST && au.unit.secondary != FFTACommand.ITEM)
@@ -302,9 +330,14 @@ public class UnitActionPanel extends JPanel
 					cl.show(thisRef,  "AlchItem");
 				}
 			});
+			if (au.status[StatusEffect.ADDLE.ordinal()] > 0)
+				btnItem.setEnabled(false);
+			else
+				btnItem.setEnabled(true);
 			
 			add(new SkillPanel(FFTACommand.ITEM), "AlchItem");
 		}
+		
 		actSkillsetPanel.revalidate();
 	}
 	
@@ -322,15 +355,26 @@ public class UnitActionPanel extends JPanel
 	
 	public void showActionsPanel()
 	{
-		if (unitHasActed)
+		if (unitHasActed || au.status[StatusEffect.DISABLE.ordinal()] > 0)
 			btnAct.setEnabled(false);
 		else
 			btnAct.setEnabled(true);
 		
 		if (unitHasMoved)
+		{
 			btnMove.setText("Undo move");
-		else
+			btnMove.setEnabled(true);
+		}
+		else if (au.status[StatusEffect.IMMOBILIZE.ordinal()] > 0)
+		{
 			btnMove.setText("Move");
+			btnMove.setEnabled(false);
+		}
+		else
+		{
+			btnMove.setText("Move");
+			btnMove.setEnabled(true);
+		}
 		
 		cl.show(this, "Actions");
 	}
@@ -376,7 +420,6 @@ public class UnitActionPanel extends JPanel
 		unitHasMoved = true;
 		if (unitHasActed)
 		{
-			btnWaitCancel.setEnabled(false);
 			showWaitPanel();
 		}
 		else
@@ -386,6 +429,7 @@ public class UnitActionPanel extends JPanel
 	public void showSkillUsePanel(FFTASkill sk)
 	{
 		window.beginTargetingMode(sk);
+		lblClickTheUnit.setText(window.selectedSkill + "");
 		cl.show(this, "Fight");
 	}
 	
@@ -401,15 +445,18 @@ public class UnitActionPanel extends JPanel
 	public void finishAct()
 	{
 		if (unitHasMoved)
+		{
+			btnWaitCancel.setEnabled(false);
 			showWaitPanel();
+		}
 		else
 			showActionsPanel();
 	}
 	
 	public void showWaitPanel()
 	{
-		if (unitHasMoved && unitHasActed)
-			btnWaitCancel.setEnabled(false);
+//		if (unitHasMoved && unitHasActed)
+//			btnWaitCancel.setEnabled(false);
 		
 		cl.show(this,  "Wait");
 	}
@@ -419,8 +466,12 @@ public class UnitActionPanel extends JPanel
 		try
 		{
 			if (sendMove)
+			{
+				System.out.println("sending move");
 				game.sendMove();
+			}
 			game.sendWait(dir);
+			System.out.println("sending wait");
 			
 			btnNe.setEnabled(false);
 			btnNw.setEnabled(false);
@@ -525,6 +576,11 @@ public class UnitActionPanel extends JPanel
 					if (sk != null && FFTASkill.canUseSkill(sk, au))
 					{
 						showSkillUsePanel(sk);
+						if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES)
+						{
+							// window.selectTile();
+							window.selectTarget(0);
+						}
 					}
 				}
 			});

@@ -20,6 +20,7 @@ import fftadata.FFTASkill;
 import fftadata.GameState;
 import fftadata.SkillEffect;
 import fftadata.SkillEffectResult;
+import fftadata.StatusEffect;
 import fftadata.Targeting;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
@@ -41,6 +42,7 @@ public class Engagement
 	ZankGameMap map;
 	ZankGameAction action;
 	ZankMessage message;
+	ZankClient client;
 	
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	
@@ -48,14 +50,15 @@ public class Engagement
 	private GameState state;
 	
 	
-	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, ObjectInputStream in, ObjectOutputStream out)
+	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, ZankClient client)
 	{
 		this.player = player;
 		this.playerNumber = playerNumber;
 		this.opponent = opponent;
 		this.gameID = id;
-		this.in = in;
-		this.out = out;
+		this.client = client;
+		this.in = client.in;
+		this.out = client.out;
 		gameOver = false;
 		
 		map = MuscadetMapLoader.getMap();
@@ -67,33 +70,21 @@ public class Engagement
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendForfeit() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
 		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendReady() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, window.getYourUnits());
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendMove() throws IOException
@@ -102,32 +93,20 @@ public class Engagement
 		int[] data = {au.id, au.x, au.y, au.z};
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
 		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
-	public void sendAction(ArrayList<Integer> targets, FFTASkill sk, int x, int y) throws IOException
+	public void sendAction(int user, FFTASkill sk, int x, int y) throws IOException
 	{
-		int[] data = new int[targets.size() + 3];
-		for (int i = 0; i < targets.size(); i++)
-			data[i] = targets.get(i);
-		data[data.length - 3] = sk.ordinal();
-		data[data.length - 2] = x;
-		data[data.length - 1] = y;
-		
-		System.out.println("sendAction: target = " + data[0]);
+		int[] data = new int[4];
+		data[0] = user;
+		data[1] = sk.ordinal();
+		data[2] = x;
+		data[3] = y;
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
-		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendWait(int dir) throws IOException
@@ -136,11 +115,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendTurnTest(int ct) throws IOException
@@ -148,11 +123,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	public void sendExit() throws IOException
@@ -160,11 +131,7 @@ public class Engagement
 		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
-		synchronized(out)
-		{
-			out.writeObject(message);
-			out.flush();
-		}
+		client.sendZankMessage(message);
 	}
 	
 	
@@ -173,7 +140,6 @@ public class Engagement
 	public void receiveChat(String user, String msg)
 	{
 		window.appendToChat("<b>" + user + "</b>: " + msg);
-		System.out.println("chat ew: " + window);
 	}
 	
 	// READY: register the received units to the rival team and create a list all the game's units in gamePanel
@@ -191,7 +157,6 @@ public class Engagement
 		{
 			aus[i] = p1Units.get(i);
 			aus[i].id = i;
-			System.out.println(i + " " + aus[i].unit.name);
 		}
 		
 		for (int i = 0; i < p2Units.size(); i++)
@@ -213,31 +178,90 @@ public class Engagement
 		state.currentUnit = data[0];
 		
 		ActiveUnit au = currentUnit();
-		window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
+		System.out.println("--- " + au.unit.name + "'s turn");
 		
-		int poisonDamage = state.startOfTurnEffects(data[1]);		// data[1] is poisonVariance
-		if (poisonDamage > 0)
+		// Decrement this unit's Stop counter and check whether it has abated this turn
+		boolean stopEnded = state.stopTick();
+		
+		if (au.status[StatusEffect.STOP.ordinal()] > 0 && !stopEnded)
+			{}
+		else
 		{
-			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
-					"</strong> takes " + poisonDamage + " damage from poison!");
+			if (au.status[StatusEffect.SLEEP.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is asleep!");
+			else if (stopEnded)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> is back in time!");
+			else if (au.status[StatusEffect.QUICK.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> cuts in!");
+			else if (au.status[StatusEffect.PETRIFY.ordinal()] == 0)
+				window.appendToChat("<em><span style=\"color:gray\"><strong>" + au.unit.name + "</strong> takes their turn!");
+			
+			if (au.status[StatusEffect.CHARM.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is charmed!");
+			
+			if (au.status[StatusEffect.CONFUSE.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is confused!");
+			
+			if (au.status[StatusEffect.BERSERK.ordinal()] > 0)
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> is berserk!");
+			
+			// Announce status effects that are abating this turn
+			window.startOfTurnAnnouncements(au);
+			
+			// Apply poison damage and regen healing, if applicable
+			int[] hpChanges = state.startOfTurnEffects(data[1], data[2]);		// data[1] is poisonVariance
+			int poisonDamage = hpChanges[0];
+			int regenHealing = hpChanges[1];
+			
+			if (regenHealing > 0)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
+						"</strong> regenerates <strong><span style=\"color: lime\">" + regenHealing + 
+						"</strong></span> hit points!");
+			}
+			
+			// Announce poison damage (if applicable) and update displays to reflect it
+			if (poisonDamage > 0)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + 
+						"</strong> takes <strong><span style=\"color: red\">" + poisonDamage + 
+						"</strong></span> damage from poison!");
+				
+				if (au.currHP == 0)
+					window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
+			}
 			
 			window.updateSprite(getUnits()[au.id]);
 			window.updateUnitPreview(au.id);
-			if (au.currHP == 0)
-				window.appendToChat("<em><span style=\"color:gray\">......<strong>" + au.unit.name + " falls!");
+			
+			// If the unit has died but has auto-life on, revive them
+			boolean autoLifeRevived = state.checkAutoLife(au);
+			if (autoLifeRevived)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name +
+						"</strong> is protected by <span style=\"color:aqua\"><strong>Auto-Life</strong></span>!");
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + "</strong> rises!");
+				
+				window.updateSprite(getUnits()[au.id]);
+				window.updateUnitPreview(au.id);
+			}
 		}
 		
-		
-		window.selectTile(map.mapData[au.x][au.y]);
-		
-		if (au.currHP > 0)
+		if (au.currHP > 0 && au.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
+							 au.status[StatusEffect.STOP.ordinal()]    == 0 && 
+							 au.status[StatusEffect.SLEEP.ordinal()]   == 0 )
 		{
+			// Select current unit's tile
+			window.selectTile(map.mapData[au.x][au.y]);
+			
 			// Decide which panel to show
 			if (currentUnit().team == playerNumber)	// Show the action panel if it's your turn
 				window.startPlayerTurn();
 			else
 				window.startRivalTurn();			// Show the blank panel if it's not
 		}
+		else
+			window.startRivalTurn();
 		
 	}
 	
@@ -252,42 +276,102 @@ public class Engagement
 	// ACT: announce in chat that the active unit has taken the indicated action
 	public void receiveAct(int[] data)
 	{
-		System.out.println("receiveAct: target = " + data[0]);
+		FFTASkill sk = FFTASkill.values[data[1]];
+		int user = data[0], x = data[2], y = data[3];
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user]);
 		
-		FFTASkill sk = FFTASkill.values[data[data.length - 3]];
 		if (sk == FFTASkill.FIGHT)
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-				"</strong> attacks <strong>" + state.units[data[0]].unit.name + "</strong>!");
+				"</strong> attacks <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		else
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-					"</strong> uses " + sk.NAME + " on <strong>" + state.units[data[0]].unit.name + "</strong>!");
+					"</strong> uses " + sk.NAME + " on <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		
 		state.expendMP(sk);
 		window.updateUnitPreview(currentID());
-		System.out.println("Received " + sk.NAME);
 	}
 	
 	// HIT: apply the effects of skills specified and announce the results in chat
 	public void receiveHit(SkillEffectResult[] results)
 	{
+		boolean miss = true;
+		ActiveUnit target = state.units[results[0].target];
+		
+		// Check cover
+		if (results[0].cover != -1)
+			window.appendToChat("<em><span style=\"color:gray\">......<strong>" + target.unit.name + 
+								"</strong> <span style=\"color:blue\">swaps places with</span> <strong>" + 
+								state.units[target.covering].unit.name + "</strong>!");
+		
+		// Check boost
+		if (results[0].boost)
+		{
+			state.units[results[0].user].status[StatusEffect.BOOST.ordinal()] = 0;
+			window.updateUnitPreview(results[0].user);
+		}
+		
+		// Check reflect
+		if (results[0].reflect)
+			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
+			
+		// determine whether the attack missed, and report so if it does
+		for (int i = 0; i < results.length; i++)
+			if (results[i] != null && results[i].success)
+				miss = false;
+		
+		// Check multi-hit attack
+		if (miss && results[0].skill != FFTASkill.DOUBLE_SWORD && results[0].skill != FFTASkill.DOUBLESHOT)
+		{
+			window.appendToChat("<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + results[0].hitChance + "%)");
+		}
+		
 		// apply each effect in sequence and append the report to chat
 		for (int i = 0; i < results.length; i++)
-		{
-			String report = state.applyEffect(results[i]);
-			
-			// Update target sprite to reflect any changes in HP
-			window.updateSprite(getUnits()[results[i].target]);
-			
-			// Update preview panels to reflect any stat changes
-			window.updateUnitPreview(results[i].target);
-			
-			// Append report to chat
-			window.appendToChat(report);
-			
-			ActiveUnit au = state.units[results[i].target]; 
-			if (au.currHP == 0)
-				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + au.unit.name + " falls!");
+		{	
+			if (!results[i].dependent || results[0].success)
+			{
+				
+				String report = state.applyEffect(results[i]);
+				
+				// Update target sprite to reflect any changes in HP
+				window.updateSprite(getUnits()[results[i].target]);
+				
+				// Update preview panels to reflect any stat changes
+				window.updateUnitPreview(results[i].target);
+				
+				// Append report to chat
+				window.appendToChat(report);
+			}
 		}
+		
+		// Update user sprite (in case of recoil, death. etc...)
+		ActiveUnit user = state.units[results[0].user];
+		window.updateSprite(user);
+		window.updateUnitPreview(user.id);
+
+		// Check target death
+		if (target.currHP == 0)
+			window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name + " falls!");
+		
+		
+		// Check auto-life trigger
+		if (!miss)
+		{
+			boolean autoLifeRevived = state.checkAutoLife(target);
+			if (autoLifeRevived)
+			{
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name +
+						"</strong> is protected by <span style=\"color:aqua\"><strong>Auto-Life</strong></span>!");
+				window.appendToChat("<em><span style=\"color:gray\">.........<strong>" + target.unit.name + "</strong> rises!");
+				
+				// Update sprites and preview panels again
+				window.updateSprite(getUnits()[target.id]);
+				window.updateUnitPreview(target.id);
+			}
+		}
+		
+		
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel
@@ -428,5 +512,10 @@ public class Engagement
 	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user)
 	{
 		return state.getTargets(x,  y, sk, user);
+	}
+	
+	public GameState getState()
+	{
+		return state;
 	}
 }

@@ -23,6 +23,8 @@ import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
+import fftadata.StatusEffect;
+
 import javax.swing.JButton;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
@@ -80,36 +82,7 @@ public class EngagementWindow extends JFrame
 		addWindowListener(new java.awt.event.WindowAdapter() {
 			public void windowClosing(java.awt.event.WindowEvent evt)
 			{
-				// If the engagement is still in progress, prompt the user to confirm the window's closing
-				if (!game.gameOver)
-				{
-					/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
-							"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
-					if (output == JOptionPane.YES_OPTION)
-					{
-						// Notify the server of user's leaving the room
-						try {
-							sendExit();
-						} catch (IOException e) { e.printStackTrace(); }
-						ew.dispose();
-					}*/
-					
-					// Temporarily do not show warning dialog
-					try {
-						game.sendExit();
-					} catch (IOException e) { e.printStackTrace(); }
-					ew.dispose();
-					
-				}
-				
-				// If the engagement is over, simply notify the server of the exit and close the window
-				else
-				{
-					try {
-						game.sendExit();
-					} catch (IOException e) { e.printStackTrace(); }
-					ew.dispose();
-				}
+				closeEngagementWindow();
 			}
 		});
 		
@@ -159,8 +132,6 @@ public class EngagementWindow extends JFrame
 				}
 			}
 		});
-		System.out.println("checkpoint 1");
-		
 		
 		JPanel leftPanel = new JPanel(new BorderLayout());
 		leftPanel.setBorder(null);
@@ -170,12 +141,8 @@ public class EngagementWindow extends JFrame
 		gamePanel = new JPanel();
 		gamePanel.setLayout(new BorderLayout());
 		
-		System.out.println("checkpoint 2");
-		
 		rosterPanel = new EngagementWindowRosterPanel(this);
 		mapPanel = new MapPanel(this);
-	
-		System.out.println("checkpoint 3");
 		
 		JPanel turnOrderPanel = new JPanel();
 		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -302,7 +269,7 @@ public class EngagementWindow extends JFrame
 			selectTile(game.map.mapData[au.x][au.y]);
 			
 			// Send the action
-			game.sendAction(targets, selectedSkill, x, y);
+			game.sendAction(au.id, selectedSkill, x, y);
 		}
 		catch (IOException e) { e.printStackTrace(); }
 	}
@@ -322,12 +289,9 @@ public class EngagementWindow extends JFrame
 			previews[i] = new UnitPreviewPanel(units[i]);
 			previewDeck.add(previews[i], String.valueOf(i));
 		}
-		
+		UnitPreviewPanel.game = game;
 		damagePreviewPanel = new JPanel();
 		previewDeck.add(damagePreviewPanel, "Damage Preview");
-		
-		for (int i = 0; i < units.length; i++)
-			System.out.println(i + " " + units[i].unit.name);
 	}
 	
 	public void startPlayerTurn()
@@ -383,6 +347,93 @@ public class EngagementWindow extends JFrame
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+	}
+	
+	public void startOfTurnAnnouncements(ActiveUnit au)
+	{
+		if (au.status[StatusEffect.DOOM.ordinal()] > 0)
+		{
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name +
+					"</strong>'s timer drops to <strong>" + (au.status[StatusEffect.DOOM.ordinal()] - 1) + 
+					"</strong>!");
+			
+			if (au.status[StatusEffect.DOOM.ordinal()] == 1)
+			{
+				appendToChat("<em><span style=\"color:gray\">......The reaper takes <strong>" + 
+							  au.unit.name + "</strong>!");
+				return;
+			}
+		}
+		
+		if (au.status[StatusEffect.SLEEP.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> wakes up!");
+		
+		if (au.status[StatusEffect.IMMOBILIZE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can move again!");
+		
+		if (au.status[StatusEffect.DISABLE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> can act again!");
+		
+		if (au.status[StatusEffect.SLOW.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
+		
+		if (au.status[StatusEffect.STOP.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s back in time!");
+		
+		if (au.status[StatusEffect.ADDLE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> remembers!");
+		
+		if (au.status[StatusEffect.CONFUSE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> comes to!");
+		
+		if (au.status[StatusEffect.CHARM.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong> comes to!");
+		
+		// Buffs fading
+		if (au.status[StatusEffect.PROTECT.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s protect fades!");
+		
+		if (au.status[StatusEffect.SHELL.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s shell melts!");
+		
+		if (au.status[StatusEffect.HASTE.ordinal()] == 1)
+			appendToChat("<em><span style=\"color:gray\">...<strong>" + au.unit.name + "</strong>'s speed resets!");
+		
+		
+	}
+	
+	public void closeEngagementWindow()
+	{
+		// If the engagement is still in progress, prompt the user to confirm the window's closing
+		if (!game.gameOver)
+		{
+			/*int output = JOptionPane.showConfirmDialog(ew, "Are you sure you want to abandon this engagement?",
+					"Warning: Engagement in progress!", JOptionPane.YES_NO_OPTION);
+			if (output == JOptionPane.YES_OPTION)
+			{
+				// Notify the server of user's leaving the room
+				try {
+					sendExit();
+				} catch (IOException e) { e.printStackTrace(); }
+				ew.dispose();
+			}*/			
+		}
+		
+		// Temporarily do not show warning dialog
+		try {
+			game.sendExit();
+		} catch (IOException e) { e.printStackTrace(); }
+		
+		// Remove client's reference to this game
+		game.client.game = null;
+		
+		// Close window
+		dispose();
+	}
+	
+	public void selectTarget(int clicks)
+	{
+		mapPanel.selectTarget(clicks);
 	}
 }
 
