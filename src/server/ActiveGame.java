@@ -203,10 +203,53 @@ public class ActiveGame
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
-		executeSkill(state.currentUnit, sk, x, y);
+		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y);
+		
+/*		for (int i = 0; i < allResults.length; i++)
+		{
+			String result;
+			for (int j = 0; j < allResults[i].length; j++)
+			{
+				result = j + ". ";
+				result += state.units[allResults[i][j].target].unit.name + "\t";
+				result += allResults[i][j].effect + "\t";
+				if (allResults[i][j].success)
+					result += "hit";
+				else
+					result += "miss";
+				
+				System.out.println(result);
+				
+			}
+		}*/
+		
+		for (int i = 0; i < allResults.length; i++)
+		{
+			ActiveUnit target = state.units[allResults[i][0].target];
+			switch(target.unit.reaction)
+			{
+				case COUNTER:
+					if (/*1*/	sk.IS_PHYSICAL 		&&
+						/*2*/	target.currHP > 0 	&&
+						/*3*/	au.currHP > 0 		&&
+						/*4*/	au != target 		&&
+						/*5*/	state.reactionApplies(au, target, sk, state))
+					{
+						System.out.println(target.unit.name + " counterattacks!");
+					}
+					else
+						System.out.println(target.unit.name + " does not counterattack.");
+						
+					break;
+					
+				default:
+					System.out.println(target.unit.name + " makes no reaction.");
+					break;
+			}
+		}
 	}
 	
-	public void executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
+	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
 	{
 		ActiveUnit user = state.units[actor];
 		
@@ -268,6 +311,8 @@ public class ActiveGame
 		else
 			 effects = sk.EFFECTS;
 		
+		// create empty array to hold results
+		SkillEffectResult[][] allResults = new SkillEffectResult[targets.size()][];
 		
 		// For each target, apply all effects sequentially
 		for (int i = 0; i < targets.size(); i++)
@@ -317,6 +362,9 @@ public class ActiveGame
 			if (reflect)
 				results[0].reflect = true;
 			
+			// Add this target's results to master record
+			allResults[i] = results;
+			
 			// Send the message
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
@@ -330,6 +378,8 @@ public class ActiveGame
 		// Remove boost, if necessary
 		if (clearBoostAfterExecuting)
 			state.units[actor].status[StatusEffect.BOOST.ordinal()] = 0;
+		
+		return allResults;
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost

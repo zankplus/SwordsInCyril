@@ -302,7 +302,7 @@ public class DamagePreviewPanel extends JPanel
 		public TargetPanel(ActiveUnit target)
 		{
 			this.target = target;
-			reactionApplies = FFTASkill.reactionApplies(au, target, sk, state);
+			reactionApplies = state.reactionApplies(au, target, sk, state);
 			
 			int whichEffect;
 			if (sk == FFTASkill.RAISE && target.currHP == 0)

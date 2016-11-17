@@ -84,10 +84,10 @@ public enum FFTASkill implements Serializable
 	PHOENIX			("Phoenix", 		24,  0, 4, 0, 2, 2, Targeting.FREE_SELECT, 	Element.HOLY, 		false,	true,	true,	true,	false,	true,	false,	false,	false,	false,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.REVIVE_FULL_HP}),
 	MADEEN			("Madeen", 			36, 52, 4, 0, 2, 2, Targeting.FREE_SELECT,	Element.HOLY,		true,	false,	true,	true,	false,	true,	false,	false,	true,	false,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
 	FIRST_AID		("First Aid",		 0, 25, 0, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HEALING_1X, SkillEffect.ESUNA_EFFECT}),
-	POWERBREAK		("Powerbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_WATK_DOWN}),
-	MINDBREAK		("Mindbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_MPOW_DOWN}),
+	POWERBREAK		("Powerbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_WATK_DOWN}),
+	MINDBREAK		("Mindbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_MPOW_DOWN}),
 	MAGICBREAK		("Magicbreak", 		 0, -1, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.MP_DAMAGE}),
-	SPEEDBREAK		("Speedbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_SPEED_DOWN}),
+	SPEEDBREAK		("Speedbreak", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_SPEED_DOWN}),
 	MUG				("Mug", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	PROVOKE			("Provoke", 		 0,  0, 1, 2, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	true,	false,	false,	false,	new SkillEffect[] {SkillEffect.ADD_BERSERK}),
 	SENSOR			("Sensor", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
@@ -390,38 +390,7 @@ public enum FFTASkill implements Serializable
 		
 		// Return result
 		return result;
-	}
-	
-	public static boolean reactionApplies(ActiveUnit user, ActiveUnit target, FFTASkill sk, GameState state)
-	{
-		FFTAReaction rx = target.unit.reaction;
-		
-		switch(rx)
-		{
-			case COUNTER:
-			{
-				if (sk.IS_PHYSICAL)
-				{
-					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
-					for (int[] tile : targetableTiles)
-					{
-						System.out.println(tile[0] + ", " + tile[1] + " vs. " + user.x + ", " + user.y);
-						if (tile[0] == user.x && tile[1] == user.y)
-							return true;
-					}
-				}
-									
-				return false;
-			}
-				
-				
-			
-			default:
-			{
-				return false;
-			}
-		}
-	}
+	}	
 }
 
 enum WeaponReq
