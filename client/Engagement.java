@@ -358,7 +358,7 @@ public class Engagement
 		
 		
 		// Check auto-life trigger
-		if (!miss)
+		if (results[results.length - 1].autoLife)
 		{
 			boolean autoLifeRevived = state.checkAutoLife(target);
 			if (autoLifeRevived)
@@ -445,9 +445,9 @@ public class Engagement
 		String reaction = FFTAReaction.values()[data[1]].name();
 		reaction = reaction.substring(0, 1) + reaction.substring(1).toLowerCase();
 		
-		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + reactor + "</strong>'s </em>" +
-							"<span style=\"color:red\"><strong>" + reaction +
-							"</strong><span style=\"color:gray\"><em> activates!");
+		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + reactor +
+							"</strong>'s </em><span style=\"color:red\">" + reaction +
+							"<span style=\"color:gray\"><em> activates!");
 	}
 	
 	public void beginGame()

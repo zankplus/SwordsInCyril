@@ -203,25 +203,7 @@ public class ActiveGame
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
-		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y);
-		
-/*		for (int i = 0; i < allResults.length; i++)
-		{
-			String result;
-			for (int j = 0; j < allResults[i].length; j++)
-			{
-				result = j + ". ";
-				result += state.units[allResults[i][j].target].unit.name + "\t";
-				result += allResults[i][j].effect + "\t";
-				if (allResults[i][j].success)
-					result += "hit";
-				else
-					result += "miss";
-				
-				System.out.println(result);
-				
-			}
-		}*/
+		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y, false);
 		
 		System.out.println("Results length: " + allResults.length);
 		
@@ -235,7 +217,8 @@ public class ActiveGame
 						/*2*/	target.currHP > 0 	&&
 						/*3*/	au.currHP > 0 		&&
 						/*4*/	au != target 		&&
-						/*5*/	state.reactionApplies(au, target, sk, state))
+						/*5*/	!allResults[i][allResults[i].length - 1].autoLife &&	
+						/*6*/	state.reactionApplies(au, target, sk, state))
 					{
 						System.out.println(target.unit.name + " counterattacks!");
 						sendReaction(target.id, FFTAReaction.COUNTER);
@@ -243,13 +226,37 @@ public class ActiveGame
 						int facing = intermediateFacing(target.id, au.x, au.y);
 						faceUnit(target.id, facing);
 						
-						executeSkill(target.id, target.getFightSkill(), au.x, au.y);
+						executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
 					}
 					else
 						System.out.println(target.unit.name + " does not counterattack.");
 						
 					break;
 					
+				case BONECRUSHER:
+					boolean hit = false;
+					for (int j = 0; j < allResults[i].length; j++)
+						if (allResults[i][j].success)
+							hit = true;
+						
+					if (/*1*/	hit					&&
+						/*2*/	target.currHP > 0 	&&
+						/*3*/	au.currHP > 0 		&&
+						/*4*/	au != target 		&&
+						/*5*/	!allResults[i][allResults[i].length - 1].autoLife &&
+						/*6*/	state.reactionApplies(au, target, sk, state))
+					{
+						System.out.println(target.unit.name + " crushes bone!");
+						sendReaction(target.id, FFTAReaction.BONECRUSHER);
+						
+						int facing = intermediateFacing(target.id, au.x, au.y);
+						faceUnit(target.id, facing);
+						
+						executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
+					}
+					else
+						System.out.println(target.unit.name + " does not crush bone.");
+				
 				default:
 					System.out.println(target.unit.name + " makes no reaction.");
 					break;
@@ -257,7 +264,8 @@ public class ActiveGame
 		}
 	}
 	
-	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
+	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y, boolean bonecrusher)
+			throws InterruptedException
 	{
 		ActiveUnit user = state.units[actor];
 		
@@ -345,7 +353,7 @@ public class ActiveGame
 				
 				// Determine the results of the current effect
 				SkillEffectResult prev = results[Math.max(0, j - 1)];
-				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false);
+				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false, bonecrusher);
 				
 				// Apply those results IF they are not effect1-dependent, or if they are but
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
@@ -372,15 +380,20 @@ public class ActiveGame
 			
 			// Add this target's results to master record
 			allResults[i] = results;
+
+			// Check for auto-life trigger on current target
+			results[results.length - 1].autoLife = state.checkAutoLife(state.units[targets.get(i)]);
 			
 			// Send the message
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 			player1.messageQueue.put(zm);
 			player2.messageQueue.put(zm);
+
+ 
 			
-			// Check for auto-life trigger on current target
-			state.checkAutoLife(state.units[targets.get(i)]);
+
+			
 		}
 		
 		// Remove boost, if necessary

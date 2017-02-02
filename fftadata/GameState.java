@@ -358,7 +358,7 @@ public class GameState
 		if (targ == Targeting.AS_WEAPON)
 		{
 			vertical = 3;
-			FFTAEquip weapon = units[currentUnit].unit.getWeapon(false);
+			FFTAEquip weapon = user.unit.getWeapon(false);
 			range = weapon.range;
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;
@@ -528,6 +528,21 @@ public class GameState
 			case COUNTER:
 			{
 				if (sk.IS_PHYSICAL)
+				{
+					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
+					for (int[] tile : targetableTiles)
+					{
+						if (tile[0] == user.x && tile[1] == user.y)
+							return true;
+					}
+				}
+									
+				return false;
+			}
+			
+			case BONECRUSHER:
+			{
+				if (sk.NAME.equals("Fight"))
 				{
 					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
 					for (int[] tile : targetableTiles)
