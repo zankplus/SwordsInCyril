@@ -302,7 +302,7 @@ public class DamagePreviewPanel extends JPanel
 		public TargetPanel(ActiveUnit target)
 		{
 			this.target = target;
-			reactionApplies = state.reactionApplies(au, target, sk, state);
+			reactionApplies = state.reactionApplies(au, target, sk);
 			
 			int whichEffect;
 			if (sk == FFTASkill.RAISE && target.currHP == 0)
@@ -311,7 +311,7 @@ public class DamagePreviewPanel extends JPanel
 				whichEffect = 0;
 			
 			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(
-					new SkillEffectResult(au.id, target.id, sk, sk.EFFECTS[0]), null, null, true, false);
+					new SkillEffectResult(au.id, target.id, sk, sk.EFFECTS[0]), null, null, state, true, false);
 			
 			
 			hit = String.valueOf(result.hitChance);

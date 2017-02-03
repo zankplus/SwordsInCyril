@@ -52,7 +52,7 @@ public class FFTACalc
 	}
 	
 	public static int getATypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
-									  double hitFactor)
+									  GameState state, double hitFactor)
 	{
 		int hitRate = 0;
 		
@@ -69,7 +69,7 @@ public class FFTACalc
 		else // Steps 2-9 are skipped in the event of an automatic hit
 		{
 			// 2. Reaction check
-			if (reactionNegates(defender.unit.reaction, skill))
+			if (reactionNegates(attacker, defender, skill, state))
 				return 0;
 			
 			// 3. Retrieve defender's Evade stat
@@ -447,8 +447,31 @@ public class FFTACalc
 	
 	
 	// TODO: Make this do something
-	public static boolean reactionNegates(FFTAReaction rAbility, FFTASkill skill)
+	public static boolean reactionNegates(ActiveUnit attacker, ActiveUnit defender, FFTASkill sk,
+											GameState state)
 	{
+		if (state.reactionApplies(attacker, defender, sk))
+		{
+			switch (defender.unit.reaction)
+			{
+				case REFLEX:
+					if (!state.reacting)
+						return true;
+					return false;
+					
+				case STRIKEBACK:
+					if (!state.reacting)
+						return true;
+					return false;
+					
+				default:
+					return false;
+			}
+			
+		}
+		
+		
+		
 		return false;
 	}
 	

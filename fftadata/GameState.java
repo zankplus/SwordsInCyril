@@ -10,11 +10,11 @@ public class GameState
 	public int currentUnit;
 	public int currentTurn;
 	public FFTAMap map;
+	public boolean reacting;
 	
 	public GameState(ActiveUnit[] units, FFTAMap map)
 	{
 		this.units = units;
-		SkillEffect.setGameState(this);
 		
 		for (int i = 0; i < units.length; i++)
 			units[i].id = i;
@@ -22,6 +22,8 @@ public class GameState
 		currentTurn = 0;
 		
 		this.map = map;
+		
+		reacting = false;
 	}
 	
 	public int[] startOfTurnEffects(int poisonVariance, int regenVariance)
@@ -168,7 +170,7 @@ public class GameState
 	
 	public String applyEffect(SkillEffectResult result)
 	{
-		return result.effect.handler.applyEffect(result);
+		return result.effect.handler.applyEffect(result, this);
 	}
 	
 	public void applyDamage(int targ, int dmg)
@@ -519,7 +521,7 @@ public class GameState
 		return coverer;
 	}
 	
-	public boolean reactionApplies(ActiveUnit user, ActiveUnit target, FFTASkill sk, GameState state)
+	public boolean reactionApplies(ActiveUnit user, ActiveUnit target, FFTASkill sk)
 	{
 		FFTAReaction rx = target.unit.reaction;
 		
@@ -527,31 +529,29 @@ public class GameState
 		{
 			case COUNTER:
 			{
-				if (sk.IS_PHYSICAL)
-				{
-					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
-					for (int[] tile : targetableTiles)
-					{
-						if (tile[0] == user.x && tile[1] == user.y)
-							return true;
-					}
-				}
-									
+				if (sk.IS_PHYSICAL && targetInFightRange(user, target))
+					return true;	
 				return false;
 			}
 			
 			case BONECRUSHER:
 			{
+				if (sk.IS_PHYSICAL && targetInFightRange(user, target))
+					return true;	
+				return false;
+			}
+			
+			case REFLEX:
+			{
 				if (sk.NAME.equals("Fight"))
-				{
-					ArrayList<int[]> targetableTiles = state.getTargetableTiles(target, FFTASkill.FIGHT);
-					for (int[] tile : targetableTiles)
-					{
-						if (tile[0] == user.x && tile[1] == user.y)
-							return true;
-					}
-				}
-									
+					return true;
+				return false;
+			}
+			
+			case STRIKEBACK:
+			{
+				if (sk.NAME.equals("Fight") && targetInFightRange(user, target))
+					return true;
 				return false;
 			}
 			
@@ -560,5 +560,16 @@ public class GameState
 				return false;
 			}
 		}
+	}
+	
+	public boolean targetInFightRange(ActiveUnit user, ActiveUnit target)
+	{
+		ArrayList<int[]> targetableTiles = getTargetableTiles(target, FFTASkill.FIGHT);
+		for (int[] tile : targetableTiles)
+		{
+			if (tile[0] == user.x && tile[1] == user.y)
+				return true;
+		}
+		return false;
 	}
 }

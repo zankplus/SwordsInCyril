@@ -203,63 +203,90 @@ public class ActiveGame
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
+		state.reacting = false;
 		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y, false);
 		
 		System.out.println("Results length: " + allResults.length);
 		
+		state.reacting = true;
 		for (int i = 0; i < allResults.length; i++)
 		{
 			ActiveUnit target = state.units[allResults[i][0].target];
-			switch(target.unit.reaction)
+			if (state.reactionApplies(au, target, sk))
 			{
-				case COUNTER:
-					if (/*1*/	sk.IS_PHYSICAL 		&&
-						/*2*/	target.currHP > 0 	&&
-						/*3*/	au.currHP > 0 		&&
-						/*4*/	au != target 		&&
-						/*5*/	!allResults[i][allResults[i].length - 1].autoLife &&	
-						/*6*/	state.reactionApplies(au, target, sk, state))
-					{
-						System.out.println(target.unit.name + " counterattacks!");
-						sendReaction(target.id, FFTAReaction.COUNTER);
+				switch(target.unit.reaction)
+				{
+					case COUNTER:
+						if (/*1*/	sk.IS_PHYSICAL 		&&
+							/*2*/	target.currHP > 0 	&&
+							/*3*/	au.currHP > 0 		&&
+							/*4*/	au != target 		&&
+							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+						{
+							System.out.println(target.unit.name + " counterattacks!");
+							sendReaction(target.id, FFTAReaction.COUNTER);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
+						}
+						else
+							System.out.println(target.unit.name + " does not counterattack.");
+							
+						break;
 						
-						int facing = intermediateFacing(target.id, au.x, au.y);
-						faceUnit(target.id, facing);
+					case BONECRUSHER:
+						boolean hit = false;
+						for (int j = 0; j < allResults[i].length; j++)
+							if (allResults[i][j].success)
+								hit = true;
+							
+						if (/*1*/	hit					&&
+							/*2*/	target.currHP > 0 	&&
+							/*3*/	au.currHP > 0 		&&
+							/*4*/	au != target 		&&
+							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+						{
+							System.out.println(target.unit.name + " crushes bone!");
+							sendReaction(target.id, FFTAReaction.BONECRUSHER);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
+						}
+						else
+							System.out.println(target.unit.name + " does not crush bone.");
 						
-						executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
-					}
-					else
-						System.out.println(target.unit.name + " does not counterattack.");
-						
-					break;
+						break;
 					
-				case BONECRUSHER:
-					boolean hit = false;
-					for (int j = 0; j < allResults[i].length; j++)
-						if (allResults[i][j].success)
-							hit = true;
-						
-					if (/*1*/	hit					&&
-						/*2*/	target.currHP > 0 	&&
-						/*3*/	au.currHP > 0 		&&
-						/*4*/	au != target 		&&
-						/*5*/	!allResults[i][allResults[i].length - 1].autoLife &&
-						/*6*/	state.reactionApplies(au, target, sk, state))
+					case STRIKEBACK:
 					{
-						System.out.println(target.unit.name + " crushes bone!");
-						sendReaction(target.id, FFTAReaction.BONECRUSHER);
+						if (/*1*/	target.currHP > 0 	&&
+							/*2*/	au.currHP > 0 		&&
+							/*3*/	au != target 		)
+						{
+							System.out.println(target.unit.name + " strikes back!");
+							sendReaction(target.id, FFTAReaction.STRIKEBACK);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
+						}
+						break;
+					}
 						
+					case REFLEX:
+					{
 						int facing = intermediateFacing(target.id, au.x, au.y);
 						faceUnit(target.id, facing);
-						
-						executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
 					}
-					else
-						System.out.println(target.unit.name + " does not crush bone.");
-				
-				default:
-					System.out.println(target.unit.name + " makes no reaction.");
-					break;
+					
+					default:
+						System.out.println(target.unit.name + " makes no reaction.");
+						break;
+				}
 			}
 		}
 	}
@@ -353,12 +380,12 @@ public class ActiveGame
 				
 				// Determine the results of the current effect
 				SkillEffectResult prev = results[Math.max(0, j - 1)];
-				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false, bonecrusher);
+				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], state, false, bonecrusher);
 				
 				// Apply those results IF they are not effect1-dependent, or if they are but
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
 				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
-					effects[j].handler.applyEffect(results[j]);
+					effects[j].handler.applyEffect(results[j], state);
 			}
 			
 			// If unit switched for cover, return both units to their original locations 
@@ -388,12 +415,7 @@ public class ActiveGame
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 			player1.messageQueue.put(zm);
-			player2.messageQueue.put(zm);
-
- 
-			
-
-			
+			player2.messageQueue.put(zm);			
 		}
 		
 		// Remove boost, if necessary
