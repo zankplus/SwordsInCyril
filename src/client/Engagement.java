@@ -16,6 +16,7 @@ import javax.swing.text.html.HTMLDocument;
 import fftadata.ActiveUnit;
 import fftadata.EquipType;
 import fftadata.FFTAEquip;
+import fftadata.FFTAReaction;
 import fftadata.FFTASkill;
 import fftadata.GameState;
 import fftadata.SkillEffect;
@@ -315,7 +316,7 @@ public class Engagement
 		if (results[0].reflect)
 			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
 			
-		// determine whether the attack missed, and report so if it does
+		// determine whether the attack missed
 		for (int i = 0; i < results.length; i++)
 			if (results[i] != null && results[i].success)
 				miss = false;
@@ -357,7 +358,7 @@ public class Engagement
 		
 		
 		// Check auto-life trigger
-		if (!miss)
+		if (results[results.length - 1].autoLife)
 		{
 			boolean autoLifeRevived = state.checkAutoLife(target);
 			if (autoLifeRevived)
@@ -436,6 +437,31 @@ public class Engagement
 	public void receiveExit(String username)
 	{
 		window.appendToChat("<em><strong>" + username + " has left the room.</strong>");
+	}
+	
+	public void receiveReaction(int[] data)
+	{
+		FFTAReaction reaction = FFTAReaction.values()[data[1]];
+		ActiveUnit reactor = getUnit(data[0]);
+		int amt = data[2];
+		
+		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + reactor.unit.name +
+							"</strong>'s </em><span style=\"color:red\">" + reaction.toString() +
+							"<span style=\"color:gray\"><em> activates!");
+		
+		switch (reaction)
+		{
+			case ABSORB_MP:
+			{
+				state.applyMPHealing(data[0], amt);
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						"</strong> recovers <strong><span style=\"color:cyan\">" + amt + "</strong> MP!";
+				window.appendToChat(report);
+				break;
+			}
+			default:
+				break;
+		}
 	}
 	
 	public void beginGame()

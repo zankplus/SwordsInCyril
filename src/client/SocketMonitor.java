@@ -231,6 +231,11 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 					{
 						game.receiveExit((String) action.data);
 					}
+					
+					else if (action.type.equals(ZankGameActionType.REACTION))
+					{
+						game.receiveReaction((int[]) action.data);
+					}
 				}
 				else
 					System.out.println("received bad game message from server: " + msg);

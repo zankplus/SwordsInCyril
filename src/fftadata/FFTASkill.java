@@ -181,7 +181,7 @@ public enum FFTASkill implements Serializable
 	BOOST			("Boost", 			 0,  0, 0, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_BOOST}),
 	AIM_LEGS		("Aim: Legs", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_IMMOBILIZE}),
 	AIM_ARM			("Aim: Arm", 		 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_DISABLE}),
-	CUPID			("Cupid", 			 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	false,	true,	false,	false,	false,	true,	false,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_CHARM}),
+	CUPID			("Cupid", 			 0,  0, 0, 0, 0, 0, Targeting.AS_WEAPON,	Element.NULL,		true,	false,	false,	true,	false,	false,	false,	true,	false,	false,	false,	true,	false,	false,	false,	new SkillEffect[] {SkillEffect.ADD_CHARM}),
 	BURIAL			("Burial", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
 	TAKE_AIM		("Take Aim", 		 0, -1, 0, 0, 0, 0,	Targeting.AS_WEAPON,	Element.AS_WEAPON,	true,	false,	true,	true,	true,	false,	false,	true,	true,	false,	false,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.HALF_DAMAGE_NEVER_MISS}),
 	FASTER			("Faster", 			0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),

@@ -175,9 +175,18 @@ public class MapPanel extends JPanel
 	{
 		if (selectedTile != null)
 			System.out.println("Selected " + selectedTile.x + ", " + selectedTile.y + ", " + selectedTile.z);
+		
+		
+		
 		this.selectedTile = tile;
 		if (selectedTile != null)
 		{
+			if (selectedTile.unit == null)
+				System.out.println("nobody's here.");
+			else
+				System.out.println(selectedTile.unit.unit.name + "'s here!");
+			
+			
 			fgObjects.remove(selector);
 			selector.moveTo(selectedTile);
 			fgObjects.add(selector);
@@ -270,6 +279,7 @@ public class MapPanel extends JPanel
 					{
 						map.mapObjects.remove(map.mapData[old.x][old.y].fgobj);	// Clear the old unit's fgobject from the map
 						map.mapData[old.x][old.y].fgobj = null;					// and from its associated map tile
+						map.mapData[old.x][old.y].unit = null;					// old position no longer points to this unit
 						mpUnits.remove(i);	// Clear the old unit from the unit list
 						i = 6;				// Stop looping
 					}

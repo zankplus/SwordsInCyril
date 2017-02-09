@@ -52,7 +52,7 @@ public class FFTACalc
 	}
 	
 	public static int getATypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
-									  double hitFactor)
+									  GameState state, double hitFactor)
 	{
 		int hitRate = 0;
 		
@@ -69,7 +69,7 @@ public class FFTACalc
 		else // Steps 2-9 are skipped in the event of an automatic hit
 		{
 			// 2. Reaction check
-			if (reactionNegates(defender.unit.reaction, skill))
+			if (reactionNegates(attacker, defender, skill, state))
 				return 0;
 			
 			// 3. Retrieve defender's Evade stat
@@ -447,8 +447,31 @@ public class FFTACalc
 	
 	
 	// TODO: Make this do something
-	public static boolean reactionNegates(FFTAReaction rAbility, FFTASkill skill)
+	public static boolean reactionNegates(ActiveUnit attacker, ActiveUnit defender, FFTASkill sk,
+											GameState state)
 	{
+		if (state.reactionApplies(attacker, defender, sk, false))
+		{
+			switch (defender.unit.reaction)
+			{
+				case REFLEX:
+					if (!state.reacting)
+						return true;
+					return false;
+					
+				case STRIKEBACK:
+					if (!state.reacting)
+						return true;
+					return false;
+					
+				default:
+					return false;
+			}
+			
+		}
+		
+		
+		
 		return false;
 	}
 	
@@ -464,13 +487,110 @@ public class FFTACalc
 		return false;
 	}
 	
-	public static boolean equipmentNegates(ActiveUnit defender, StatusEffect sEff)
+	public static boolean equipmentNegates(ActiveUnit def, StatusEffect sEff)
 	{
+		boolean result = false;
+		switch (sEff)
+		{
+			case FROG:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_FROG, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case STOP:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_STOP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case SLOW:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLOW, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case CHARM:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CHARM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case IMMOBILIZE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_IMMOBILIZE, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case DISABLE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DISABLE, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case BERSERK:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BERSERK, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case DARKNESS:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BLIND, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case CONFUSE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CONFUSION, ItemEffect.MINDU_GEM, ItemEffect.RIBBON});
+				break;
+				
+			case DOOM:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DOOM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case SLEEP:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLEEP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case PETRIFY:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_PETRIFY, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case DEATH:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_KO, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case SILENCE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SILENCE, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case POISON:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_POISON, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case ADDLE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.RIBBON});
+				break;
+		}
+		
+		return result;
+	}
+	
+	private static boolean checkForItemEffects(ActiveUnit defender, ItemEffect[] effs)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			if (defender.unit.equips.slots[i] != FFTAEquip.NONE)
+				for (int j = 0; j < defender.unit.equips.slots[i].effects.length; j++)
+					for (int k = 0; k < effs.length; k++)
+						if (effs[k] == defender.unit.equips.slots[i].effects[j])
+						{
+							System.out.println("Blocked by " + effs[k]); 
+							return true;
+						}
+		}
+				
 		return false;
 	}
 	
 	public static boolean supportNegates(ActiveUnit defender, StatusEffect sEff)
 	{
+		if (defender.unit.support == FFTASupport.IMMUNITY &&
+			(sEff == StatusEffect.FROG 		||
+			sEff == StatusEffect.DARKNESS	||
+			sEff == StatusEffect.CONFUSE	||
+			sEff == StatusEffect.SLEEP		||	
+			sEff == StatusEffect.PETRIFY	||
+			sEff == StatusEffect.SILENCE	||
+			sEff == StatusEffect.POISON)	)
+		{
+			return true;
+		}
+		
 		return false;
 	}
 }

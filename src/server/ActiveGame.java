@@ -203,53 +203,122 @@ public class ActiveGame
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
-		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y);
+		state.reacting = false;
+		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y, false);
 		
-/*		for (int i = 0; i < allResults.length; i++)
-		{
-			String result;
-			for (int j = 0; j < allResults[i].length; j++)
-			{
-				result = j + ". ";
-				result += state.units[allResults[i][j].target].unit.name + "\t";
-				result += allResults[i][j].effect + "\t";
-				if (allResults[i][j].success)
-					result += "hit";
-				else
-					result += "miss";
-				
-				System.out.println(result);
-				
-			}
-		}*/
+		System.out.println("Results length: " + allResults.length);
 		
+		state.reacting = true;
 		for (int i = 0; i < allResults.length; i++)
 		{
 			ActiveUnit target = state.units[allResults[i][0].target];
-			switch(target.unit.reaction)
+			if (state.reactionApplies(au, target, sk, false))
 			{
-				case COUNTER:
-					if (/*1*/	sk.IS_PHYSICAL 		&&
-						/*2*/	target.currHP > 0 	&&
-						/*3*/	au.currHP > 0 		&&
-						/*4*/	au != target 		&&
-						/*5*/	state.reactionApplies(au, target, sk, state))
+				switch(target.unit.reaction)
+				{
+					case ABSORB_MP:
 					{
-						System.out.println(target.unit.name + " counterattacks!");
-					}
-					else
-						System.out.println(target.unit.name + " does not counterattack.");
+						boolean miss = true;
+						for (int j = 0; j < allResults[i].length; j++)
+							if (allResults[i][j] != null && allResults[i][j].success)
+								miss = false;
 						
-					break;
+						if (/*1*/ !miss &&
+							/*2*/ target.currHP > 0 &&	
+							/*3*/ target.status[StatusEffect.SLEEP.ordinal()] == 0 &&
+							/*4*/ target.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
+							/*5*/ target.status[StatusEffect.DISABLE.ordinal()] == 0 &&
+							/*6*/ target.status[StatusEffect.STOP.ordinal()] == 0)
+						{
+							int cost = sk.MP_COST;
+							if (au.unit.support == FFTASupport.HALF_MP)
+								cost /= 2;
+							else if (au.unit.support == FFTASupport.TURBO_MP)
+								cost *= 2;
+							
+							state.applyMPHealing(target.id, cost);
+							sendReaction(target.id, FFTAReaction.ABSORB_MP, cost);
+						}
+						break;
+					}
+				
+					case COUNTER:
+						if (/*1*/	sk.IS_PHYSICAL 		&&
+							/*2*/	target.currHP > 0 	&&
+							/*3*/	au.currHP > 0 		&&
+							/*4*/	au != target 		&&
+							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+						{
+							System.out.println(target.unit.name + " counterattacks!");
+							sendReaction(target.id, FFTAReaction.COUNTER, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
+						}
+						else
+							System.out.println(target.unit.name + " does not counterattack.");
+							
+						break;
+						
+					case BONECRUSHER:
+						boolean hit = false;
+						for (int j = 0; j < allResults[i].length; j++)
+							if (allResults[i][j].success)
+								hit = true;
+							
+						if (/*1*/	hit					&&
+							/*2*/	target.currHP > 0 	&&
+							/*3*/	au.currHP > 0 		&&
+							/*4*/	au != target 		&&
+							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+						{
+							System.out.println(target.unit.name + " crushes bone!");
+							sendReaction(target.id, FFTAReaction.BONECRUSHER, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
+						}
+						else
+							System.out.println(target.unit.name + " does not crush bone.");
+						
+						break;
 					
-				default:
-					System.out.println(target.unit.name + " makes no reaction.");
-					break;
+					case STRIKEBACK:
+					{
+						if (/*1*/	target.currHP > 0 	&&
+							/*2*/	au.currHP > 0 		&&
+							/*3*/	au != target 		)
+						{
+							System.out.println(target.unit.name + " strikes back!");
+							sendReaction(target.id, FFTAReaction.STRIKEBACK, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
+						}
+						break;
+					}
+						
+					case REFLEX:
+					{
+						int facing = intermediateFacing(target.id, au.x, au.y);
+						faceUnit(target.id, facing);
+					}
+					
+					default:
+						System.out.println(target.unit.name + " makes no reaction.");
+						break;
+				}
 			}
 		}
 	}
 	
-	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
+	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y, boolean bonecrusher)
+			throws InterruptedException
 	{
 		ActiveUnit user = state.units[actor];
 		
@@ -337,12 +406,12 @@ public class ActiveGame
 				
 				// Determine the results of the current effect
 				SkillEffectResult prev = results[Math.max(0, j - 1)];
-				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false);
+				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], state, false, bonecrusher);
 				
 				// Apply those results IF they are not effect1-dependent, or if they are but
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
 				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
-					effects[j].handler.applyEffect(results[j]);
+					effects[j].handler.applyEffect(results[j], state);
 			}
 			
 			// If unit switched for cover, return both units to their original locations 
@@ -364,15 +433,15 @@ public class ActiveGame
 			
 			// Add this target's results to master record
 			allResults[i] = results;
+
+			// Check for auto-life trigger on current target
+			results[results.length - 1].autoLife = state.checkAutoLife(state.units[targets.get(i)]);
 			
 			// Send the message
 			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 			player1.messageQueue.put(zm);
-			player2.messageQueue.put(zm);
-			
-			// Check for auto-life trigger on current target
-			state.checkAutoLife(state.units[targets.get(i)]);
+			player2.messageQueue.put(zm);			
 		}
 		
 		// Remove boost, if necessary
@@ -437,6 +506,16 @@ public class ActiveGame
 		return unit.dir;
 	}
 	
+	public void faceUnit(int unitNumber, int dir) throws InterruptedException
+	{
+		state.units[unitNumber].dir = dir;
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.WAIT, id, null, null,
+									new int[]{unitNumber, dir});
+		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+		player1.messageQueue.put(zm);
+		player2.messageQueue.put(zm);
+	}
+	
 	public void sendToAll(ZankMessage msg) throws InterruptedException
 	{
 		synchronized(userlist)
@@ -444,6 +523,15 @@ public class ActiveGame
 			for (ActiveUser user : userlist)
 					user.messageQueue.put(msg);
 		}
+	}
+	
+	public void sendReaction(int unit, FFTAReaction r, int x) throws InterruptedException
+	{
+		int[] data = new int[] {unit, r.ordinal(), x};
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.REACTION, id, null, null, data);
+		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+		player1.messageQueue.put(zm);
+		player2.messageQueue.put(zm);
 	}
 	
 	public ActiveUnit currentUnit()
