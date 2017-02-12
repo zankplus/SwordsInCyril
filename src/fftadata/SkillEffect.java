@@ -410,7 +410,7 @@ public enum SkillEffect implements Serializable
 		FFTASkill skill = result.skill;
 		
 		int hitRate;
-		if (neverMiss)
+		if (neverMiss && !FFTACalc.reactionNegates(user, target, skill, state))
 			hitRate = 100;
 		else
 			hitRate = FFTACalc.getATypeHitRate(user, target, skill, state, hitFactor);
@@ -651,7 +651,7 @@ public enum SkillEffect implements Serializable
 		else if (aType)
 			hitRate = FFTACalc.getATypeHitRate(user, target, skill, state, hitFactor);
 		else
-			hitRate = FFTACalc.getSTypeHitRate(user, target, sEff, hitFactor);
+			hitRate = FFTACalc.getSTypeHitRate(user, target, skill, state, sEff, hitFactor);
 		result.hitChance = hitRate;
 		
 		// Determine whether effect succeeds or fails

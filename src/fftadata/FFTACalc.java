@@ -119,8 +119,8 @@ public class FFTACalc
 		return hitRate;
 	}
 	
-	public static int getSTypeHitRate(ActiveUnit attacker, ActiveUnit defender, StatusEffect sEff,
-										double hitFactor)
+	public static int getSTypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill sk, 
+										GameState state, StatusEffect sEff, double hitFactor)
 	{
 		int hitRate;
 		// 1. Retrieve target's Status Resistance
@@ -130,9 +130,9 @@ public class FFTACalc
 		if (sEff == StatusEffect.CHARM && attacker.team == defender.team)
 			hitRate = 0;
 		
-		// 2. Status check | 3. Equipment check | 4. Immunity check
+		// 2. Status check | 3. Equipment check | 4. Immunity check | 4.5. Support Check
 		if (statusNegates(defender, sEff) || equipmentNegates(defender, sEff) ||
-				supportNegates(defender, sEff))
+				supportNegates(defender, sEff) || reactionNegates(attacker, defender, sk, state))
 			hitRate = 0;
 		else
 		{
@@ -464,13 +464,15 @@ public class FFTACalc
 						return true;
 					return false;
 					
+				case BLOCK_ARROWS:
+					if (!state.reacting)
+						return true;
+					return false;
+					
 				default:
 					return false;
-			}
-			
+			}	
 		}
-		
-		
 		
 		return false;
 	}

@@ -536,6 +536,17 @@ public class GameState
 				return false;
 			}
 		
+			case BLOCK_ARROWS:
+			{
+				EquipType eqType = user.unit.getWeapon(false).type; 
+				if ((sk.TARGETING == Targeting.AS_WEAPON || sk.POWER == -1) &&
+					(eqType == EquipType.BOW || eqType == EquipType.GREATBOW))
+				{
+					return true;
+				}
+				return false;
+			}
+			
 			case COUNTER:
 			{
 				if (sk.IS_PHYSICAL && targetInFightRange(user, target))
