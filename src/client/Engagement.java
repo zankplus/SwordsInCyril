@@ -478,6 +478,32 @@ public class Engagement
 				window.appendToChat(report);
 				break;
 			}
+			case LAST_HASTE:
+			{
+				state.applyStatus(reactor, StatusEffect.HASTE);
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						"</strong>" + StatusEffect.HASTE.REPORT;
+				window.appendToChat(report);
+				break;
+			}
+			
+			case LAST_QUICKEN:
+			{
+				state.applyStatus(reactor, StatusEffect.QUICK);
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						 "</strong>" + StatusEffect.QUICK.REPORT;
+				window.appendToChat(report);
+				break;
+			}
+			
+			case RETURN_FIRE:
+			{
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						 "</strong> throws the arrow back!";
+				window.appendToChat(report);
+				break;
+			}
+			
 			default:
 				break;
 		}

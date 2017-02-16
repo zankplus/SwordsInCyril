@@ -308,6 +308,12 @@ public class FFTACalc
 			else
 				power = attacker.unit.getWAtkEquipBonus();
 		}
+		
+		else if (skill.POWER == -2)
+		{
+			power = defender.unit.getWAtkEquipBonus();
+		}
+		
 		else
 		{
 			power = skill.POWER;
@@ -326,6 +332,8 @@ public class FFTACalc
 			Element element;
 			if (skill.ELEMENT == Element.AS_WEAPON)
 				element = attacker.unit.getWeapon(leftHand).element;
+			else if (skill.ELEMENT == Element.ENEMY_WEAP)
+				element = defender.unit.getWeapon(false).element;
 			else
 				element = skill.ELEMENT;
 			
@@ -465,6 +473,11 @@ public class FFTACalc
 					return false;
 					
 				case BLOCK_ARROWS:
+					if (!state.reacting)
+						return true;
+					return false;
+					
+				case RETURN_FIRE:
 					if (!state.reacting)
 						return true;
 					return false;

@@ -310,6 +310,28 @@ public class ActiveGame
 						break;
 					}
 					
+					case LAST_HASTE:
+					{
+						if (/*1*/ target.currHP <= (target.unit.maxHP / 4) &&
+							/*2*/ allResults[i][whichEffect].damage + target.currHP > target.unit.maxHP / 4)
+						{
+							state.applyStatus(target, StatusEffect.HASTE);
+							sendReaction(target.id, FFTAReaction.LAST_HASTE, 0);
+						}
+						break;
+					}
+					
+					case LAST_QUICKEN:
+					{
+						if (/*1*/ target.currHP <= (target.unit.maxHP / 4) &&
+							/*2*/ allResults[i][whichEffect].damage + target.currHP > target.unit.maxHP / 4)
+						{
+							state.applyStatus(target, StatusEffect.QUICK);
+							sendReaction(target.id, FFTAReaction.LAST_QUICKEN, 0);
+						}
+						break;
+					}
+					
 					case STRIKEBACK:
 					{
 						if (/*1*/	au.currHP > 0)
@@ -320,6 +342,19 @@ public class ActiveGame
 							int facing = intermediateFacing(target.id, au.x, au.y);
 							faceUnit(target.id, facing);
 							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
+						}
+						break;
+					}
+					
+					case RETURN_FIRE:
+					{
+						if (/*1*/ au.currHP > 0)
+						{
+							sendReaction(target.id, FFTAReaction.RETURN_FIRE, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							executeSkill(target.id, FFTASkill.RETURN_FIRE, au.x, au.y, false);
 						}
 						break;
 					}
@@ -460,6 +495,14 @@ public class ActiveGame
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
 				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
 					effects[j].handler.applyEffect(results[j], state);
+			}
+			
+			// Return Fire modifiers
+			if (state.reacting && actor == target)
+			{
+				results[0].success = true;
+				results[0].hitChance = 100;
+				results[0].damage *= 1.2 + Math.random() * 0.4;
 			}
 			
 			// Boost flag

@@ -117,6 +117,11 @@ public enum SkillEffect implements Serializable
 	{ 	return genericDamageEffect(result, state, 1, 1, preview, false, true, false, false, false,	false);		}	public String applyEffect(SkillEffectResult result, GameState state)
 	{	return applyDamage(result, state);																		}	}),
 	
+	RETURN_FIRE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, GameState state, boolean preview, boolean bonecrusher)
+	{ 	double rfBonus = 1.2 + 0.4 * Math.random();
+		return genericDamageEffect(result, state, 1, 1+rfBonus, preview, true, false, false, false, false,	true);	}	public String applyEffect(SkillEffectResult result, GameState state)
+	{	return applyDamage(result, state);																		}	}),
+	
 	DOUBLE_DAMAGE																						(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, GameState state, boolean preview, boolean bonecrusher)
 	{ 	return genericDamageEffect(result, state, 1, 2, preview, false, false, false, false, false, false);	}	public String applyEffect(SkillEffectResult result, GameState state)
 	{	return applyDamage(result, state);																		}	}),
@@ -433,7 +438,6 @@ public enum SkillEffect implements Serializable
 		
 		return result;
 	}
-	
 	
 	public static SkillEffectResult subdueEffect(SkillEffectResult result, GameState state, boolean preview)
 	{
@@ -1021,7 +1025,7 @@ public enum SkillEffect implements Serializable
 					if (healedSomething)
 						report += "<br>";
 					report += "<em><span style=\"color:gray\">......<strong>" + target.unit.name +
-							"</strong>'s " + sEff.NAME.toLowerCase() + " is dispelled!";
+							"</strong>'s " + sEff.NAME + " is dispelled!";
 					
 					healedSomething = true;
 				}			

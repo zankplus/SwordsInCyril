@@ -586,9 +586,25 @@ public class GameState
 				return (sk.IS_PHYSICAL && !sk.dealsMPDamage() && target.status[StatusEffect.AUTO_LIFE.ordinal()] == 0);
 			}
 			
+			case LAST_HASTE:
+			{
+				return damaging && target.status[StatusEffect.HASTE.ordinal()] == 0;
+			}
+			
+			case LAST_QUICKEN:
+			{
+				return damaging && target.status[StatusEffect.QUICK.ordinal()] == 0;
+			}
+			
 			case REFLEX:
 			{
 				return (sk.NAME.equals("Fight"));
+			}
+			
+			case RETURN_FIRE:
+			{
+				return (sk.NAME.equals("Fight") && (user.unit.getWeapon(false).type == EquipType.BOW ||
+						user.unit.getWeapon(false).type == EquipType.GREATBOW));
 			}
 			
 			case RETURN_MAGIC:
