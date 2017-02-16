@@ -362,6 +362,12 @@ public enum FFTASkill implements Serializable
 		EFFECTS = effects;
 	}
 	
+	public boolean dealsMPDamage()
+	{
+		return (this == FFTASkill.SOUL_SPHERE && this == FFTASkill.MANASTRIKE &&
+				this == FFTASkill.MAGICBREAK && this == FFTASkill.RASP && this == FFTASkill.MAGIC_HAMMER);
+	}
+	
 	public static boolean canUseSkill(FFTASkill sk, ActiveUnit au)
 	{
 		boolean result;

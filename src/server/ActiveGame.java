@@ -209,10 +209,22 @@ public class ActiveGame
 		System.out.println("Results length: " + allResults.length);
 		
 		state.reacting = true;
+		
+		int whichEffect;
+		
 		for (int i = 0; i < allResults.length; i++)
 		{
 			ActiveUnit target = state.units[allResults[i][0].target];
-			if (state.reactionApplies(au, target, sk, false))
+			
+			if (sk == FFTASkill.RAISE && target.currHP == 0)
+				whichEffect = 1;
+			else
+				whichEffect = 0;
+			
+			if (/*1*/ state.reactionApplies(au, target, sk, allResults[i][whichEffect].damage > 0) &&
+				/*2*/ target.currHP > 0 &&
+				/*3*/ !allResults[i][allResults[i].length - 1].autoLife &&
+				/*4*/ allResults[i][0].cover == -1)
 			{
 				switch(target.unit.reaction)
 				{
@@ -223,12 +235,7 @@ public class ActiveGame
 							if (allResults[i][j] != null && allResults[i][j].success)
 								miss = false;
 						
-						if (/*1*/ !miss &&
-							/*2*/ target.currHP > 0 &&	
-							/*3*/ target.status[StatusEffect.SLEEP.ordinal()] == 0 &&
-							/*4*/ target.status[StatusEffect.PETRIFY.ordinal()] == 0 &&
-							/*5*/ target.status[StatusEffect.DISABLE.ordinal()] == 0 &&
-							/*6*/ target.status[StatusEffect.STOP.ordinal()] == 0)
+						if (/*1*/ !miss)
 						{
 							int cost = sk.MP_COST;
 							if (au.unit.support == FFTASupport.HALF_MP)
@@ -242,12 +249,42 @@ public class ActiveGame
 						break;
 					}
 				
+					case AUTO_REGEN:
+					{
+						if( /*1*/ allResults[i][whichEffect].success)	// if damaging effect hit
+						{
+							state.applyStatus(target, StatusEffect.REGEN);
+							sendReaction(target.id, FFTAReaction.AUTO_REGEN, 0);
+						}
+						break;
+					}
+					
+					case BONECRUSHER:
+					{
+						boolean hit = false;
+						for (int j = 0; j < allResults[i].length; j++)
+							if (allResults[i][j].success)
+								hit = true;
+							
+						if (/*1*/	hit					&&
+							/*2*/	au.currHP > 0 		)
+						{
+							System.out.println(target.unit.name + " crushes bone!");
+							sendReaction(target.id, FFTAReaction.BONECRUSHER, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							
+							executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
+						}
+						else
+							System.out.println(target.unit.name + " does not crush bone.");
+						
+						break;
+					}
+					
 					case COUNTER:
-						if (/*1*/	sk.IS_PHYSICAL 		&&
-							/*2*/	target.currHP > 0 	&&
-							/*3*/	au.currHP > 0 		&&
-							/*4*/	au != target 		&&
-							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+						if (/*3*/	au.currHP > 0)
 						{
 							System.out.println(target.unit.name + " counterattacks!");
 							sendReaction(target.id, FFTAReaction.COUNTER, 0);
@@ -262,36 +299,20 @@ public class ActiveGame
 							
 						break;
 						
-					case BONECRUSHER:
-						boolean hit = false;
-						for (int j = 0; j < allResults[i].length; j++)
-							if (allResults[i][j].success)
-								hit = true;
-							
-						if (/*1*/	hit					&&
-							/*2*/	target.currHP > 0 	&&
-							/*3*/	au.currHP > 0 		&&
-							/*4*/	au != target 		&&
-							/*5*/	!allResults[i][allResults[i].length - 1].autoLife)
+					case DRAGONHEART:
+					{
+						if (/*1*/ allResults[i][whichEffect].success)
 						{
-							System.out.println(target.unit.name + " crushes bone!");
-							sendReaction(target.id, FFTAReaction.BONECRUSHER, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							
-							executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
+							state.applyStatus(target, StatusEffect.AUTO_LIFE);
+							sendReaction(target.id, FFTAReaction.DRAGONHEART, 0);
 						}
-						else
-							System.out.println(target.unit.name + " does not crush bone.");
 						
 						break;
+					}
 					
 					case STRIKEBACK:
 					{
-						if (/*1*/	target.currHP > 0 	&&
-							/*2*/	au.currHP > 0 		&&
-							/*3*/	au != target 		)
+						if (/*1*/	au.currHP > 0)
 						{
 							System.out.println(target.unit.name + " strikes back!");
 							sendReaction(target.id, FFTAReaction.STRIKEBACK, 0);
@@ -302,7 +323,26 @@ public class ActiveGame
 						}
 						break;
 					}
+					
+					case RETURN_MAGIC:
+					{
+						int mpCost = sk.MP_COST;
+						if (target.unit.support == FFTASupport.HALF_MP)
+							mpCost /= 2;
+						else if (target.unit.support == FFTASupport.TURBO_MP)
+							mpCost *= 2;
 						
+						if (/*1*/	au.currHP > 0 &&
+							/*2*/	mpCost < target.currMP)
+						{
+							sendReaction(target.id, FFTAReaction.RETURN_MAGIC, 0);
+							
+							int facing = intermediateFacing(target.id, au.x, au.y);
+							faceUnit(target.id, facing);
+							executeSkill(target.id, sk, au.x, au.y, false);
+						}
+					}
+					
 					case REFLEX:
 					{
 						int facing = intermediateFacing(target.id, au.x, au.y);
@@ -313,6 +353,14 @@ public class ActiveGame
 						System.out.println(target.unit.name + " makes no reaction.");
 						break;
 				}
+			}
+			
+			// If unit switched for cover, return both units to their original locations 
+			if (state.units[target.id].switchedInFor != -1)
+			{
+				allResults[i][0].cover = target.id;
+				state.swapUnits(target.id, target.switchedInFor);
+				target.switchedInFor = -1;
 			}
 		}
 	}
@@ -326,14 +374,14 @@ public class ActiveGame
 		state.expendMP(sk);
 		
 		// Find skill's targets
-		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor]);
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor], state.reacting);
 		
 		// Boost check  
 		boolean clearBoostAfterExecuting = (state.units[actor].status[StatusEffect.BOOST.ordinal()] > 0 && 
 											sk != FFTASkill.BOOST);
 		
 		// Cover check
-		if (sk.COVERABLE)
+		if (sk.COVERABLE && !state.reacting)	// Cover doesn't apply to reactions
 		{
 			int k;
 			for (int i = 0; i < targets.size(); i++)
@@ -349,7 +397,7 @@ public class ActiveGame
 			}
 			
 			// Find targets again using new locations
-			targets = state.getTargets(x, y, sk, state.units[actor]);
+			targets = state.getTargets(x, y, sk, state.units[actor], false);
 		}
 		
 		// Generate effect list
@@ -412,15 +460,6 @@ public class ActiveGame
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
 				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
 					effects[j].handler.applyEffect(results[j], state);
-			}
-			
-			// If unit switched for cover, return both units to their original locations 
-			if (state.units[target].switchedInFor != -1)
-			{
-				ActiveUnit au = state.units[target];
-				results[0].cover = au.id;
-				state.swapUnits(au.id, au.switchedInFor);
-				au.switchedInFor = -1;
 			}
 			
 			// Boost flag

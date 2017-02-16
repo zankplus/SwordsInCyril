@@ -100,11 +100,12 @@ public class Engagement
 	
 	public void sendAction(int user, FFTASkill sk, int x, int y) throws IOException
 	{
-		int[] data = new int[4];
+		int[] data = new int[5];
 		data[0] = user;
 		data[1] = sk.ordinal();
 		data[2] = x;
 		data[3] = y;
+		data[4] = state.reacting ? 1 : 0;
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
 		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
@@ -280,9 +281,11 @@ public class Engagement
 	{
 		FFTASkill sk = FFTASkill.values[data[1]];
 		int user = data[0], x = data[2], y = data[3];
-		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user]);
+		boolean restrictAoE = data[4] != 0 ? true : false;
+			
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user], restrictAoE);
 		
-		if (sk == FFTASkill.FIGHT)
+		if (sk.NAME.equals("Fight"))
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
 				"</strong> attacks <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		else
@@ -459,6 +462,22 @@ public class Engagement
 				window.appendToChat(report);
 				break;
 			}
+			case AUTO_REGEN:
+			{
+				state.applyStatus(reactor, StatusEffect.REGEN);
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						 "</strong>" + StatusEffect.REGEN.REPORT;
+				window.appendToChat(report);
+				break;
+			}
+			case DRAGONHEART: 
+			{
+				state.applyStatus(reactor, StatusEffect.AUTO_LIFE);
+				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
+						 "</strong>" + StatusEffect.AUTO_LIFE.REPORT;
+				window.appendToChat(report);
+				break;
+			}
 			default:
 				break;
 		}
@@ -538,7 +557,7 @@ public class Engagement
 	
 	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user)
 	{
-		return state.getTargets(x,  y, sk, user);
+		return state.getTargets(x,  y, sk, user, false);
 	}
 	
 	public GameState getState()

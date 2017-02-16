@@ -347,7 +347,7 @@ public class GameState
 	// Because this function is only called by the click handler when selecting a space it has
 	// already confirmed is within your targeting range, the getTargets() method can safely
 	// assume that the selected tile is within range
-	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user)
+	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user, boolean restrictAoE)
 	{
 		ArrayList<Integer> result = new ArrayList<Integer>();
 		
@@ -370,6 +370,10 @@ public class GameState
 		
 		// If the skill uses free selection
 		if (targ == Targeting.FREE_SELECT || targ == Targeting.SELF_CENTER)
+		{
+			if (restrictAoE)
+				radius = 0;
+			
 			for (int i = 0; i < units.length; i++)
 			{
 				if (isValidTarget(user, units[i], sk))
@@ -382,7 +386,8 @@ public class GameState
 						result.add(i);
 				}
 			}
-
+		}
+		
 		// Directional targeting
 		else if (targ == Targeting.DIRECTIONAL)
 		{
@@ -527,15 +532,29 @@ public class GameState
 	{
 		FFTAReaction rx = target.unit.reaction;
 		
+		// Status check
+		if (/*3*/ target.status[StatusEffect.SLEEP.ordinal()] != 0 ||
+			/*4*/ target.status[StatusEffect.PETRIFY.ordinal()] != 0 ||
+			/*5*/ target.status[StatusEffect.DISABLE.ordinal()] != 0 ||
+			/*6*/ target.status[StatusEffect.STOP.ordinal()] != 0 ||
+			/*5*/ user == target)
+		{
+			return false;
+		}
+			
+		
 		switch(rx)
 		{
 			case ABSORB_MP:
 			{
-				if (sk.TRIGGER_ABS_MP)
-					return true;
-				return false;
+				return (sk.TRIGGER_ABS_MP && user != target);
 			}
 		
+			case AUTO_REGEN:
+			{
+				return (damaging && user != target);
+			}
+			
 			case BLOCK_ARROWS:
 			{
 				EquipType eqType = user.unit.getWeapon(false).type; 
@@ -547,39 +566,39 @@ public class GameState
 				return false;
 			}
 			
-			case COUNTER:
-			{
-				if (sk.IS_PHYSICAL && targetInFightRange(user, target))
-					return true;	
-				return false;
-			}
-			
 			case BONECRUSHER:
 			{
-				if (sk.IS_PHYSICAL && targetInFightRange(user, target))
-					return true;	
-				return false;
+				return sk.IS_PHYSICAL && !sk.dealsMPDamage() && targetInFightRange(user, target);
 			}
 			
-			case REFLEX:
+			case COUNTER:
 			{
-				if (sk.NAME.equals("Fight"))
-					return true;
-				return false;
-			}
-			
-			case STRIKEBACK:
-			{
-				if (sk.NAME.equals("Fight") && targetInFightRange(user, target))
-					return true;
-				return false;
+				return sk.IS_PHYSICAL && !sk.dealsMPDamage() && targetInFightRange(user, target);
 			}
 			
 			case DAMAGE_TO_MP:
 			{
-				if (damaging && target.currMP > 0)
-					return true;
-				return false;
+				return (damaging && target.currMP > 0);
+			}
+			
+			case DRAGONHEART:
+			{
+				return (sk.IS_PHYSICAL && !sk.dealsMPDamage() && target.status[StatusEffect.AUTO_LIFE.ordinal()] == 0);
+			}
+			
+			case REFLEX:
+			{
+				return (sk.NAME.equals("Fight"));
+			}
+			
+			case RETURN_MAGIC:
+			{
+				return (sk.TRIGGER_RET_MAG);
+			}
+			
+			case STRIKEBACK:
+			{
+				return (sk.NAME.equals("Fight") && targetInFightRange(user, target));
 			}
 			
 			default:

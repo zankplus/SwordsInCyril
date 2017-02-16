@@ -652,15 +652,15 @@ enum ItemEffect
 	HEAL_HP("Heal's the target's HP"), AUTO_RAISE("Auto-Raise"), AUTO_REFLECT("Auto-Reflect");
 	
 	final static ItemEffect[][] elemEffs = { {ABSB_FIRE, NULL_FIRE, HALF_FIRE, WEAK_FIRE},
-											 {ABSB_ICE, NULL_ICE, HALF_ICE, WEAK_ICE},
 											 {ABSB_LIGHTNING, NULL_LIGHTNING, HALF_LIGHTNING, WEAK_LIGHTNING},
+											 {ABSB_ICE, NULL_ICE, HALF_ICE, WEAK_ICE},
 											 {ABSB_WIND, NULL_WIND, HALF_WIND, WEAK_WIND},
 											 {ABSB_EARTH, NULL_EARTH, HALF_EARTH, WEAK_EARTH},
 											 {ABSB_WATER, NULL_WATER, HALF_WATER, WEAK_WATER},
 											 {ABSB_HOLY, NULL_HOLY, HALF_HOLY, WEAK_HOLY},
 											 {ABSB_DARK, NULL_DARK, HALF_DARK, WEAK_DARK}};
 	
-	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_ICE, ENHN_LIGHTNING, ENHN_WIND,
+	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_LIGHTNING, ENHN_ICE, ENHN_WIND,
 										   ENHN_EARTH, ENHN_WATER, ENHN_HOLY, ENHN_DARK };
 	
 	
