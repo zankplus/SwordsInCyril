@@ -509,6 +509,11 @@ public class Engagement
 		}
 	}
 	
+	public void receiveTurnOrder(int[] data)
+	{
+		window.updateTurnOrder(data);
+	}
+	
 	public void beginGame()
 	{
 		ArrayList<ActiveUnit> otherTeam;

@@ -232,9 +232,16 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 						game.receiveExit((String) action.data);
 					}
 					
+					// REACTION: A unit's R-Ability has activated
 					else if (action.type.equals(ZankGameActionType.REACTION))
 					{
 						game.receiveReaction((int[]) action.data);
+					}
+					
+					// TURN_ORDER: An able unit's turn has begun and the turn order must be updated
+					else if (action.type.equals(ZankGameActionType.TURN_ORDER))
+					{
+						game.receiveTurnOrder((int[]) action.data); 
 					}
 				}
 				else

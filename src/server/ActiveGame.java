@@ -1,14 +1,9 @@
 package server;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.*;
-
-import javax.swing.JOptionPane;
 
 import fftadata.*;
 import zank.*;
@@ -178,6 +173,64 @@ public class ActiveGame
 			// Advance to the next turn
 			advanceTurn();
 		}
+		
+		// If this turn isn't being skipped, send a turn order update
+		else
+		{
+			za = new ZankGameAction(ZankGameActionType.TURN_ORDER, id, null, null,
+					predictTurnOrder());
+			zm = new ZankMessage(ZankMessageType.GAME, null, za);
+			player1.messageQueue.put(zm);
+			player2.messageQueue.put(zm);
+		}
+	}
+	
+	public int[] predictTurnOrder()
+	{
+		boolean keepGoing = true;
+		int round = 0;
+		
+		
+		
+		ArrayList<Turn> turnList = new ArrayList<Turn>();
+		
+		int speed = state.units[state.currentUnit].unit.getTotalSpeed();
+		Turn wait = new Turn(-5, 500.0 / speed);
+		Turn actOnly = new Turn(-7, 700.0 / speed);
+		Turn moveOnly = new Turn(-8, 800.0 / speed);
+		Turn moveAct = new Turn(-10, 1000.0 / speed);
+		
+		turnList.add(wait);
+		turnList.add(actOnly);
+		turnList.add(moveOnly);
+		turnList.add(moveAct);
+		
+		while (keepGoing)
+		{
+			keepGoing = false;
+			for (int i = 0; i < state.units.length; i++)
+			{
+				if (!(i == state.currentUnit && round == 1) && state.units[i].currHP > 0)
+				{
+					double ticksTilTurn = (1000.0 * (round + 1) - (state.units[i].counter + 
+							state.units[i].reserve)) / state.units[i].unit.getTotalSpeed();
+					if (turnList.size() < 20 || ticksTilTurn < turnList.get(19).position)
+					{
+						Turn to = new Turn(i, ticksTilTurn);
+						turnList.add(to);
+						Collections.sort(turnList);
+						keepGoing = true;
+					}
+				}
+			}
+			round++;
+		}
+		
+		int[] turnOrder = new int[20];
+		for (int i = 0; i < 20; i++)
+			turnOrder[i] = turnList.get(i).unit;
+		
+		return turnOrder;
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
@@ -619,5 +672,30 @@ public class ActiveGame
 	public ActiveUnit currentUnit()
 	{
 		return state.units[state.currentUnit];
+	}
+	
+	class Turn implements Comparable<Turn>
+	{ 
+		int unit; double position;
+		public Turn(int unit, double position)
+		{
+			this.unit = unit;
+			this.position = position;
+		}
+		
+		@Override
+		public int compareTo(Turn t)
+		{
+			if (t.position > position)
+				return -1;
+			else if (t.position < position)
+				return 1;
+			else if (this.unit < 0)	// for non-unit predictors
+				return 1;
+			else if (state.units[unit].priority > state.units[t.unit].priority)
+				return -1;
+			else
+				return 1;
+		}
 	}
 }

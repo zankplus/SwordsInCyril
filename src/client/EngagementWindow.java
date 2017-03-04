@@ -62,6 +62,8 @@ public class EngagementWindow extends JFrame
 	
 	EngagementWindowRosterPanel rosterPanel;
 
+	private JPanel turnOrderPanel;
+	public TurnOrderBoy wait, actOnly, moveOnly, moveAct;
 	
 	
 	
@@ -69,8 +71,11 @@ public class EngagementWindow extends JFrame
 	/**
 	 * Create the frame.
 	 */
+	
+	
 	public EngagementWindow(Engagement game)
 	{
+		wait = new TurnOrderBoy("Wait");
 		this.game = game;
 		
 		try {
@@ -156,9 +161,8 @@ public class EngagementWindow extends JFrame
 		rosterPanel = new EngagementWindowRosterPanel(this);
 		mapPanel = new MapPanel(this);
 		
-		JPanel turnOrderPanel = new JPanel();
-		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
-		turnOrderPanel.setPreferredSize(new Dimension(80, 10));
+		turnOrderPanel = new JPanel();
+		turnOrderPanel.setPreferredSize(new Dimension(96, 400));
 		turnOrderPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
 		
@@ -203,8 +207,39 @@ public class EngagementWindow extends JFrame
 		
 		// Set up other team's units
 		mapPanel.beginGame(otherTeam);
+		
+		// Initialize turn order panel
+		wait = new TurnOrderBoy("Wait");
+		actOnly = new TurnOrderBoy("Act Only");
+		moveOnly = new TurnOrderBoy("Move Only");
+		moveAct = new TurnOrderBoy("Move & Act");
+		
+		turnOrderPanel.setLayout(new GridLayout(20, 1, 0, 0));
+
 	}
-	
+
+	// update turn order display
+	public void updateTurnOrder(int[] order)
+	{
+		turnOrderPanel.removeAll();
+		for (int i = 0; i < order.length; i++)
+		{
+			if (order[i] >= 0)
+				turnOrderPanel.add(new TurnOrderBoy(game.getUnits()[order[i]]));
+			else if (order[i] == -5)
+				turnOrderPanel.add(wait);
+			else if (order[i] == -7)
+				turnOrderPanel.add(actOnly);
+			else if (order[i] == -8)
+				turnOrderPanel.add(moveOnly);
+			else if (order[i] == -10)
+				turnOrderPanel.add(moveAct);
+			else
+				System.out.println("Notice: Invalid index given for turn order update");
+		}
+		
+		turnOrderPanel.repaint();
+	}
 	
 	public void beginTargetingMode(FFTASkill sk)
 	{
@@ -448,6 +483,7 @@ public class EngagementWindow extends JFrame
 		mapPanel.selectTarget(clicks);
 	}
 	
+
 	class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
 	{
 		Engagement game;
@@ -501,6 +537,110 @@ public class EngagementWindow extends JFrame
 					}
 				}
 			});
+		}
+	}
+	
+	class TurnOrderBoy extends JPanel implements Comparable<TurnOrderBoy>
+	{
+		ActiveUnit unit;
+		double position;
+		
+		public TurnOrderBoy(ActiveUnit unit)
+		{
+			this.unit = unit;
+			position = 0;
+			
+			FlowLayout flowLayout_1 = (FlowLayout) getLayout();
+			flowLayout_1.setAlignment(FlowLayout.LEFT);
+			flowLayout_1.setVgap(1);
+			flowLayout_1.setHgap(1);
+			setPreferredSize(new Dimension(96, 20));
+			
+			TOJobIconPanel panel = new TOJobIconPanel(unit);
+			panel.setPreferredSize(new Dimension(32, 16));
+			panel.setOpaque(false);
+			add(panel);
+			
+			if (unit.team == 1)
+				setBackground(new Color(192, 192, 248));
+			else
+				setBackground(new Color(248, 192, 192));
+			
+			JLabel lblUnitName;
+			lblUnitName = new JLabel(" " + unit.unit.name);
+			lblUnitName.setFont(new Font("Tahoma", Font.BOLD, 11));
+			
+			add(lblUnitName);
+			repaint();
+		}
+
+		public TurnOrderBoy(String special)
+		{
+			this.unit = null;
+			this.position = position;
+			
+			FlowLayout flowLayout_1 = (FlowLayout) getLayout();
+			flowLayout_1.setAlignment(FlowLayout.LEFT);
+			flowLayout_1.setVgap(1);
+			flowLayout_1.setHgap(1);
+			setPreferredSize(new Dimension(96, 20));
+			setBackground(new Color(192, 248, 192));
+			
+			JLabel lblChevrons = new JLabel(">>>>");
+			JLabel lblAction = new JLabel(" " + special);
+			lblAction.setFont(new Font("Tahoma", Font.PLAIN, 11));
+			
+			add(lblChevrons);
+			add(lblAction);
+			repaint();
+		}
+		
+		@Override
+		public int compareTo(TurnOrderBoy to)
+		{
+			if (to.position > position)
+				return -1;
+			else if (to.position < position)
+				return 1;
+			else if (unit == null || to.unit == null)
+				return 1;
+			else if (to.unit.priority > unit.priority)
+				return -1;
+			else
+				return 1;
+		}	
+	}
+	
+	class TOJobIconPanel extends JPanel
+	{
+		BufferedImage icon;
+		String jobName;
+		
+		public TOJobIconPanel(ActiveUnit au)
+		{
+			super();
+			if (au != null)
+				jobName = au.unit.job.name();
+			update();
+		}
+		
+		public void update()
+		{
+			try {
+				if (jobName != null)
+					icon = ImageIO.read(new File("resources/icons/icon_" + jobName + ".png"));
+				else
+					icon = null;
+			} catch (IOException e) {}
+			repaint();
+		}
+		
+		@Override
+		protected void paintComponent(Graphics g)
+		{
+			super.paintComponent(g); 
+			if (icon != null)
+				g.drawImage(icon, 0, 0, null);
 		}
 	}
 }
