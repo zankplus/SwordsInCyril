@@ -487,13 +487,120 @@ public class FFTACalc
 		return false;
 	}
 	
-	public static boolean equipmentNegates(ActiveUnit defender, StatusEffect sEff)
+	public static boolean equipmentNegates(ActiveUnit def, StatusEffect sEff)
 	{
+		boolean result = false;
+		switch (sEff)
+		{
+			case FROG:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_FROG, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case STOP:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_STOP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case SLOW:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLOW, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case CHARM:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CHARM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case IMMOBILIZE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_IMMOBILIZE, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case DISABLE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DISABLE, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case BERSERK:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BERSERK, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case DARKNESS:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BLIND, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case CONFUSE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CONFUSION, ItemEffect.MINDU_GEM, ItemEffect.RIBBON});
+				break;
+				
+			case DOOM:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DOOM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case SLEEP:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLEEP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case PETRIFY:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_PETRIFY, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case DEATH:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_KO, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
+				break;
+				
+			case SILENCE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SILENCE, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case POISON:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_POISON, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
+				break;
+				
+			case ADDLE:
+				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.RIBBON});
+				break;
+		}
+		
+		
+		
+//		NULL_FROG("[null] Frog"), NULL_STOP("[null] Stop"), NULL_SLOW("[null] Slow"), NULL_CHARM("[null] Charm"),
+//		NULL_IMMOBILIZE("[null] Immobilize"), NULL_DISABLE("[null] Disable"), NULL_BERSERK("[null] Berserk"),
+//		NULL_BLIND("[null] Blind"), NULL_CONFUSION("[null] Confusion"), NULL_DOOM("[null] Doom"), NULL_SLEEP("[null] Sleep"),
+//		NULL_PETRIFY("[null] Petrify"), NULL_KO("[null] "), NULL_SILENCE("[null] Silence"), NULL_POISON("[null] Poison"),
+//		RIBBON("[null] All (almost)"), CACHUSHA("[null] KO/Stone/Confuse/Berserk/Stop/Charm/Sleep"),
+//		BARETTE("[null] Zombie/Darkness/Silence/Frog/Poison/Slow/Immobilize/Disable/Doom"),
+//		MINDU_GEM("[null] Petrify/Frog/Confuse/Poison/Blind/Silence"),
+		
+		return result;
+	}
+	
+	private static boolean checkForItemEffects(ActiveUnit defender, ItemEffect[] effs)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			if (defender.unit.equips.slots[i] != FFTAEquip.NONE)
+				for (int j = 0; j < defender.unit.equips.slots[i].effects.length; j++)
+					for (int k = 0; k < effs.length; k++)
+						if (effs[k] == defender.unit.equips.slots[i].effects[j])
+						{
+							System.out.println("Blocked by " + effs[k]); 
+							return true;
+						}
+		}
+				
 		return false;
 	}
 	
 	public static boolean supportNegates(ActiveUnit defender, StatusEffect sEff)
 	{
+		if (defender.unit.support == FFTASupport.IMMUNITY &&
+			(sEff == StatusEffect.FROG 		||
+			sEff == StatusEffect.DARKNESS	||
+			sEff == StatusEffect.CONFUSE	||
+			sEff == StatusEffect.SLEEP		||	
+			sEff == StatusEffect.PETRIFY	||
+			sEff == StatusEffect.SILENCE	||
+			sEff == StatusEffect.POISON)	)
+		{
+			return true;
+		}
+		
 		return false;
 	}
 }
