@@ -190,8 +190,6 @@ public class ActiveGame
 		boolean keepGoing = true;
 		int round = 0;
 		
-		
-		
 		ArrayList<Turn> turnList = new ArrayList<Turn>();
 		
 		int speed = state.units[state.currentUnit].unit.getTotalSpeed();
@@ -228,7 +226,11 @@ public class ActiveGame
 		
 		int[] turnOrder = new int[20];
 		for (int i = 0; i < 20; i++)
+		{
 			turnOrder[i] = turnList.get(i).unit;
+			if (turnOrder[i] >= 0)
+				System.out.println(turnList.get(i));
+		}
 		
 		return turnOrder;
 	}
@@ -696,6 +698,12 @@ public class ActiveGame
 				return -1;
 			else
 				return 1;
+		}
+		
+		public String toString()
+		{
+			return state.units[unit].unit.name + "\t" + state.units[unit].counter + " + " +
+					state.units[unit].reserve + "\t" + position;  
 		}
 	}
 }

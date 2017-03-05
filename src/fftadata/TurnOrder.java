@@ -40,8 +40,8 @@ public ActiveUnit[] units;
 		
 		if (max.counter >= 1000)
 		{
-			int baseReserve = Math.min(max.counter - 1000, 500);
-//			int baseReserve = max.counter - 1000;
+//			int baseReserve = Math.min(max.counter - 1000, 500);
+			int baseReserve = max.counter - 1000;
 			
 			
 			for (ActiveUnit au : units)
@@ -50,7 +50,7 @@ public ActiveUnit[] units;
 				{
 					int res = Math.min(baseReserve, au.counter);
 					au.counter -= res;
-					au.reserve = res;
+					au.reserve = Math.min(res, 500);
 				}
 			}
 		}
