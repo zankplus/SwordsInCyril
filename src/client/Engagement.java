@@ -112,6 +112,24 @@ public class Engagement
 		client.sendZankMessage(message);
 	}
 	
+	public void sendDoublecast(int user1, FFTASkill sk1, int x1, int y1,
+							   int user2, FFTASkill sk2, int x2, int y2) throws IOException
+	{
+		int[] data = new int[8];
+		data[0] = user1;
+		data[1] = sk1.ordinal();
+		data[2] = x1;
+		data[3] = y1; 
+		data[4] = state.reacting ? 1 : 0;
+		data[5] = sk2.ordinal();
+		data[6] = x2;
+		data[7] = y2;
+		
+		action = new ZankGameAction(ZankGameActionType.DOUBLECAST, gameID, null, null, data);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		client.sendZankMessage(message);
+	}
+	
 	public void sendWait(int dir) throws IOException
 	{
 		int[] data = {state.currentUnit, dir};
@@ -296,6 +314,17 @@ public class Engagement
 		window.updateUnitPreview(currentID());
 	}
 	
+	public void receiveDoublecast(int[] data)
+	{
+		int user = data[0];
+		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
+					"</strong> uses Doublecast!");
+		FFTASkill sk1 = FFTASkill.values[data[2]], sk2 = FFTASkill.values[data[5]];
+		state.expendMP(sk1);
+		state.expendMP(sk2);
+		window.updateUnitPreview(currentID());
+	}
+	
 	// HIT: apply the effects of skills specified and announce the results in chat
 	public void receiveHit(SkillEffectResult[] results)
 	{
@@ -375,8 +404,16 @@ public class Engagement
 				window.updateUnitPreview(target.id);
 			}
 		}
+	}
+	
+	// DCHIT: display the individual skill name before applying the results
+	public void receiveDCHit(SkillEffectResult[] results)
+	{
+		FFTASkill sk = results[0].skill;
+		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
+				"</strong> uses " + sk.NAME + "!");
 		
-		
+		receiveHit(results);
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel

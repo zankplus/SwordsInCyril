@@ -44,7 +44,7 @@ public enum FFTASkill implements Serializable
 	BLIZZARA		("Blizzara",		12, 40, 4, 0, 1, 2, Targeting.FREE_SELECT,	Element.ICE,		true,	false,	true,	true,	false,	true,	false,	false,	true,	true,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
 	BLIZZAGA		("Blizzaga", 		24, 50, 4, 0, 1, 3, Targeting.FREE_SELECT,	Element.ICE,		true,	false,	true,	true,	false,	true,	false,	false,	true,	true,	true,	true,	true,	true,	true,	new SkillEffect[] {SkillEffect.REGULAR_DAMAGE}),
 	SLEEP			("Sleep", 			10,  0, 4, 0, 1, 2, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	true,	false,	true,	new SkillEffect[] {SkillEffect.ADD_SLEEP}),
-	DOUBLECAST		("Doublecast", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	null),
+	DOUBLECAST		("Doublecast", 		0, 0, 0, 0, 0, 0, null, null, true,	false,	true,	true,	false,	false,	false,	false,	false,	false,	false,	false,	false,	false,	true,	null),
 	QUICKEN			("Quicken", 		24,  0, 3, 0, 0, 0, Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	false,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_QUICK}),
 	SLOW			("Slow", 			12, 0, 3, 0, 1, 2,	Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	true,	false,	true,	new SkillEffect[] {SkillEffect.ADD_SLOW}),
 	REFLECT			("Reflect",			8,  0, 3, 0, 0, 0,  Targeting.FREE_SELECT,	Element.NULL,		true,	false,	true,	true,	false,	true,	false,	false,	false,	true,	true,	true,	false,	false,	true,	new SkillEffect[] {SkillEffect.ADD_REFLECT}),
@@ -369,7 +369,7 @@ public enum FFTASkill implements Serializable
 				this == FFTASkill.MAGICBREAK && this == FFTASkill.RASP && this == FFTASkill.MAGIC_HAMMER);
 	}
 	
-	public static boolean canUseSkill(FFTASkill sk, ActiveUnit au)
+	public static boolean canUseSkill(FFTASkill sk, ActiveUnit au, int offset)
 	{
 		boolean result;
 		
@@ -381,7 +381,7 @@ public enum FFTASkill implements Serializable
 			mpCost *= 2;
 		
 		// Does the unit have sufficient MP for this skill?
-		result = mpCost <= au.currMP;
+		result = mpCost <= (au.currMP - offset);
 		
 		// Is the unit silenced and trying to use a skill that is blocked by silence?
 		result = result && (au.status[StatusEffect.SILENCE.ordinal()] == 0 || sk.IGNORE_SILENCE);

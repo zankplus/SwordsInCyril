@@ -208,13 +208,25 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 						game.receiveAct((int[]) action.data);
 					}
 					
-					// HIT: the server has indicated that a unit in combat has taken damage
+					// DOUBLECAST: the server has indicated that a unit is using the Doublecast ability
+					else if (action.type.equals(ZankGameActionType.DOUBLECAST))
+					{
+						game.receiveDoublecast((int[]) action.data);
+					}
+					
+					// HIT: the server has sent the results of a combat action
 					else if (action.type.equals(ZankGameActionType.HIT))
 					{
 						game.receiveHit((SkillEffectResult[]) action.data);
 					}
+					
+					// DCHIT: the server has sent the results of a doublecasted spell
+					else if (action.type.equals(ZankGameActionType.DCHIT))
+					{
+						game.receiveDCHit((SkillEffectResult[]) action.data);
+					}
 						
-					// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
+					// WAIT: the server has indicated that some unit ended their turn, picking a direction
 					else if (action.type.equals(ZankGameActionType.WAIT))
 					{
 						game.receiveWait((int[]) action.data);
@@ -248,7 +260,7 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 					System.out.println("received bad game message from server: " + msg);
 
 				if (client.chatWindow != null)
-					client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());							
+					client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());
 			}
 			catch (NullPointerException e) { e.printStackTrace(); }
 		}

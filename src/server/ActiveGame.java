@@ -23,6 +23,7 @@ public class ActiveGame
 	GameState state;
 	Lock gameLock;
 	int turn;
+	boolean doublecast;
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2, FFTAMap map)
 	{
@@ -255,6 +256,7 @@ public class ActiveGame
 	
 	public void doAction(FFTASkill sk, int x, int y) throws InterruptedException
 	{
+		System.out.println ("Doing " + sk.NAME);
 		ActiveUnit au = state.units[state.currentUnit];
 		au.counter = Math.max(au.counter - 200, 0);
 		
@@ -264,6 +266,7 @@ public class ActiveGame
 		System.out.println("Results length: " + allResults.length);
 		
 		state.reacting = true;
+		doublecast = false;	// so we don't send DCHIT messages in the reaciton
 		
 		int whichEffect;
 		
@@ -431,6 +434,7 @@ public class ActiveGame
 							faceUnit(target.id, facing);
 							executeSkill(target.id, sk, au.x, au.y, false);
 						}
+						break;
 					}
 					
 					case REFLEX:
@@ -575,7 +579,10 @@ public class ActiveGame
 			results[results.length - 1].autoLife = state.checkAutoLife(state.units[targets.get(i)]);
 			
 			// Send the message
-			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
+			ZankGameActionType t = ZankGameActionType.HIT;
+			if (doublecast)
+				t = ZankGameActionType.DCHIT;
+			ZankGameAction za = new ZankGameAction(t, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 			player1.messageQueue.put(zm);
 			player2.messageQueue.put(zm);			

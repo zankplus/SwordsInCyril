@@ -253,9 +253,32 @@ public class ActiveUser extends Thread
 											ag.player2.messageQueue.put(waitmsg);
 											
 											FFTASkill sk = FFTASkill.values[data[1]];
+											ag.doublecast = false;
 											ag.doAction(sk, x, y);
 											ag.victoryCheck();
 										}
+										
+										else if (action.type == ZankGameActionType.DOUBLECAST)
+										{
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
+											int[] data = (int[]) action.data;
+											
+											// Send intermediate facing
+											int x1 = data[2], y1 = data[3], x2 = data[6], y2 = data[7];
+											FFTASkill sk1 = FFTASkill.values[data[1]], sk2 = FFTASkill.values[data[5]];
+											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x2, y2)}; 
+											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
+											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
+											ag.player1.messageQueue.put(waitmsg);
+											ag.player2.messageQueue.put(waitmsg);
+											
+											ag.doublecast = true;
+											ag.doAction(sk1, x1, y1);
+											ag.doAction(sk2, x2, y2);
+											ag.victoryCheck();
+										}
+										
 										else if (action.type == ZankGameActionType.WAIT)
 										{
 											int[] data = (int[]) action.data;

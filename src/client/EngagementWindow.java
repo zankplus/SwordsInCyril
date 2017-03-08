@@ -58,6 +58,8 @@ public class EngagementWindow extends JFrame
 	private UnitPreviewPanel[] previews;
 	// TurnOrderPanel top;
 	
+	private int doublecastMode;
+	
 	FFTASkill selectedSkill;
 	
 	EngagementWindowRosterPanel rosterPanel;
@@ -65,14 +67,11 @@ public class EngagementWindow extends JFrame
 	private JPanel turnOrderPanel;
 	public TurnOrderBoy wait, actOnly, moveOnly, moveAct;
 	
-	
+	ActiveUnit dcAu;
+	FFTASkill dcSkill;
+	int dcX, dcY;
 	
 
-	/**
-	 * Create the frame.
-	 */
-	
-	
 	public EngagementWindow(Engagement game)
 	{
 		wait = new TurnOrderBoy("Wait");
@@ -241,10 +240,11 @@ public class EngagementWindow extends JFrame
 		turnOrderPanel.repaint();
 	}
 	
-	public void beginTargetingMode(FFTASkill sk)
+	public void beginTargetingMode(FFTASkill sk, int doublecastMode)
 	{
 		mapPanel.mode = 3;
 		selectedSkill = sk;
+		this.doublecastMode = doublecastMode; 
 		mapPanel.highlightTargetableTiles(sk);
 	}
 	
@@ -297,28 +297,76 @@ public class EngagementWindow extends JFrame
 	public void commitAction(ArrayList<Integer> targets)
 	{
 		int x = mapPanel.selectedTile.x, y = mapPanel.selectedTile.y;
-		unitAction.unitHasActed = true;
-		
-		try
+		switch (doublecastMode)
 		{
-			unitAction.hideActionPanel();
-			if (unitAction.unitHasMoved)
-			{
-				game.sendMove();
-				unitAction.sendMove = false;
-			}
-			
-			// Clear away the tile highlights and return to the actions menu
-			cancelMovementMode();
-			
-			// Reselect the current unit to remind the active player that further action is required of them
-			ActiveUnit au = game.currentUnit();
-			selectTile(game.map.mapData[au.x][au.y]);
-			
-			// Send the action
-			game.sendAction(au.id, selectedSkill, x, y);
+			case 0:
+				unitAction.unitHasActed = true;
+				try
+				{
+					unitAction.hideActionPanel();
+					if (unitAction.unitHasMoved)
+					{
+						game.sendMove();
+						unitAction.sendMove = false;
+					}
+					
+					// Clear away the tile highlights and return to the actions menu
+					cancelMovementMode();
+					
+					// Reselect the current unit to remind the active player that further action is required of them
+					ActiveUnit au = game.currentUnit();
+					selectTile(game.map.mapData[au.x][au.y]);
+					
+					// Send the action
+					game.sendAction(au.id, selectedSkill, x, y);
+				}
+				catch (IOException e) { e.printStackTrace(); }
+				break;
+				
+			case 1:
+				ActiveUnit au = game.currentUnit();
+				selectTile(game.map.mapData[au.x][au.y]);
+				dcAu = au;
+				dcSkill = selectedSkill;
+				dcX = x;
+				dcY = y;
+				
+				unitAction.showPanel("Doublecast");
+				unitAction.doublecastMode = 2;
+				unitAction.dcPanel.btnSkillCancel.setText("Cancel " + dcSkill.NAME);
+				cancelMovementMode();
+				
+				break;
+				
+			case 2:
+				unitAction.unitHasActed = true;
+				try
+				{
+					unitAction.hideActionPanel();
+					if (unitAction.unitHasMoved)
+					{
+						game.sendMove();
+						unitAction.sendMove = false;
+					}
+					
+					// Clear away the tile highlights and return to the actions menu
+					cancelMovementMode();
+					
+					// Reselect the current unit to remind the active player that further action is required of them
+					ActiveUnit au2 = game.currentUnit();
+					selectTile(game.map.mapData[au2.x][au2.y]);
+					
+					// Send the actions
+					game.sendDoublecast(dcAu.id, dcSkill, dcX, dcY, au2.id, selectedSkill, x, y);
+				}
+				catch (IOException e) { e.printStackTrace(); }
+				break;
+				
+			default:
+				System.err.println("hey why come doublecastMode == " + doublecastMode);
 		}
-		catch (IOException e) { e.printStackTrace(); }
+		
+		
 	}
 	
 	// Calls UnitActionPanel's finishAct() method to bring up the appropriate menu to finish the current unit's turn
