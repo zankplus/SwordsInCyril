@@ -71,21 +71,21 @@ public class Engagement
 	public void sendChat(String content) throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
 	public void sendForfeit() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
-		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
 	public void sendReady() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, window.getYourUnits());
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -94,7 +94,7 @@ public class Engagement
 		ActiveUnit au = currentUnit();
 		int[] data = {au.id, au.x, au.y, au.z};
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -108,7 +108,7 @@ public class Engagement
 		data[4] = state.reacting ? 1 : 0;
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -126,7 +126,7 @@ public class Engagement
 		data[7] = y2;
 		
 		action = new ZankGameAction(ZankGameActionType.DOUBLECAST, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -134,7 +134,7 @@ public class Engagement
 	{
 		int[] data = {state.currentUnit, dir};
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -142,7 +142,7 @@ public class Engagement
 	public void sendTurnTest(int ct) throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -150,7 +150,7 @@ public class Engagement
 	public void sendExit() throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
-		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -187,6 +187,55 @@ public class Engagement
 		}
 		
 		state = new GameState(aus, map);
+		beginGame();
+		window.setupPreviews();
+		System.out.println("Finished setting up previews, now beginning game");
+		window.repaint();
+	}
+	
+	// SPECREADY: create a list all the game's units in gamePanel
+	// before telling gamePanel to start the game.
+	public void receiveSpecReady(ArrayList<ActiveUnit>[] units)
+	{
+		p1Units = units[0];
+		p2Units = units[1];
+		
+		ActiveUnit[] aus = new ActiveUnit[p1Units.size() + p2Units.size()];
+		
+		for (int i = 0; i < p1Units.size(); i++)
+		{
+			aus[i] = p1Units.get(i);
+			aus[i].id = i;
+		}
+		
+		for (int i = 0; i < p2Units.size(); i++)
+		{
+			aus[i + p1Units.size()] = p2Units.get(i);
+			aus[i + p1Units.size()].id = i + p1Units.size();
+		}
+		
+		state = new GameState(aus, map);
+		beginGame();
+		window.setupPreviews();
+		System.out.println("Finished setting up previews, now beginning game");
+		window.repaint();
+	}
+	
+	public void receiveSpecJoin(GameState state)
+	{
+		p1Units = new ArrayList<ActiveUnit>();
+		p2Units = new ArrayList<ActiveUnit>();
+		
+		for (ActiveUnit au : state.units)
+			if (au.team == 1)
+				p1Units.add(au);
+			else if (au.team == 2)
+				p2Units.add(au);
+		
+		this.state = state;
+		
+		state.map = MuscadetMapLoader.getMap(true);
+		
 		beginGame();
 		window.setupPreviews();
 		System.out.println("Finished setting up previews, now beginning game");
@@ -430,13 +479,13 @@ public class Engagement
 		String p1name, p2name;
 		if (playerNumber == 1)
 		{
-			p1name = player.username;
-			p2name = opponent.username;
+			p1name = player.name;
+			p2name = opponent.name;
 		}
 		else
 		{
-			p2name = player.username;
-			p1name = opponent.username;
+			p2name = player.name;
+			p1name = opponent.name;
 		}
 		
 		// If data[0] and data[1] are both true, the match has ended in a tie
@@ -556,8 +605,14 @@ public class Engagement
 		ArrayList<ActiveUnit> otherTeam;
 		if (playerNumber == 1)
 			otherTeam = p2Units;
-		else
+		else if (playerNumber == 2)
 			otherTeam = p1Units;
+		else
+		{
+			otherTeam = new ArrayList<ActiveUnit>();
+			for (ActiveUnit au : p1Units) otherTeam.add(au);
+			for (ActiveUnit au : p2Units) otherTeam.add(au);
+		}
 		
 		window.beginGame(otherTeam);
 	}

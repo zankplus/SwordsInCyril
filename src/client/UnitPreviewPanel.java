@@ -79,16 +79,21 @@ public class UnitPreviewPanel extends JPanel
 		JPanel basicInfoPanel = new JPanel();
 		basicInfoPanel.setOpaque(false);
 		upperPanel.add(basicInfoPanel, BorderLayout.CENTER);
-		basicInfoPanel.setLayout(new GridLayout(4, 1, 0, 0));
+		basicInfoPanel.setLayout(new BorderLayout(0, 0));
 		
-		JLabel lblNameAndLevel = new JLabel("<html><b>" + unit.name + "</b> &mdash Lv. " + unit.getLevel() + " " + unit.job);
+		JLabel lblNameAndLevel = new JLabel("<html><b>" + unit.name + "</b> &mdash Lv. " + unit.getLevel());
 		lblNameAndLevel.setHorizontalAlignment(SwingConstants.CENTER);
-		basicInfoPanel.add(lblNameAndLevel);
+		basicInfoPanel.add(lblNameAndLevel, BorderLayout.NORTH);
+		
+		JPanel unitDescPanel = new JPanel();
+		unitDescPanel.setOpaque(false);
+		basicInfoPanel.add(unitDescPanel, BorderLayout.CENTER);
+		unitDescPanel.setLayout(new GridLayout(3, 0, 0, 0));
 		
 		JPanel basicStatsAlignmentPanel = new JPanel();
+		unitDescPanel.add(basicStatsAlignmentPanel);
 		basicStatsAlignmentPanel.setOpaque(false);
 		basicStatsAlignmentPanel.setBorder(null);
-		basicInfoPanel.add(basicStatsAlignmentPanel);
 		basicStatsAlignmentPanel.setLayout(new GridLayout(0, 6, 0, 0));
 		
 		JLabel lblHP = new JLabel("<html><b>HP</b>");
@@ -114,13 +119,13 @@ public class UnitPreviewPanel extends JPanel
 		basicStatsAlignmentPanel.add(lblMaxMP);
 		
 		JLabel lblJobAndSecondary = new JLabel("<html><em>" + unit.secondary + "&emsp " + unit.support + "</em>");
+		unitDescPanel.add(lblJobAndSecondary);
 		lblJobAndSecondary.setHorizontalAlignment(SwingConstants.CENTER);
-		basicInfoPanel.add(lblJobAndSecondary);
 		
 		JLabel lblOtherAbilities = new JLabel("<html> <em>" + unit.reaction + "&emsp " + unit.combo);
+		unitDescPanel.add(lblOtherAbilities);
 		lblOtherAbilities.setHorizontalAlignment(SwingConstants.CENTER);
 		lblOtherAbilities.setAlignmentX(Component.CENTER_ALIGNMENT);
-		basicInfoPanel.add(lblOtherAbilities);
 		
 		JPanel imagePanel = new JPanel() {
 			@Override

@@ -853,7 +853,10 @@ public enum SkillEffect implements Serializable
 			report += target.unit.name + "</strong> takes <strong><span style=\"color:fuchsia\">" + 
 					result.damage + "</strong> MP damage! (" + result.hitChance + "%)";
 		}
-			
+		else if (result.skill == FFTASkill.DOUBLE_SWORD || result.skill == FFTASkill.DOUBLESHOT)
+			report += "<em><span style=\"color:gray\">......The attack misses <strong>" +
+					target.unit.name + "</strong>! (" + result.hitChance + "%)";
+		
 		return report;
 	}
 	

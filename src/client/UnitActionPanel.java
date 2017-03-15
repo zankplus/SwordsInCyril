@@ -60,6 +60,7 @@ public class UnitActionPanel extends JPanel
 	int doublecastMode;
 	String prevCard;
 	Engagement game;
+	private JButton btnFightConfirm;
 	
 
 	public UnitActionPanel(EngagementWindow window)
@@ -193,6 +194,15 @@ public class UnitActionPanel extends JPanel
 		add(fightPanel, "Fight");
 		fightPanel.setLayout(new BorderLayout(0, 0));
 		
+		btnFightConfirm = new JButton("Confirm");
+		fightPanel.add(btnFightConfirm, BorderLayout.CENTER);
+		btnFightConfirm.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				window.mapPanel.selectTarget(2);
+			}
+		});
+		
 		btnFightCancel = new JButton("Cancel");
 		fightPanel.add(btnFightCancel, BorderLayout.SOUTH);
 		btnFightCancel.addActionListener(new ActionListener(){
@@ -204,7 +214,7 @@ public class UnitActionPanel extends JPanel
 		
 		lblClickTheUnit = new JLabel("<html>Click the unit to target.<br>Double-click to confirm action.");
 		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
-		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
+		// fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
 			
 		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
 		waitPanel = new JPanel();
@@ -446,7 +456,7 @@ public class UnitActionPanel extends JPanel
 	public void showSkillUsePanel(FFTASkill sk, int doublecastMode)
 	{
 		window.beginTargetingMode(sk, doublecastMode);
-		lblClickTheUnit.setText(window.selectedSkill + "");
+		btnFightConfirm.setText("Use " + window.selectedSkill.NAME);
 		cl.show(this, "Fight");
 	}
 	

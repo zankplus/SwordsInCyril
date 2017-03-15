@@ -15,7 +15,6 @@ import fftadata.FFTAUnit;
 import fftadata.GameState;
 import fftadata.SkillEffectResult;
 import fftamap.FFTAMap;
-import zank.ZankUser;
 
 import java.awt.Dimension;
 

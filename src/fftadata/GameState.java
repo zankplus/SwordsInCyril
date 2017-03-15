@@ -1,15 +1,17 @@
 package fftadata;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 import fftamap.FFTAMap;
 
-public class GameState
+public class GameState implements Serializable
 {
+	private static final long serialVersionUID = 727342834019051386L;
 	public ActiveUnit[] units;
 	public int currentUnit;
 	public int currentTurn;
-	public FFTAMap map;
+	public transient FFTAMap map;	// we're gonna try not serializing this
 	public boolean reacting;
 	
 	public GameState(ActiveUnit[] units, FFTAMap map)

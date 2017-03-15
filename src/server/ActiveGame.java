@@ -24,6 +24,8 @@ public class ActiveGame
 	Lock gameLock;
 	int turn;
 	boolean doublecast;
+	private int[] lastNextData;
+	private int[] lastTurnOrderData;
 	
 	public ActiveGame (ActiveUser p1, ActiveUser p2, FFTAMap map)
 	{
@@ -57,24 +59,27 @@ public class ActiveGame
 	
 	public void joinRoom(ActiveUser user)
 	{
-		userlist.add(user);
+		synchronized(userlist)
+		{
+			userlist.add(user);
+		}
 	}
 	
 	public void leaveRoom(ActiveUser user)
 	{
-		// Remove user from the list
-		userlist.remove(user);
-		ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
-		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		
-		try
+		synchronized(userlist)
 		{
-			synchronized(userlist)
+			// Remove user from the list
+			userlist.remove(user);
+			user.game = null;
+			ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
+			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
+			try
 			{
-				for (int i = 0; i < userlist.size(); i++)
-					userlist.get(i).messageQueue.put(zm);
-			}
-		} catch (InterruptedException e) { e.printStackTrace(); }
+				sendToAll(zm);
+			} catch (Exception e) { e.printStackTrace(); }
+		}
+		
 	}
 	
 	// leaveRoom(String): Find the ActiveUser with the username listed and call leaveRoom() on them
@@ -99,9 +104,25 @@ public class ActiveGame
 		state = new GameState(turnOrder.units, map);
 	}
 	
-	public ZankMessage getStartMessage()
+	public ZankMessage getStartMessage(boolean spectator)
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.START, id, player1.nickname, player2.nickname, null);
+		ZankMessage msg;
+		if (spectator)
+			msg = new ZankMessage(ZankMessageType.GAME, "spec", action);
+		else
+			msg = new ZankMessage(ZankMessageType.GAME, null, action);
+		return msg;
+	}
+	
+	public ZankMessage getSpecJoinMessage()
+	{
+		Object[] data = new Object[3];
+		data[0] = state;
+		data[1] = lastNextData;
+		data[2] = lastTurnOrderData;
+		
+		ZankGameAction action = new ZankGameAction(ZankGameActionType.SPECJOIN, id, null, null, data);
 		return new ZankMessage(ZankMessageType.GAME, null, action);
 	}
 	
@@ -135,11 +156,12 @@ public class ActiveGame
 
 		// Tell the client that it's this unit's turn, whether they're able to take their turn or not.
 		// If the unit is dead, petrified, stopped, etc., the client will handle it accordingly.
+		
+		lastNextData = new int[] { state.currentUnit, poisonVariance, regenVariance }; 
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null,
-				new int[] { state.currentUnit, poisonVariance, regenVariance });
+				lastNextData);
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		player1.messageQueue.put(zm);
-		player2.messageQueue.put(zm);
+		sendToAll(zm);
 	
 		// If the current unit has died of poison/doom this turn...
 		if (au.currHP == 0)
@@ -178,11 +200,11 @@ public class ActiveGame
 		// If this turn isn't being skipped, send a turn order update
 		else
 		{
+			lastTurnOrderData = predictTurnOrder(); 
 			za = new ZankGameAction(ZankGameActionType.TURN_ORDER, id, null, null,
-					predictTurnOrder());
+					lastTurnOrderData);
 			zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			player1.messageQueue.put(zm);
-			player2.messageQueue.put(zm);
+			sendToAll(zm);
 		}
 	}
 	
@@ -258,6 +280,8 @@ public class ActiveGame
 	{
 		System.out.println ("Doing " + sk.NAME);
 		ActiveUnit au = state.units[state.currentUnit];
+		if (au.currHP == 0)
+			return; 
 		au.counter = Math.max(au.counter - 200, 0);
 		
 		state.reacting = false;
@@ -266,7 +290,6 @@ public class ActiveGame
 		System.out.println("Results length: " + allResults.length);
 		
 		state.reacting = true;
-		doublecast = false;	// so we don't send DCHIT messages in the reaciton
 		
 		int whichEffect;
 		
@@ -580,12 +603,11 @@ public class ActiveGame
 			
 			// Send the message
 			ZankGameActionType t = ZankGameActionType.HIT;
-			if (doublecast)
+			if (doublecast && !state.reacting)
 				t = ZankGameActionType.DCHIT;
 			ZankGameAction za = new ZankGameAction(t, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			player1.messageQueue.put(zm);
-			player2.messageQueue.put(zm);			
+			sendToAll(zm);			
 		}
 		
 		// Remove boost, if necessary
@@ -617,8 +639,7 @@ public class ActiveGame
 		
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.GAMEOVER, id, null, null, new boolean[]{p1lose, p2lose});
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		player1.messageQueue.put(zm);
-		player2.messageQueue.put(zm);			
+		sendToAll(zm);			
 		
 		return (p1lose || p2lose);
 	}
@@ -656,8 +677,7 @@ public class ActiveGame
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.WAIT, id, null, null,
 									new int[]{unitNumber, dir});
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		player1.messageQueue.put(zm);
-		player2.messageQueue.put(zm);
+		sendToAll(zm);
 	}
 	
 	public void sendToAll(ZankMessage msg) throws InterruptedException
@@ -665,7 +685,17 @@ public class ActiveGame
 		synchronized(userlist)
 		{
 			for (ActiveUser user : userlist)
-					user.messageQueue.put(msg);
+				user.messageQueue.put(msg);
+		}
+	}
+	
+	public void sendToSpectators(ZankMessage msg) throws InterruptedException
+	{
+		synchronized(userlist)
+		{
+			for (ActiveUser user : userlist)
+				if (user != player1 && user != player2)
+				user.messageQueue.put(msg);
 		}
 	}
 	
@@ -674,8 +704,7 @@ public class ActiveGame
 		int[] data = new int[] {unit, r.ordinal(), x};
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.REACTION, id, null, null, data);
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		player1.messageQueue.put(zm);
-		player2.messageQueue.put(zm);
+		sendToAll(zm);
 	}
 	
 	public ActiveUnit currentUnit()
@@ -701,6 +730,8 @@ public class ActiveGame
 				return 1;
 			else if (this.unit < 0)	// for non-unit predictors
 				return 1;
+			else if (t.unit < 0)
+				return -1;
 			else if (state.units[unit].priority > state.units[t.unit].priority)
 				return -1;
 			else
@@ -713,4 +744,6 @@ public class ActiveGame
 					state.units[unit].reserve + "\t" + position;  
 		}
 	}
+
+	
 }

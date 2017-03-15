@@ -21,23 +21,19 @@ import javax.swing.JTextPane;
 import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingConstants;
 import javax.swing.UIManager;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.MatteBorder;
+import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.html.HTMLDocument;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
-import fftadata.SkillEffectResult;
 import fftadata.StatusEffect;
 
 import javax.swing.JButton;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
-import java.awt.Insets;
 
 import fftamap.*;
 
@@ -51,7 +47,7 @@ public class EngagementWindow extends JFrame
 	private JTextField chatEntry;
 	
 	JPanel gamePanel;
-	private MapPanel mapPanel;
+	MapPanel mapPanel;
 	private UnitActionPanel unitAction;
 	
 	private CardLayout deck;
@@ -61,7 +57,6 @@ public class EngagementWindow extends JFrame
 	private int doublecastMode;
 	
 	FFTASkill selectedSkill;
-	
 	EngagementWindowRosterPanel rosterPanel;
 
 	private JPanel turnOrderPanel;
@@ -89,7 +84,7 @@ public class EngagementWindow extends JFrame
 		
 		try
 		{
-			setTitle("[" + "///" + "] " + game.player.username + " vs " + game.opponent.username );
+			setTitle(game.player.name + " vs. " + game.opponent.name );
 		} catch (NullPointerException e) { setTitle("Testin' mode"); }
 		
 		// Closing
@@ -157,7 +152,7 @@ public class EngagementWindow extends JFrame
 		gamePanel = new JPanel();
 		gamePanel.setLayout(new BorderLayout());
 		
-		rosterPanel = new EngagementWindowRosterPanel(this);
+		
 		mapPanel = new MapPanel(this);
 		
 		turnOrderPanel = new JPanel();
@@ -168,14 +163,15 @@ public class EngagementWindow extends JFrame
 		leftPanel.add(gamePanel, BorderLayout.CENTER);
 		gamePanel.add(mapPanel, BorderLayout.CENTER);
 		gamePanel.add(turnOrderPanel, BorderLayout.EAST);
-		mapPanel.roster = rosterPanel.roster;
 		leftPanel.add(gamePanel);
-		
-		
 		damagePreviewPanel = null;
 		
-		beginPlacementMode();
-		
+		if (game.playerNumber != 0)
+		{
+			rosterPanel = new EngagementWindowRosterPanel(this);
+			mapPanel.roster = rosterPanel.roster;
+			beginPlacementMode();
+		}
 		
 	}
 	
@@ -187,7 +183,8 @@ public class EngagementWindow extends JFrame
 	
 	public void beginGame(ArrayList<ActiveUnit> otherTeam)
 	{
-		gamePanel.remove(rosterPanel);
+		if (rosterPanel != null)
+			gamePanel.remove(rosterPanel);
 		bottomPanel = new JPanel(new BorderLayout());
 		gamePanel.add(bottomPanel, BorderLayout.SOUTH);
 		
@@ -204,8 +201,10 @@ public class EngagementWindow extends JFrame
 		unitAction = new UnitActionPanel(this);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
 		
-		// Set up other team's units
+		// Set up other team's units (or both teams for specs)
 		mapPanel.beginGame(otherTeam);
+		
+		
 		
 		// Initialize turn order panel
 		wait = new TurnOrderBoy("Wait");
@@ -598,16 +597,15 @@ public class EngagementWindow extends JFrame
 			this.unit = unit;
 			position = 0;
 			
-			FlowLayout flowLayout_1 = (FlowLayout) getLayout();
-			flowLayout_1.setAlignment(FlowLayout.LEFT);
-			flowLayout_1.setVgap(1);
-			flowLayout_1.setHgap(1);
+			BorderLayout bl = new BorderLayout();
+			setLayout(bl);
+			setBorder(new EmptyBorder(2, 1, 0, 2));
 			setPreferredSize(new Dimension(96, 20));
 			
 			TOJobIconPanel panel = new TOJobIconPanel(unit);
 			panel.setPreferredSize(new Dimension(32, 16));
 			panel.setOpaque(false);
-			add(panel);
+			add(panel, BorderLayout.WEST);
 			
 			if (unit.team == 1)
 				setBackground(new Color(192, 192, 248));
@@ -617,8 +615,8 @@ public class EngagementWindow extends JFrame
 			JLabel lblUnitName;
 			lblUnitName = new JLabel(" " + unit.unit.name);
 			lblUnitName.setFont(new Font("Tahoma", Font.BOLD, 11));
+			add(lblUnitName, BorderLayout.CENTER);
 			
-			add(lblUnitName);
 			repaint();
 		}
 
