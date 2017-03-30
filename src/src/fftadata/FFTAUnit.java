@@ -265,26 +265,30 @@ public class FFTAUnit implements Serializable
 		}
 		return (int) result;
 	}
-	
-	public int getFightPower()
+
+	public FFTAEquip getWeapon(boolean leftHand)
 	{
-		int result = 0;
-		for (int i = 0; i < equips.slots.length; i++)
+		// Right hand weapon
+		if (!leftHand)
 		{
-			result += equips.slots[i].wAtk;
+			int index = equips.rightHand;
+			if (index == -1)
+				return FFTAEquip.UNARMED;
+			else
+				return equips.slots[index];
 		}
-		if (equips.rightHand == -1)
-			result += job.unarmedPower;
-		return (int) result;
-	}
-	
-	public FFTAEquip getWeapon()
-	{
-		int index = equips.rightHand;
-		if (index == -1)
-			return FFTAEquip.UNARMED;
+		
+		// Left hand weapon
 		else
-			return equips.slots[index];
+		{
+			int index = equips.leftHand;
+			if (index == -1 || !equips.slots[index].isWeapon())	// return NONE if no weapon
+				return FFTAEquip.NONE;							// is in the left hand
+			else
+				return equips.slots[index];
+		}
+		
+		
 	}
 	
 	public void updateDeepStats()

@@ -29,6 +29,7 @@ import javax.swing.UIManager;
 import zank.ZankMessage;
 import zank.ZankMessageType;
 import zank.ZankUser;
+
 import javax.swing.SwingConstants;
 import java.awt.FlowLayout;
 import javax.swing.BoxLayout;
@@ -95,7 +96,7 @@ public class LoginWindow extends JFrame {
 		connectPane.setBackground(new Color(255, 255, 255));
 		connectPane.setLayout(null);
 		
-		
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
 		
 		// Adjust window		
@@ -215,9 +216,12 @@ public class LoginWindow extends JFrame {
 		statusLabel.setForeground(Color.BLUE);
 		try
 		{
-			client.zu = new ZankUser(usernameField.getText());
+			client.zu = zUser;
 			client.chatWindow = new ChatWindow(client);
+			System.out.println("client.chatWindow: " + client.chatWindow);
 			sendLogin();
+			client.startHeartbeat();
+			
 		}
 		catch (IOException e) { e.printStackTrace(); System.exit(0); }
 	}
@@ -232,7 +236,7 @@ public class LoginWindow extends JFrame {
 	
 	public void sendLogin() throws IOException
 	{
-		ZankMessage msg = new ZankMessage(ZankMessageType.LOGIN, zUser.username, null);
+		ZankMessage msg = new ZankMessage(ZankMessageType.LOGIN, zUser.name, null);
 		
 		synchronized(client.out)
 		{

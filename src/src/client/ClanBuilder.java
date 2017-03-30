@@ -21,7 +21,10 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultFormatter;
+import javax.swing.text.PlainDocument;
 
 import fftadata.EquipSet;
 import fftadata.EquipType;
@@ -223,6 +226,7 @@ public class ClanBuilder extends JFrame
 		nameField = new JTextField();
 		basicFieldsPanel.add(nameField);
 		nameField.setColumns(10);
+		nameField.setDocument(new JTextFieldLimit(32));
 		
 		nameField.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
@@ -816,7 +820,7 @@ public class ClanBuilder extends JFrame
 		lblMoveScore.setText(Integer.toString(unit.getTotalMove()));
 		lblJumpScore.setText(Integer.toString(unit.getTotalJump()));
 		lblEvadeScore.setText(Integer.toString(unit.getTotalEvade()));
-		lblFPowScore.setText(Integer.toString(unit.getFightPower()));
+		lblFPowScore.setText(Integer.toString(unit.getWAtkEquipBonus()));
 	}
 	
 	class SecondaryAbilityCellRenderer implements ListCellRenderer<FFTACommand>
@@ -1283,13 +1287,14 @@ public class ClanBuilder extends JFrame
 				else
 					newSet.equip(eq, slot);
 				
-				System.out.println("RIGHT: " + newSet.rightHand);
-				System.out.println("LEFT:  " + newSet.leftHand);
-				System.out.println("HEAD:  " + newSet.head);
-				System.out.println("BODY:  " + newSet.body);
-				System.out.println("ARMS:  " + newSet.arms);
-				System.out.println("FEET:  " + newSet.feet);
-				System.out.println();
+//				System.out.println("RIGHT: " + newSet.rightHand);
+//				System.out.println("LEFT:  " + newSet.leftHand);
+//				System.out.println("HEAD:  " + newSet.head);
+//				System.out.println("BODY:  " + newSet.body);
+//				System.out.println("ARMS:  " + newSet.arms);
+//				System.out.println("FEET:  " + newSet.feet);
+//				System.out.println();
+				System.out.println(newSet);
 				
 				updateEquippedList();
 			}
@@ -1377,4 +1382,28 @@ public class ClanBuilder extends JFrame
 			}
 		}
 	}
+	
+	class JTextFieldLimit extends PlainDocument {
+		  private int limit;
+		  JTextFieldLimit(int limit) {
+		    super();
+		    this.limit = limit;
+		  }
+
+		  JTextFieldLimit(int limit, boolean upper) {
+		    super();
+		    this.limit = limit;
+		  }
+
+		  public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException {
+		    if (str == null || str.contains("\\") || str.contains("/") || str.contains(":") || str.contains("*") || 
+		    		str.contains("?") || str.contains("\"") || str.contains("<") || str.contains(">") || 
+		    		str.contains("|"))
+		      return;
+
+		    if ((getLength() + str.length()) <= limit) {
+		      super.insertString(offset, str, attr);
+		    }
+		  }
+		}
 }
