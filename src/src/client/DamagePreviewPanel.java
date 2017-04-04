@@ -12,9 +12,7 @@ import fftadata.FFTACalc;
 import fftadata.FFTAEquip;
 import fftadata.FFTASkill;
 import fftadata.FFTAUnit;
-import fftadata.GameState;
 import fftadata.SkillEffectResult;
-import fftamap.FFTAMap;
 
 import java.awt.Dimension;
 
@@ -38,8 +36,6 @@ import javax.swing.JTextPane;
 import java.awt.CardLayout;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
-import javax.swing.JFrame;
-
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,14 +51,12 @@ public class DamagePreviewPanel extends JPanel
 	int currentCard;
 	FFTASkill sk;
 	private TargetPanel[] targetCards;
-	GameState state;
 	
-	public DamagePreviewPanel(ActiveUnit au, ArrayList<ActiveUnit> targets, FFTASkill sk, GameState state)
+	public DamagePreviewPanel(ActiveUnit au, ArrayList<ActiveUnit> targets, FFTASkill sk)
 	{
 		this.au = au;
 		this.targets = targets;
 		this.sk = sk;
-		this.state = state;
 		
 		setBorder(new TitledBorder(null, "Damage Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setPreferredSize(new Dimension(320, 162));
@@ -262,12 +256,14 @@ public class DamagePreviewPanel extends JPanel
 		bottomRightPanel.setBackground(targetCards[currentCard].getBackground());
 	}
 
-/*	public static void main(String[] args) {
+	/**
+	 * Create the panel.
+	 */
+	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
 					EngagementWindowRosterPanel ewrp = new EngagementWindowRosterPanel(null);
-					//EngagementWindowRosterPanel ewrp = new EngagementWindowRosterPanel(new EngagementWindow(new Engagement(null, 0, null, null, null)));
 					
 					ActiveUnit au1 = new ActiveUnit( (FFTAUnit) ewrp.roster.getModel().getElementAt(0), 1, 11, 4, 1);
 					ActiveUnit au2 = new ActiveUnit( (FFTAUnit) ewrp.roster.getModel().getElementAt(1), 1, 11, 5, 2);
@@ -279,24 +275,22 @@ public class DamagePreviewPanel extends JPanel
 					targets.add(au3);
 					targets.add(au4);
 					
-					JFrame frame = new JFrame();
-					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
-					frame.pack();
-					frame.setVisible(true);
+//					MapPanelTest frame = new MapPanelTest();
+//					frame.getContentPane().add(new DamagePreviewPanel(au1, targets, FFTASkill.FIGHT));
+//					frame.pack();
+//					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 	}
-*/
 	
 	class TargetPanel extends JPanel
 	{
 		ActiveUnit target;
 		String dmg, hit;
 		BufferedImage sprite;
-		private boolean reactionApplies;
 		
 		public TargetPanel(ActiveUnit target)
 		{
@@ -308,12 +302,7 @@ public class DamagePreviewPanel extends JPanel
 			else
 				whichEffect = 0;
 			
-			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(
-					new SkillEffectResult(au.id, target.id, sk, sk.EFFECTS[0]), null, null, state, true, false);
-			
-			reactionApplies = state.reactionApplies(au, target, sk, result.damage > 0);
-			
-			
+			SkillEffectResult result = sk.EFFECTS[whichEffect].handler.resolveEffect(new SkillEffectResult(au.id, target.id, sk, 0), null, true);
 			
 			
 			hit = String.valueOf(result.hitChance);
@@ -407,10 +396,6 @@ public class DamagePreviewPanel extends JPanel
 			
 			JLabel lblReaction = new JLabel(""+target.unit.reaction);
 			lblReaction.setHorizontalAlignment(SwingConstants.CENTER);
-			if (reactionApplies)
-				lblReaction.setForeground(Color.RED);
-			else
-				lblReaction.setForeground(Color.GRAY);
 			targetStatPanel.add(lblReaction);
 		}
 	}

@@ -1,31 +1,22 @@
 package fftadata;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 
-import fftamap.FFTAMap;
-
-public class GameState implements Serializable
+public class GameState
 {
-	private static final long serialVersionUID = 727342834019051386L;
 	public ActiveUnit[] units;
 	public int currentUnit;
 	public int currentTurn;
-	public transient FFTAMap map;	// we're gonna try not serializing this
-	public boolean reacting;
 	
-	public GameState(ActiveUnit[] units, FFTAMap map)
+	public GameState(ActiveUnit[] units)
 	{
 		this.units = units;
+		SkillEffect.setGameState(this);
 		
 		for (int i = 0; i < units.length; i++)
 			units[i].id = i;
 		
 		currentTurn = 0;
-		
-		this.map = map;
-		
-		reacting = false;
 	}
 	
 	public int[] startOfTurnEffects(int poisonVariance, int regenVariance)
@@ -172,7 +163,7 @@ public class GameState implements Serializable
 	
 	public String applyEffect(SkillEffectResult result)
 	{
-		return result.effect.handler.applyEffect(result, this);
+		return result.effect.handler.applyEffect(result);
 	}
 	
 	public void applyDamage(int targ, int dmg)
@@ -263,93 +254,10 @@ public class GameState implements Serializable
 		units[targ].unit.equips.unequip(slot);
 	}
 	
-	// Returns a list of tiles that could contain valid targets for a given skill by a given user
-	public ArrayList<int[]> getTargetableTiles(ActiveUnit au, FFTASkill sk)
-	{
-		Targeting targ = sk.TARGETING;
-		int range = sk.H_RANGE;
-		ArrayList<int[]> targetableTiles = new ArrayList<int[]>();
-		
-		if (targ == Targeting.AS_WEAPON)
-		{
-			FFTAEquip weapon = au.unit.getWeapon(false);
-			range = weapon.range;
-			
-			if (weapon.type == EquipType.SPEAR)
-				targ = Targeting.DIRECTIONAL;
-			else
-				targ = Targeting.FREE_SELECT;
-		}
-		
-		switch(targ)
-		{
-			// Free Select targeting
-			case FREE_SELECT:
-			{
-				System.out.println("case FREE_SELECT");
-				int xmin = Math.max(au.x - range, 0), xmax = Math.min(au.x + range, 14),
-						ymin = Math.max(au.y - range, 0), ymax = Math.min(au.y + range, 14);
-				
-				for (int x = xmin; x <= xmax; x++)
-					for (int y = ymin; y <= ymax; y++)
-					{
-						int dist = Math.abs(x - au.x) + Math.abs(y - au.y);
-						if (map.mapData[x][y] != null && dist <= range && (dist > 0 || sk.SELF_TARGET))
-						{
-							targetableTiles.add(new int[] {x, y});
-						}
-					}
-				break;
-			}
-			
-			case DIRECTIONAL:
-			{
-				System.out.println("case DIRECTIONAL");
-				// Add targets in same x-dimension
-				int y = au.y;
-				for (int x = au.x + range; x >= au.x - range; x--)
-				{	
-					if (x < 15 && x >= 0 && x != au.x && map.mapData[x][y] != null)
-					{
-						targetableTiles.add(new int[] {x, y});
-					}
-				}
-				
-				// Add targets in same y-dimension
-				int x = au.x;
-				for (y = au.y + range; y >= au.y - range; y--)
-				{	
-					if (y < 15 && y >= 0 && y != au.y && map.mapData[x][y] != null)
-					{
-						targetableTiles.add(new int[] {x, y});
-					}
-				}
-				break;
-			}
-			
-			case SELF_CENTER:
-			{
-				System.out.println("case SELF_CENTER");
-				int x = au.x, y = au.y;
-				targetableTiles.add(new int[] {au.x, au.y});
-				break;
-			}
-			
-			default:
-			{
-				System.err.println("getTargetableTiles entered switch case with targ = " + targ);
-				break;
-			}
-		}
-		
-		return targetableTiles;
-	}
-	
-	
 	// Because this function is only called by the click handler when selecting a space it has
 	// already confirmed is within your targeting range, the getTargets() method can safely
 	// assume that the selected tile is within range
-	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user, boolean restrictAoE)
+	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user)
 	{
 		ArrayList<Integer> result = new ArrayList<Integer>();
 		
@@ -362,7 +270,7 @@ public class GameState implements Serializable
 		if (targ == Targeting.AS_WEAPON)
 		{
 			vertical = 3;
-			FFTAEquip weapon = user.unit.getWeapon(false);
+			FFTAEquip weapon = units[currentUnit].unit.getWeapon(false);
 			range = weapon.range;
 			if (weapon.type == EquipType.SPEAR)
 				targ = Targeting.DIRECTIONAL;
@@ -372,10 +280,6 @@ public class GameState implements Serializable
 		
 		// If the skill uses free selection
 		if (targ == Targeting.FREE_SELECT || targ == Targeting.SELF_CENTER)
-		{
-			if (restrictAoE)
-				radius = 0;
-			
 			for (int i = 0; i < units.length; i++)
 			{
 				if (isValidTarget(user, units[i], sk))
@@ -388,8 +292,7 @@ public class GameState implements Serializable
 						result.add(i);
 				}
 			}
-		}
-		
+
 		// Directional targeting
 		else if (targ == Targeting.DIRECTIONAL)
 		{
@@ -526,114 +429,5 @@ public class GameState implements Serializable
 			}
 		
 		return coverer;
-	}
-	
-	// note that boolean damaging is only of interest in predicting whether the reaction will apply, 
-	// so that parameter should be false outside of DamagePreviewPanel
-	public boolean reactionApplies(ActiveUnit user, ActiveUnit target, FFTASkill sk, boolean damaging)
-	{
-		FFTAReaction rx = target.unit.reaction;
-		
-		// Status check
-		if (/*3*/ target.status[StatusEffect.SLEEP.ordinal()] != 0 ||
-			/*4*/ target.status[StatusEffect.PETRIFY.ordinal()] != 0 ||
-			/*5*/ target.status[StatusEffect.DISABLE.ordinal()] != 0 ||
-			/*6*/ target.status[StatusEffect.STOP.ordinal()] != 0 ||
-			/*5*/ user == target)
-		{
-			return false;
-		}
-			
-		
-		switch(rx)
-		{
-			case ABSORB_MP:
-			{
-				return (sk.TRIGGER_ABS_MP && user != target);
-			}
-		
-			case AUTO_REGEN:
-			{
-				return (damaging && user != target);
-			}
-			
-			case BLOCK_ARROWS:
-			{
-				EquipType eqType = user.unit.getWeapon(false).type; 
-				if ((sk.TARGETING == Targeting.AS_WEAPON || sk.POWER == -1) &&
-					(eqType == EquipType.BOW || eqType == EquipType.GREATBOW))
-				{
-					return true;
-				}
-				return false;
-			}
-			
-			case BONECRUSHER:
-			{
-				return sk.IS_PHYSICAL && !sk.dealsMPDamage() && targetInFightRange(user, target);
-			}
-			
-			case COUNTER:
-			{
-				return sk.IS_PHYSICAL && !sk.dealsMPDamage() && targetInFightRange(user, target);
-			}
-			
-			case DAMAGE_TO_MP:
-			{
-				return (damaging && target.currMP > 0);
-			}
-			
-			case DRAGONHEART:
-			{
-				return (sk.IS_PHYSICAL && !sk.dealsMPDamage() && target.status[StatusEffect.AUTO_LIFE.ordinal()] == 0);
-			}
-			
-			case LAST_HASTE:
-			{
-				return damaging && target.status[StatusEffect.HASTE.ordinal()] == 0;
-			}
-			
-			case LAST_QUICKEN:
-			{
-				return damaging && target.status[StatusEffect.QUICK.ordinal()] == 0;
-			}
-			
-			case REFLEX:
-			{
-				return (sk.NAME.equals("Fight"));
-			}
-			
-			case RETURN_FIRE:
-			{
-				return (sk.NAME.equals("Fight") && (user.unit.getWeapon(false).type == EquipType.BOW ||
-						user.unit.getWeapon(false).type == EquipType.GREATBOW));
-			}
-			
-			case RETURN_MAGIC:
-			{
-				return (sk.TRIGGER_RET_MAG);
-			}
-			
-			case STRIKEBACK:
-			{
-				return (sk.NAME.equals("Fight") && targetInFightRange(user, target));
-			}
-			
-			default:
-			{
-				return false;
-			}
-		}
-	}
-	
-	public boolean targetInFightRange(ActiveUnit user, ActiveUnit target)
-	{
-		ArrayList<int[]> targetableTiles = getTargetableTiles(target, FFTASkill.FIGHT);
-		for (int[] tile : targetableTiles)
-		{
-			if (tile[0] == user.x && tile[1] == user.y)
-				return true;
-		}
-		return false;
 	}
 }

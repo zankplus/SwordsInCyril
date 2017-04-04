@@ -5,7 +5,7 @@ import javax.swing.ImageIcon;
 
 public enum FFTAEquip implements Serializable
 {
-	NONE			(" -",				EquipType.NONE,			0,	0,	0,	0,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {}),
+	NONE			(" -",				null,					0,	0,	0,	0,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {}),
 	
 	UNARMED			("Unarmed",			EquipType.UNARMED,		10,	0,	0,	0,	0,	0,	0,	0,	1,	Element.NULL,		0,	new ItemEffect[] {}),		
 	
@@ -467,32 +467,9 @@ public enum FFTAEquip implements Serializable
 	
 	public boolean isWeapon()
 	{
-		return type.ordinal() <= EquipType.GUN.ordinal();
+		return (type.ordinal() <= EquipType.GUN.ordinal());
 	}
 		
-	public boolean isShield()
-	{
-		return type.ordinal() == EquipType.SHIELD.ordinal();
-	}
-	
-	public boolean isHeadwear()
-	{
-		return type.ordinal() >= EquipType.HELM.ordinal() && 
-			   type.ordinal() <= EquipType.HAT.ordinal();
-	}
-	
-	public boolean isArmor()
-	{
-		return type.ordinal() >= EquipType.ARMOR.ordinal() &&
-			   type.ordinal() <= EquipType.ROBE.ordinal();
-	}
-	
-	public boolean isStealableAccessory()
-	{
-		return type.ordinal() == EquipType.GLOVES.ordinal() || 
-			   type.ordinal() == EquipType.ACCESSORY.ordinal();
-	}
-	
 	public String getEffectString()
 	{
 		StringBuilder effect = new StringBuilder();
@@ -652,15 +629,15 @@ enum ItemEffect
 	HEAL_HP("Heal's the target's HP"), AUTO_RAISE("Auto-Raise"), AUTO_REFLECT("Auto-Reflect");
 	
 	final static ItemEffect[][] elemEffs = { {ABSB_FIRE, NULL_FIRE, HALF_FIRE, WEAK_FIRE},
-											 {ABSB_LIGHTNING, NULL_LIGHTNING, HALF_LIGHTNING, WEAK_LIGHTNING},
 											 {ABSB_ICE, NULL_ICE, HALF_ICE, WEAK_ICE},
+											 {ABSB_LIGHTNING, NULL_LIGHTNING, HALF_LIGHTNING, WEAK_LIGHTNING},
 											 {ABSB_WIND, NULL_WIND, HALF_WIND, WEAK_WIND},
 											 {ABSB_EARTH, NULL_EARTH, HALF_EARTH, WEAK_EARTH},
 											 {ABSB_WATER, NULL_WATER, HALF_WATER, WEAK_WATER},
 											 {ABSB_HOLY, NULL_HOLY, HALF_HOLY, WEAK_HOLY},
 											 {ABSB_DARK, NULL_DARK, HALF_DARK, WEAK_DARK}};
 	
-	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_LIGHTNING, ENHN_ICE, ENHN_WIND,
+	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_ICE, ENHN_LIGHTNING, ENHN_WIND,
 										   ENHN_EARTH, ENHN_WATER, ENHN_HOLY, ENHN_DARK };
 	
 	
@@ -673,3 +650,9 @@ enum ItemEffect
 }
 
 
+enum Status
+{
+	PETRIFY, BERSERK, FROG, POISON, DARKNESS, SLEEP, SILENCE, CONFUSION, IMMOBILIZE, DISABLE,
+	AUTO_LIFE, REGEN, ASTRA, REFLECT, DOOM, HASTE, SLOW, STOP, PROTECT, CHARM, ADDLE,
+	KO, ZOMBIE, WATK_UP, WATK_DOWN, WDEF_UP, WDEF_DOWN, MPOW_UP, MPOW_DOWN, MRES_UP, MRES_DOWN, SPEED_DOWN;
+}

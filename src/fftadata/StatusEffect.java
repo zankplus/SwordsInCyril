@@ -55,11 +55,15 @@ public enum StatusEffect
 	
 	
 	
+	
+	
+	
+	
 	MISC_EFFECT		("",				0,	false,	""),
 	
 	// Status effects that persist after death
 	FROG 			("Frog",			1,	false,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
-	AUTO_LIFE		("Auto-Life",		1,	true,	" is granted <strong><span style=\"color:aqua\">Auto-Life</strong></span>!");
+	AUTO_LIFE		("Auto-Life",		1,	true,	" is granted an <strong><span style=\"color:aqua\">Auto-Life</strong></span>!");
 	
 	
 	public final String NAME, REPORT;

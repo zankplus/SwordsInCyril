@@ -32,15 +32,13 @@ import javax.swing.ListSelectionModel;
 
 public class UnitPreviewPanel extends JPanel
 {
-	static Engagement game;
+	
 	ActiveUnit au;
 	FFTAUnit unit;
 	private JLabel lblCurrHP;
 	private JLabel lblCurrMP;
 	private JLabel lblStatus;
-	private JList<FFTAEquip> equipmentList_1;
-	private JLabel lblWAtkScore, lblWDefScore, lblMPowScore, lblMResScore,
-					lblSpeedScore, lblMoveScore, lblJumpScore, lblEvadeScore;
+	private JList equipmentList_1;
 	
 	public UnitPreviewPanel()
 	{
@@ -55,7 +53,8 @@ public class UnitPreviewPanel extends JPanel
 		setBorder(new TitledBorder(null, "Unit Preview", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		setPreferredSize(new Dimension(320, 162));
 		setLayout(new BorderLayout(0, 0));
-
+		
+		JList equipmentList = new JList();
 		
 		JPanel mainPanel = new JPanel();
 		if (au.team == 1)
@@ -79,21 +78,16 @@ public class UnitPreviewPanel extends JPanel
 		JPanel basicInfoPanel = new JPanel();
 		basicInfoPanel.setOpaque(false);
 		upperPanel.add(basicInfoPanel, BorderLayout.CENTER);
-		basicInfoPanel.setLayout(new BorderLayout(0, 0));
+		basicInfoPanel.setLayout(new GridLayout(4, 1, 0, 0));
 		
-		JLabel lblNameAndLevel = new JLabel("<html><b>" + unit.name + "</b> &mdash Lv. " + unit.getLevel());
+		JLabel lblNameAndLevel = new JLabel("<html><b>" + unit.name + "</b> &mdash Lv. " + unit.getLevel() + " " + unit.job);
 		lblNameAndLevel.setHorizontalAlignment(SwingConstants.CENTER);
-		basicInfoPanel.add(lblNameAndLevel, BorderLayout.NORTH);
-		
-		JPanel unitDescPanel = new JPanel();
-		unitDescPanel.setOpaque(false);
-		basicInfoPanel.add(unitDescPanel, BorderLayout.CENTER);
-		unitDescPanel.setLayout(new GridLayout(3, 0, 0, 0));
+		basicInfoPanel.add(lblNameAndLevel);
 		
 		JPanel basicStatsAlignmentPanel = new JPanel();
-		unitDescPanel.add(basicStatsAlignmentPanel);
 		basicStatsAlignmentPanel.setOpaque(false);
 		basicStatsAlignmentPanel.setBorder(null);
+		basicInfoPanel.add(basicStatsAlignmentPanel);
 		basicStatsAlignmentPanel.setLayout(new GridLayout(0, 6, 0, 0));
 		
 		JLabel lblHP = new JLabel("<html><b>HP</b>");
@@ -119,13 +113,13 @@ public class UnitPreviewPanel extends JPanel
 		basicStatsAlignmentPanel.add(lblMaxMP);
 		
 		JLabel lblJobAndSecondary = new JLabel("<html><em>" + unit.secondary + "&emsp " + unit.support + "</em>");
-		unitDescPanel.add(lblJobAndSecondary);
 		lblJobAndSecondary.setHorizontalAlignment(SwingConstants.CENTER);
+		basicInfoPanel.add(lblJobAndSecondary);
 		
 		JLabel lblOtherAbilities = new JLabel("<html> <em>" + unit.reaction + "&emsp " + unit.combo);
-		unitDescPanel.add(lblOtherAbilities);
 		lblOtherAbilities.setHorizontalAlignment(SwingConstants.CENTER);
 		lblOtherAbilities.setAlignmentX(Component.CENTER_ALIGNMENT);
+		basicInfoPanel.add(lblOtherAbilities);
 		
 		JPanel imagePanel = new JPanel() {
 			@Override
@@ -169,7 +163,7 @@ public class UnitPreviewPanel extends JPanel
 		lblWAtk.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblWAtk);
 		
-		lblWAtkScore = new JLabel(""+unit.getTotalWAtk());
+		JLabel lblWAtkScore = new JLabel(""+unit.getTotalWAtk());
 		lblWAtkScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblWAtkScore);
 		
@@ -177,7 +171,7 @@ public class UnitPreviewPanel extends JPanel
 		lblSpeed.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblSpeed);
 		
-		lblSpeedScore = new JLabel(""+unit.getTotalSpeed());
+		JLabel lblSpeedScore = new JLabel(""+unit.getTotalSpeed());
 		lblSpeedScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblSpeedScore);
 		
@@ -185,7 +179,7 @@ public class UnitPreviewPanel extends JPanel
 		lblWDef.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblWDef);
 		
-		lblWDefScore = new JLabel(""+unit.getTotalWDef());
+		JLabel lblWDefScore = new JLabel(""+unit.getTotalWDef());
 		lblWDefScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblWDefScore);
 		
@@ -193,7 +187,7 @@ public class UnitPreviewPanel extends JPanel
 		lblMove.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMove);
 		
-		lblMoveScore = new JLabel(""+unit.getTotalMove());
+		JLabel lblMoveScore = new JLabel(""+unit.getTotalMove());
 		lblMoveScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMoveScore);
 		
@@ -201,7 +195,7 @@ public class UnitPreviewPanel extends JPanel
 		lblMPow.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMPow);
 		
-		lblMPowScore = new JLabel(""+unit.getTotalMPow());
+		JLabel lblMPowScore = new JLabel(""+unit.getTotalMPow());
 		lblMPowScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMPowScore);
 		
@@ -209,7 +203,7 @@ public class UnitPreviewPanel extends JPanel
 		lblJump.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblJump);
 		
-		lblJumpScore = new JLabel(""+unit.getTotalJump());
+		JLabel lblJumpScore = new JLabel(""+unit.getTotalJump());
 		lblJumpScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblJumpScore);
 		
@@ -217,7 +211,7 @@ public class UnitPreviewPanel extends JPanel
 		lblMRes.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMRes);
 		
-		lblMResScore = new JLabel(""+unit.getTotalMRes());
+		JLabel lblMResScore = new JLabel(""+unit.getTotalMRes());
 		lblMResScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblMResScore);
 		
@@ -225,7 +219,7 @@ public class UnitPreviewPanel extends JPanel
 		lblEvade.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblEvade);
 		
-		lblEvadeScore = new JLabel(""+unit.getTotalEvade());
+		JLabel lblEvadeScore = new JLabel(""+unit.getTotalEvade());
 		lblEvadeScore.setHorizontalAlignment(SwingConstants.CENTER);
 		statsPanel.add(lblEvadeScore);
 		
@@ -236,7 +230,7 @@ public class UnitPreviewPanel extends JPanel
 		rightPanel.setLayout(new BorderLayout(0, 0));
 		equipmentList_1 = new JList<FFTAEquip>();
 		equipmentList_1.setEnabled(false);
-//		equipmentList_1.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
+		equipmentList_1.setSelectionMode(ListSelectionModel.SINGLE_INTERVAL_SELECTION);
 		equipmentList_1.setPreferredSize(new Dimension(100, 94));
 		equipmentList_1.setCellRenderer(new EquipCellRenderer());
 		equipmentList_1.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
@@ -255,21 +249,8 @@ public class UnitPreviewPanel extends JPanel
 		// Update HP and MP
 		lblCurrHP.setText("" + au.currHP);
 		lblCurrMP.setText("" + au.currMP);
-
-		// Update equipment
-		equipmentList_1.setModel(unit.equips.getListModel());
 		
-		// Update stats
-		lblWAtkScore.setText ("" + unit.getTotalWAtk());
-		lblWDefScore.setText ("" + unit.getTotalWDef());
-		lblMPowScore.setText ("" + unit.getTotalMPow());
-		lblMResScore.setText ("" + unit.getTotalMRes());
-		lblSpeedScore.setText("" + unit.getTotalSpeed());
-		lblMoveScore.setText ("" + unit.getTotalMove());
-		lblJumpScore.setText ("" + unit.getTotalJump());
-		lblEvadeScore.setText("" + unit.getTotalEvade());
-		
-		// Update status effects
+		// Update status
 		int count = 0;
 		StringBuilder status = new StringBuilder();
 		
@@ -282,22 +263,9 @@ public class UnitPreviewPanel extends JPanel
 				{
 					if (count > 0)
 						status.append(", ");
-					
 					status.append(StatusEffect.values()[i].NAME);
-					
-					if (i == StatusEffect.DOOM.ordinal())
-						status.append(" (" + au.status[i] + ")");
-					
 					count++; 
 				}
-			
-			if (au.covering != -1)
-			{
-				if (count > 0)
-					status.append(", ");
-				status.append("Covering (" + game.getUnits()[au.covering].unit.name + ")");
-				count++;
-			}
 			
 			if (status.toString().equals("")) 
 				lblStatus.setText("<html><b>Status:</b> OK");

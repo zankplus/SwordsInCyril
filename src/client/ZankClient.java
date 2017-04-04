@@ -45,55 +45,36 @@ public class ZankClient
 
 	public void sendChallenge(String user) throws IOException
 	{
-		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.name, user);
+		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.username, user);
 		sendZankMessage(message);
 	}
 	
 	public void sendEngage(String user) throws IOException
 	{
-		message = new ZankMessage(ZankMessageType.ENGAGE, zu.name, user);
+		message = new ZankMessage(ZankMessageType.ENGAGE, zu.username, user);
 		sendZankMessage(message);
 	}
 	
-	public void sendSpectate(String user) throws IOException
-	{
-		message = new ZankMessage(ZankMessageType.SPECTATE, zu.name, user);
-		sendZankMessage(message);
-	}
-	
-	public void launchEngagementWindow(ZankGameAction startMsg, boolean spectator)
+	public void launchEngagementWindow(ZankGameAction startMsg)
 	{
 		String opponentName;
 		int playerNumber;
 		
-		if (spectator)
-		{
-			opponentName = startMsg.player2;
-			playerNumber = 0;
-			
-			game = new Engagement(new ZankUser(startMsg.player1), playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
-			game.window.appendToChat("<em>You are now watching <strong>" + startMsg.player1 +
-									 "</strong> and <strong>" + startMsg.player2 + "</strong> engage.");
-		}
-		else if (zu.name.equals(startMsg.player1))
+		if (zu.username.equals(startMsg.player1))
 		{
 			opponentName = startMsg.player2;
 			playerNumber = 1;
-			
-			game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
-			game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
 		}
+		
 		else
 		{
 			opponentName = startMsg.player1;
 			playerNumber = 2;
-			
-			game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
-			game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
 		}
 		
 		
-		
+		game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
+		game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
 		game.window.setVisible(true);	
 	}
 	
@@ -196,6 +177,4 @@ public class ZankClient
 		System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");	// Lets the program close on command-Q on macs
 			
 	}
-
-	
 }

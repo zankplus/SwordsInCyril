@@ -50,19 +50,35 @@ public class UnitActionPanel extends JPanel
 						btnNe, btnNw, btnSe, btnSw, btnFight, btnSkillset_1, btnSkillset_2,
 						btnItem, btnSkillCancel, btnOk;
 	private JPanel blankPanel, actionsPanel, movePanel, waitPanel, directionsPanel, actPanel,
-		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel, doublecastPanel;
+		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel;
 	private JLabel lblMoveInstruction; 
 	boolean unitHasMoved, unitHasActed, sendMove;
 	private JPanel fightPanel;
 	private JButton btnFightCancel;
 	private JLabel lblClickTheUnit;
-	SkillPanel dcPanel;
-	int doublecastMode;
 	String prevCard;
 	Engagement game;
-	private JButton btnFightConfirm;
 	
-
+	/**
+	 * Create the panel.
+	 */
+	public static void main(String[] args) {
+		EventQueue.invokeLater(new Runnable() {
+			public void run() {
+				try {
+//					MapPanelTest frame = new MapPanelTest();
+//					UnitActionPanel uap = new UnitActionPanel(null);
+//					uap.showActionsPanel();
+//					frame.getContentPane().add(uap);
+//					frame.pack();
+//					frame.setVisible(true);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		});
+	}
+	
 	public UnitActionPanel(EngagementWindow window)
 	{
 		this.window = window;
@@ -121,7 +137,7 @@ public class UnitActionPanel extends JPanel
 		btnAct.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				showPanel("Act");
+				showActPanel();
 			}
 		});
 		actionsPanel.add(btnAct);
@@ -177,7 +193,7 @@ public class UnitActionPanel extends JPanel
 		btnFight.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				prevCard = "Act";
-				showSkillUsePanel(game.currentUnit().getFightSkill(), 0);
+				showSkillUsePanel(game.currentUnit().getFightSkill());
 			}
 		});
 		btnFight.setPreferredSize(new Dimension(112, 23));
@@ -194,15 +210,6 @@ public class UnitActionPanel extends JPanel
 		add(fightPanel, "Fight");
 		fightPanel.setLayout(new BorderLayout(0, 0));
 		
-		btnFightConfirm = new JButton("Confirm");
-		fightPanel.add(btnFightConfirm, BorderLayout.CENTER);
-		btnFightConfirm.addActionListener(new ActionListener(){
-			public void actionPerformed(ActionEvent e)
-			{
-				window.mapPanel.selectTarget(2);
-			}
-		});
-		
 		btnFightCancel = new JButton("Cancel");
 		fightPanel.add(btnFightCancel, BorderLayout.SOUTH);
 		btnFightCancel.addActionListener(new ActionListener(){
@@ -214,7 +221,7 @@ public class UnitActionPanel extends JPanel
 		
 		lblClickTheUnit = new JLabel("<html>Click the unit to target.<br>Double-click to confirm action.");
 		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
-		// fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
+		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
 			
 		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
 		waitPanel = new JPanel();
@@ -282,7 +289,7 @@ public class UnitActionPanel extends JPanel
 				cl.show(thisRef, "Skillset 1");
 			}
 		});
-		add(new SkillPanel(au.unit.job.command.SKILLS, "Act"), "Skillset 1");
+		add(new SkillPanel(au.unit.job.command), "Skillset 1");
 		if (au.status[StatusEffect.FROG.ordinal()] > 0 || au.status[StatusEffect.ADDLE.ordinal()] > 0)
 			btnSkillset_1.setEnabled(false);
 		else
@@ -307,7 +314,7 @@ public class UnitActionPanel extends JPanel
 				else
 					btnSkillset_2.setEnabled(true);
 			
-			add(new SkillPanel(au.unit.secondary.SKILLS, "Act"), "Skillset 2");
+			add(new SkillPanel(au.unit.secondary), "Skillset 2");
 		}
 		
 		
@@ -328,41 +335,7 @@ public class UnitActionPanel extends JPanel
 			else
 				btnItem.setEnabled(true);
 			
-			add(new SkillPanel(FFTACommand.ITEM.SKILLS, "Act"), "AlchItem");
-		}
-		
-		// Add doublecast panel
-		
-		if (au.unit.job == FFTAJob.RED_MAGE || au.unit.secondary == FFTACommand.RED_MAGIC)
-		{
-			// Identify magic skillsets
-			FFTASkill[] second = new FFTASkill[0];
-			if (au.unit.job.command == FFTACommand.WHITE_MAGIC || 
-				au.unit.job.command == FFTACommand.SPIRIT_MAGIC || 
-				au.unit.job.command == FFTACommand.SUMMON_MAGIC)
-			{
-				second = au.unit.job.command.SKILLS;
-			}
-			else if (au.unit.secondary== FFTACommand.WHITE_MAGIC || 
-				au.unit.secondary == FFTACommand.SPIRIT_MAGIC || 
-				au.unit.secondary == FFTACommand.SUMMON_MAGIC)
-			{
-				second = au.unit.secondary.SKILLS;
-			}
-			
-			FFTASkill[] dcSkills = new FFTASkill[FFTACommand.RED_MAGIC.SKILLS.length + second.length - 1];
-			for (int i = 0; i < FFTACommand.RED_MAGIC.SKILLS.length - 1; i++)
-				dcSkills[i] = FFTACommand.RED_MAGIC.SKILLS[i];
-			for (int i = 0; i < second.length; i++)
-				dcSkills[i + FFTACommand.RED_MAGIC.SKILLS.length - 1] = second[i];
-			
-			String prev;
-			if (au.unit.job == FFTAJob.RED_MAGE)
-				prev = "Skillset 1";
-			else
-				prev = "Skillset 2";
-			dcPanel = new SkillPanel(dcSkills, prev);
-			add(dcPanel, "Doublecast");
+			add(new SkillPanel(FFTACommand.ITEM), "AlchItem");
 		}
 		
 		actSkillsetPanel.revalidate();
@@ -417,9 +390,9 @@ public class UnitActionPanel extends JPanel
 		cl.show(this, "Move");
 	}
 	
-	public void showPanel(String panelName)
+	public void showActPanel()
 	{
-		cl.show(this, panelName);
+		cl.show(this, "Act");
 	}
 	
 	public void showPrevPanel()
@@ -453,23 +426,18 @@ public class UnitActionPanel extends JPanel
 			showActionsPanel();
 	}
 
-	public void showSkillUsePanel(FFTASkill sk, int doublecastMode)
+	public void showSkillUsePanel(FFTASkill sk)
 	{
-		window.beginTargetingMode(sk, doublecastMode);
-		btnFightConfirm.setText("Use " + window.selectedSkill.NAME);
+		window.beginTargetingMode(sk);
+		lblClickTheUnit.setText(window.selectedSkill + "");
 		cl.show(this, "Fight");
 	}
 	
 	public void cancelFight()
 	{
-		window.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just 
-										// clears the highlighted tiles and sets the map panel's mode to 0,
-		window.selectTile();			// it serves our purpose here
-		
-		if (doublecastMode > 0)
-			showPanel("Doublecast");
-		else
-			showPrevPanel();
+		window.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
+		window.selectTile();
+		showPrevPanel();			// tiles and sets the map panel's mode to 0, it serves our purpose here
 	}
 	
 	
@@ -509,7 +477,6 @@ public class UnitActionPanel extends JPanel
 			btnNw.setEnabled(false);
 			btnSw.setEnabled(false);
 			btnSe.setEnabled(false);
-			btnWaitCancel.setEnabled(false);
 			
 //			hideActionPanel();
 		}
@@ -517,34 +484,17 @@ public class UnitActionPanel extends JPanel
 
 	}
 	
-	class SkillPanel extends JPanel
+	private class SkillPanel extends JPanel
 	{
-		public JButton btnSkillCancel;
-		
-		public SkillPanel(FFTASkill[] skills, String prevPanel)
+		public SkillPanel(FFTACommand skillset)
 		{
-			doublecastMode = 0;
 			setLayout(new BorderLayout(0, 0));
 			
 			// Initialize 'Cancel' button 
-			btnSkillCancel = new JButton("Cancel Skill");
+			JButton btnSkillCancel = new JButton("Cancel Skill");
 			btnSkillCancel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					
-					if (doublecastMode < 2)
-					{
-						showPanel(prevPanel);
-						doublecastMode = 0;
-						btnSkillCancel.setText("Cancel Skill");
-					}
-					else
-					{
-						showPanel("Doublecast");
-						doublecastMode = 1;
-						btnSkillCancel.setText("Cancel Doublecast");
-						revalidate();
-						repaint();
-					}
+					showActPanel();
 				}
 			});
 			add(btnSkillCancel, BorderLayout.SOUTH);
@@ -585,18 +535,7 @@ public class UnitActionPanel extends JPanel
 					result.setBorder(new EmptyBorder(1, 2, 1, 0));
 					result.setOpaque(true);
 					
-					if (doublecastMode == 2)
-					{
-						int offset = window.dcSkill.MP_COST;
-						if (au.unit.support == FFTASupport.HALF_MP)
-							offset /= 2;
-						else if (au.unit.support == FFTASupport.TURBO_MP)
-							offset *= 2;
-						
-						result.setEnabled(FFTASkill.canUseSkill(sk, au, offset));
-					}
-					else
-						result.setEnabled(FFTASkill.canUseSkill(sk, au, 0));
+					result.setEnabled(FFTASkill.canUseSkill(sk, au));
 
 					
 					if (isSelected)
@@ -616,6 +555,7 @@ public class UnitActionPanel extends JPanel
 			skillList.setCellRenderer(new SkillCellRenderer());
 			
 			// Create and populate list model and assign it to the list
+			FFTASkill[] skills = skillset.SKILLS;
 			DefaultListModel<FFTASkill> skListModel = new DefaultListModel<FFTASkill>();
 			for (FFTASkill sk : skills)
 				skListModel.addElement(sk);
@@ -633,34 +573,13 @@ public class UnitActionPanel extends JPanel
 				public void actionPerformed(ActionEvent e)
 				{
 					FFTASkill sk = skillList.getSelectedValue();
-					int offset = 0;
-					if (doublecastMode == 2)
+					if (sk != null && FFTASkill.canUseSkill(sk, au))
 					{
-						offset = window.dcSkill.MP_COST;
-						if (au.unit.support == FFTASupport.HALF_MP)
-							offset /= 2;
-						else if (au.unit.support == FFTASupport.TURBO_MP)
-							offset *= 2;
-					}
-					
-					if (sk != null && FFTASkill.canUseSkill(sk, au, offset))
-					{
-						if (sk == FFTASkill.DOUBLECAST)
+						showSkillUsePanel(sk);
+						if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES)
 						{
-							dcPanel.btnSkillCancel.setText("Cancel Doublecast");
-							showPanel("Doublecast");
-							doublecastMode = 1;
-							System.out.println("boops");
-							revalidate();
-						}
-						else
-						{
-							showSkillUsePanel(sk, doublecastMode);
-							if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES)
-							{
-								// window.selectTile();
-								window.selectTarget(0);
-							}
+							// window.selectTile();
+							window.selectTarget(0);
 						}
 					}
 				}

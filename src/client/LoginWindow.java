@@ -29,7 +29,6 @@ import javax.swing.UIManager;
 import zank.ZankMessage;
 import zank.ZankMessageType;
 import zank.ZankUser;
-
 import javax.swing.SwingConstants;
 import java.awt.FlowLayout;
 import javax.swing.BoxLayout;
@@ -96,7 +95,7 @@ public class LoginWindow extends JFrame {
 		connectPane.setBackground(new Color(255, 255, 255));
 		connectPane.setLayout(null);
 		
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+		
 		
 		
 		// Adjust window		
@@ -236,7 +235,7 @@ public class LoginWindow extends JFrame {
 	
 	public void sendLogin() throws IOException
 	{
-		ZankMessage msg = new ZankMessage(ZankMessageType.LOGIN, zUser.name, null);
+		ZankMessage msg = new ZankMessage(ZankMessageType.LOGIN, zUser.username, null);
 		
 		synchronized(client.out)
 		{

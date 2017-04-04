@@ -1,13 +1,18 @@
 package server;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.*;
+
+import javax.swing.JOptionPane;
 
 import fftadata.*;
 import zank.*;
-import fftamap.*;
+
 
 public class ActiveGame
 {
@@ -15,7 +20,6 @@ public class ActiveGame
 	ActiveUser player1, player2;
 	List<ActiveUser> userlist;
 	GameStatus status;
-	FFTAMap map;
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	boolean finishedPrep1, finishedPrep2;
 	
@@ -23,11 +27,8 @@ public class ActiveGame
 	GameState state;
 	Lock gameLock;
 	int turn;
-	boolean doublecast;
-	private int[] lastNextData;
-	private int[] lastTurnOrderData;
 	
-	public ActiveGame (ActiveUser p1, ActiveUser p2, FFTAMap map)
+	public ActiveGame (ActiveUser p1, ActiveUser p2)
 	{
 		StringBuilder pID = new StringBuilder();
 		for (int i = 0; i < 5; i++)
@@ -40,7 +41,6 @@ public class ActiveGame
 		id = pID.toString();
 		player1 = p1;
 		player2 = p2;
-		this.map = map;
 //		System.out.println("\np1 is " + player1.nickname + ", p2 is " + p2.nickname);
 		status = GameStatus.SETUP;
 		finishedPrep1 = finishedPrep2 = false;
@@ -59,27 +59,24 @@ public class ActiveGame
 	
 	public void joinRoom(ActiveUser user)
 	{
-		synchronized(userlist)
-		{
-			userlist.add(user);
-		}
+		userlist.add(user);
 	}
 	
 	public void leaveRoom(ActiveUser user)
 	{
-		synchronized(userlist)
-		{
-			// Remove user from the list
-			userlist.remove(user);
-			user.game = null;
-			ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
-			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			try
-			{
-				sendToAll(zm);
-			} catch (Exception e) { e.printStackTrace(); }
-		}
+		// Remove user from the list
+		userlist.remove(user);
+		ZankGameAction za = new ZankGameAction(ZankGameActionType.EXIT, id, null, null, user.nickname);
+		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
 		
+		try
+		{
+			synchronized(userlist)
+			{
+				for (int i = 0; i < userlist.size(); i++)
+					userlist.get(i).messageQueue.put(zm);
+			}
+		} catch (InterruptedException e) { e.printStackTrace(); }
 	}
 	
 	// leaveRoom(String): Find the ActiveUser with the username listed and call leaveRoom() on them
@@ -101,28 +98,12 @@ public class ActiveGame
 	public void initializeTurnOrder()
 	{
 		turnOrder = new TurnOrder(p1Units, p2Units);
-		state = new GameState(turnOrder.units, map);
+		state = new GameState(turnOrder.units);
 	}
 	
-	public ZankMessage getStartMessage(boolean spectator)
+	public ZankMessage getStartMessage()
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.START, id, player1.nickname, player2.nickname, null);
-		ZankMessage msg;
-		if (spectator)
-			msg = new ZankMessage(ZankMessageType.GAME, "spec", action);
-		else
-			msg = new ZankMessage(ZankMessageType.GAME, null, action);
-		return msg;
-	}
-	
-	public ZankMessage getSpecJoinMessage()
-	{
-		Object[] data = new Object[3];
-		data[0] = state;
-		data[1] = lastNextData;
-		data[2] = lastTurnOrderData;
-		
-		ZankGameAction action = new ZankGameAction(ZankGameActionType.SPECJOIN, id, null, null, data);
 		return new ZankMessage(ZankMessageType.GAME, null, action);
 	}
 	
@@ -156,12 +137,11 @@ public class ActiveGame
 
 		// Tell the client that it's this unit's turn, whether they're able to take their turn or not.
 		// If the unit is dead, petrified, stopped, etc., the client will handle it accordingly.
-		
-		lastNextData = new int[] { state.currentUnit, poisonVariance, regenVariance }; 
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.NEXT, id, null, null,
-				lastNextData);
+				new int[] { state.currentUnit, poisonVariance, regenVariance });
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		sendToAll(zm);
+		player1.messageQueue.put(zm);
+		player2.messageQueue.put(zm);
 	
 		// If the current unit has died of poison/doom this turn...
 		if (au.currHP == 0)
@@ -196,66 +176,6 @@ public class ActiveGame
 			// Advance to the next turn
 			advanceTurn();
 		}
-		
-		// If this turn isn't being skipped, send a turn order update
-		else
-		{
-			lastTurnOrderData = predictTurnOrder(); 
-			za = new ZankGameAction(ZankGameActionType.TURN_ORDER, id, null, null,
-					lastTurnOrderData);
-			zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			sendToAll(zm);
-		}
-	}
-	
-	public int[] predictTurnOrder()
-	{
-		boolean keepGoing = true;
-		int round = 0;
-		
-		ArrayList<Turn> turnList = new ArrayList<Turn>();
-		
-		int speed = state.units[state.currentUnit].unit.getTotalSpeed();
-		Turn wait = new Turn(-5, 500.0 / speed);
-		Turn actOnly = new Turn(-7, 700.0 / speed);
-		Turn moveOnly = new Turn(-8, 800.0 / speed);
-		Turn moveAct = new Turn(-10, 1000.0 / speed);
-		
-		turnList.add(wait);
-		turnList.add(actOnly);
-		turnList.add(moveOnly);
-		turnList.add(moveAct);
-		
-		while (keepGoing)
-		{
-			keepGoing = false;
-			for (int i = 0; i < state.units.length; i++)
-			{
-				if (!(i == state.currentUnit && round == 1) && state.units[i].currHP > 0)
-				{
-					double ticksTilTurn = (1000.0 * (round + 1) - (state.units[i].counter + 
-							state.units[i].reserve)) / state.units[i].unit.getTotalSpeed();
-					if (turnList.size() < 20 || ticksTilTurn < turnList.get(19).position)
-					{
-						Turn to = new Turn(i, ticksTilTurn);
-						turnList.add(to);
-						Collections.sort(turnList);
-						keepGoing = true;
-					}
-				}
-			}
-			round++;
-		}
-		
-		int[] turnOrder = new int[20];
-		for (int i = 0; i < 20; i++)
-		{
-			turnOrder[i] = turnList.get(i).unit;
-			if (turnOrder[i] >= 0)
-				System.out.println(turnList.get(i));
-		}
-		
-		return turnOrder;
 	}
 	
 	// Only use this for move actions; use a different method for knockback, since this one depletes counter
@@ -278,212 +198,13 @@ public class ActiveGame
 	
 	public void doAction(FFTASkill sk, int x, int y) throws InterruptedException
 	{
-		System.out.println ("Doing " + sk.NAME);
 		ActiveUnit au = state.units[state.currentUnit];
-		if (au.currHP == 0)
-			return; 
 		au.counter = Math.max(au.counter - 200, 0);
 		
-		state.reacting = false;
-		SkillEffectResult[][] allResults = executeSkill(state.currentUnit, sk, x, y, false);
-		
-		System.out.println("Results length: " + allResults.length);
-		
-		state.reacting = true;
-		
-		int whichEffect;
-		
-		for (int i = 0; i < allResults.length; i++)
-		{
-			ActiveUnit target = state.units[allResults[i][0].target];
-			
-			if (sk == FFTASkill.RAISE && target.currHP == 0)
-				whichEffect = 1;
-			else
-				whichEffect = 0;
-			
-			if (/*1*/ state.reactionApplies(au, target, sk, allResults[i][whichEffect].damage > 0) &&
-				/*2*/ target.currHP > 0 &&
-				/*3*/ !allResults[i][allResults[i].length - 1].autoLife &&
-				/*4*/ allResults[i][0].cover == -1)
-			{
-				switch(target.unit.reaction)
-				{
-					case ABSORB_MP:
-					{
-						boolean miss = true;
-						for (int j = 0; j < allResults[i].length; j++)
-							if (allResults[i][j] != null && allResults[i][j].success)
-								miss = false;
-						
-						if (/*1*/ !miss)
-						{
-							int cost = sk.MP_COST;
-							if (au.unit.support == FFTASupport.HALF_MP)
-								cost /= 2;
-							else if (au.unit.support == FFTASupport.TURBO_MP)
-								cost *= 2;
-							
-							state.applyMPHealing(target.id, cost);
-							sendReaction(target.id, FFTAReaction.ABSORB_MP, cost);
-						}
-						break;
-					}
-				
-					case AUTO_REGEN:
-					{
-						if( /*1*/ allResults[i][whichEffect].success)	// if damaging effect hit
-						{
-							state.applyStatus(target, StatusEffect.REGEN);
-							sendReaction(target.id, FFTAReaction.AUTO_REGEN, 0);
-						}
-						break;
-					}
-					
-					case BONECRUSHER:
-					{
-						boolean hit = false;
-						for (int j = 0; j < allResults[i].length; j++)
-							if (allResults[i][j].success)
-								hit = true;
-							
-						if (/*1*/	hit					&&
-							/*2*/	au.currHP > 0 		)
-						{
-							System.out.println(target.unit.name + " crushes bone!");
-							sendReaction(target.id, FFTAReaction.BONECRUSHER, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							
-							executeSkill(target.id, target.getFightSkill(), au.x, au.y, true);
-						}
-						else
-							System.out.println(target.unit.name + " does not crush bone.");
-						
-						break;
-					}
-					
-					case COUNTER:
-						if (/*3*/	au.currHP > 0)
-						{
-							System.out.println(target.unit.name + " counterattacks!");
-							sendReaction(target.id, FFTAReaction.COUNTER, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							
-							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
-						}
-						else
-							System.out.println(target.unit.name + " does not counterattack.");
-							
-						break;
-						
-					case DRAGONHEART:
-					{
-						if (/*1*/ allResults[i][whichEffect].success)
-						{
-							state.applyStatus(target, StatusEffect.AUTO_LIFE);
-							sendReaction(target.id, FFTAReaction.DRAGONHEART, 0);
-						}
-						
-						break;
-					}
-					
-					case LAST_HASTE:
-					{
-						if (/*1*/ target.currHP <= (target.unit.maxHP / 4) &&
-							/*2*/ allResults[i][whichEffect].damage + target.currHP > target.unit.maxHP / 4)
-						{
-							state.applyStatus(target, StatusEffect.HASTE);
-							sendReaction(target.id, FFTAReaction.LAST_HASTE, 0);
-						}
-						break;
-					}
-					
-					case LAST_QUICKEN:
-					{
-						if (/*1*/ target.currHP <= (target.unit.maxHP / 4) &&
-							/*2*/ allResults[i][whichEffect].damage + target.currHP > target.unit.maxHP / 4)
-						{
-							state.applyStatus(target, StatusEffect.QUICK);
-							sendReaction(target.id, FFTAReaction.LAST_QUICKEN, 0);
-						}
-						break;
-					}
-					
-					case STRIKEBACK:
-					{
-						if (/*1*/	au.currHP > 0)
-						{
-							System.out.println(target.unit.name + " strikes back!");
-							sendReaction(target.id, FFTAReaction.STRIKEBACK, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							executeSkill(target.id, target.getFightSkill(), au.x, au.y, false);
-						}
-						break;
-					}
-					
-					case RETURN_FIRE:
-					{
-						if (/*1*/ au.currHP > 0)
-						{
-							sendReaction(target.id, FFTAReaction.RETURN_FIRE, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							executeSkill(target.id, FFTASkill.RETURN_FIRE, au.x, au.y, false);
-						}
-						break;
-					}
-					
-					case RETURN_MAGIC:
-					{
-						int mpCost = sk.MP_COST;
-						if (target.unit.support == FFTASupport.HALF_MP)
-							mpCost /= 2;
-						else if (target.unit.support == FFTASupport.TURBO_MP)
-							mpCost *= 2;
-						
-						if (/*1*/	au.currHP > 0 &&
-							/*2*/	mpCost < target.currMP)
-						{
-							sendReaction(target.id, FFTAReaction.RETURN_MAGIC, 0);
-							
-							int facing = intermediateFacing(target.id, au.x, au.y);
-							faceUnit(target.id, facing);
-							executeSkill(target.id, sk, au.x, au.y, false);
-						}
-						break;
-					}
-					
-					case REFLEX:
-					{
-						int facing = intermediateFacing(target.id, au.x, au.y);
-						faceUnit(target.id, facing);
-					}
-					
-					default:
-						System.out.println(target.unit.name + " makes no reaction.");
-						break;
-				}
-			}
-			
-			// If unit switched for cover, return both units to their original locations 
-			if (state.units[target.id].switchedInFor != -1)
-			{
-				allResults[i][0].cover = target.id;
-				state.swapUnits(target.id, target.switchedInFor);
-				target.switchedInFor = -1;
-			}
-		}
+		executeSkill(state.currentUnit, sk, x, y);
 	}
 	
-	public SkillEffectResult[][] executeSkill(int actor, FFTASkill sk, int x, int y, boolean bonecrusher)
-			throws InterruptedException
+	public void executeSkill(int actor, FFTASkill sk, int x, int y) throws InterruptedException
 	{
 		ActiveUnit user = state.units[actor];
 		
@@ -491,14 +212,14 @@ public class ActiveGame
 		state.expendMP(sk);
 		
 		// Find skill's targets
-		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor], state.reacting);
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[actor]);
 		
 		// Boost check  
 		boolean clearBoostAfterExecuting = (state.units[actor].status[StatusEffect.BOOST.ordinal()] > 0 && 
 											sk != FFTASkill.BOOST);
 		
 		// Cover check
-		if (sk.COVERABLE && !state.reacting)	// Cover doesn't apply to reactions
+		if (sk.COVERABLE)
 		{
 			int k;
 			for (int i = 0; i < targets.size(); i++)
@@ -514,7 +235,7 @@ public class ActiveGame
 			}
 			
 			// Find targets again using new locations
-			targets = state.getTargets(x, y, sk, state.units[actor], false);
+			targets = state.getTargets(x, y, sk, state.units[actor]);
 		}
 		
 		// Generate effect list
@@ -545,8 +266,6 @@ public class ActiveGame
 		else
 			 effects = sk.EFFECTS;
 		
-		// create empty array to hold results
-		SkillEffectResult[][] allResults = new SkillEffectResult[targets.size()][];
 		
 		// For each target, apply all effects sequentially
 		for (int i = 0; i < targets.size(); i++)
@@ -571,20 +290,21 @@ public class ActiveGame
 				
 				// Determine the results of the current effect
 				SkillEffectResult prev = results[Math.max(0, j - 1)];
-				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], state, false, bonecrusher);
+				results[j] = effects[j].handler.resolveEffect(result, prev, results[0], false);
 				
 				// Apply those results IF they are not effect1-dependent, or if they are but
 				// effect1 was successful, or if it is prev-effect dependent and that was successful
 				if (!results[j].dependent || results[0].success || (effects[j] == SkillEffect.DRAIN && results[j - 1].success))
-					effects[j].handler.applyEffect(results[j], state);
+					effects[j].handler.applyEffect(results[j]);
 			}
 			
-			// Return Fire modifiers
-			if (state.reacting && actor == target)
+			// If unit switched for cover, return both units to their original locations 
+			if (state.units[target].switchedInFor != -1)
 			{
-				results[0].success = true;
-				results[0].hitChance = 100;
-				results[0].damage *= 1.2 + Math.random() * 0.4;
+				ActiveUnit au = state.units[target];
+				results[0].cover = au.id;
+				state.swapUnits(au.id, au.switchedInFor);
+				au.switchedInFor = -1;
 			}
 			
 			// Boost flag
@@ -595,26 +315,19 @@ public class ActiveGame
 			if (reflect)
 				results[0].reflect = true;
 			
-			// Add this target's results to master record
-			allResults[i] = results;
-
-			// Check for auto-life trigger on current target
-			results[results.length - 1].autoLife = state.checkAutoLife(state.units[targets.get(i)]);
-			
 			// Send the message
-			ZankGameActionType t = ZankGameActionType.HIT;
-			if (doublecast && !state.reacting)
-				t = ZankGameActionType.DCHIT;
-			ZankGameAction za = new ZankGameAction(t, id, null, null, results);
+			ZankGameAction za = new ZankGameAction(ZankGameActionType.HIT, id, null, null, results);
 			ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-			sendToAll(zm);			
+			player1.messageQueue.put(zm);
+			player2.messageQueue.put(zm);
+			
+			// Check for auto-life trigger on current target
+			state.checkAutoLife(state.units[targets.get(i)]);
 		}
 		
 		// Remove boost, if necessary
 		if (clearBoostAfterExecuting)
 			state.units[actor].status[StatusEffect.BOOST.ordinal()] = 0;
-		
-		return allResults;
 	}
 	
 	// Check both teams' HP scores and status to see if either size has lost
@@ -639,7 +352,8 @@ public class ActiveGame
 		
 		ZankGameAction za = new ZankGameAction(ZankGameActionType.GAMEOVER, id, null, null, new boolean[]{p1lose, p2lose});
 		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		sendToAll(zm);			
+		player1.messageQueue.put(zm);
+		player2.messageQueue.put(zm);			
 		
 		return (p1lose || p2lose);
 	}
@@ -671,79 +385,17 @@ public class ActiveGame
 		return unit.dir;
 	}
 	
-	public void faceUnit(int unitNumber, int dir) throws InterruptedException
-	{
-		state.units[unitNumber].dir = dir;
-		ZankGameAction za = new ZankGameAction(ZankGameActionType.WAIT, id, null, null,
-									new int[]{unitNumber, dir});
-		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		sendToAll(zm);
-	}
-	
 	public void sendToAll(ZankMessage msg) throws InterruptedException
 	{
 		synchronized(userlist)
 		{
 			for (ActiveUser user : userlist)
-				user.messageQueue.put(msg);
+					user.messageQueue.put(msg);
 		}
-	}
-	
-	public void sendToSpectators(ZankMessage msg) throws InterruptedException
-	{
-		synchronized(userlist)
-		{
-			for (ActiveUser user : userlist)
-				if (user != player1 && user != player2)
-				user.messageQueue.put(msg);
-		}
-	}
-	
-	public void sendReaction(int unit, FFTAReaction r, int x) throws InterruptedException
-	{
-		int[] data = new int[] {unit, r.ordinal(), x};
-		ZankGameAction za = new ZankGameAction(ZankGameActionType.REACTION, id, null, null, data);
-		ZankMessage zm = new ZankMessage(ZankMessageType.GAME, null, za);
-		sendToAll(zm);
 	}
 	
 	public ActiveUnit currentUnit()
 	{
 		return state.units[state.currentUnit];
 	}
-	
-	class Turn implements Comparable<Turn>
-	{ 
-		int unit; double position;
-		public Turn(int unit, double position)
-		{
-			this.unit = unit;
-			this.position = position;
-		}
-		
-		@Override
-		public int compareTo(Turn t)
-		{
-			if (t.position > position)
-				return -1;
-			else if (t.position < position)
-				return 1;
-			else if (this.unit < 0)	// for non-unit predictors
-				return 1;
-			else if (t.unit < 0)
-				return -1;
-			else if (state.units[unit].priority > state.units[t.unit].priority)
-				return -1;
-			else
-				return 1;
-		}
-		
-		public String toString()
-		{
-			return state.units[unit].unit.name + "\t" + state.units[unit].counter + " + " +
-					state.units[unit].reserve + "\t" + position;  
-		}
-	}
-
-	
 }

@@ -52,7 +52,7 @@ public class FFTACalc
 	}
 	
 	public static int getATypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
-									  GameState state, double hitFactor)
+									  double hitFactor)
 	{
 		int hitRate = 0;
 		
@@ -69,7 +69,7 @@ public class FFTACalc
 		else // Steps 2-9 are skipped in the event of an automatic hit
 		{
 			// 2. Reaction check
-			if (reactionNegates(attacker, defender, skill, state))
+			if (reactionNegates(defender.unit.reaction, skill))
 				return 0;
 			
 			// 3. Retrieve defender's Evade stat
@@ -83,11 +83,11 @@ public class FFTACalc
 			evade /= getRelativeFacing(attacker, defender);
 			
 			// 5. Status check
-			if (defender.status[StatusEffect.DARKNESS.ordinal()] != 0)
+			if (defender.status[StatusEffect.BLIND.ordinal()] != 0)
 				evade -= 20;
 			if (defender.status[StatusEffect.CONFUSE.ordinal()] != 0)
 				evade -= 10;
-			if (attacker.status[StatusEffect.DARKNESS.ordinal()] != 0)
+			if (attacker.status[StatusEffect.BLIND.ordinal()] != 0)
 				evade += 50;
 			
 			// 6. Support check
@@ -119,20 +119,16 @@ public class FFTACalc
 		return hitRate;
 	}
 	
-	public static int getSTypeHitRate(ActiveUnit attacker, ActiveUnit defender, FFTASkill sk, 
-										GameState state, StatusEffect sEff, double hitFactor)
+	public static int getSTypeHitRate(ActiveUnit attacker, ActiveUnit defender, StatusEffect sEff,
+										double hitFactor)
 	{
 		int hitRate;
 		// 1. Retrieve target's Status Resistance
 		int sRes = 50;
 		
-		// 1.5. Return 0 if attempting to charm
-		if (sEff == StatusEffect.CHARM && attacker.team == defender.team)
-			hitRate = 0;
-		
-		// 2. Status check | 3. Equipment check | 4. Immunity check | 4.5. Support Check
+		// 2. Status check | 3. Equipment check | 4. Immunity check
 		if (statusNegates(defender, sEff) || equipmentNegates(defender, sEff) ||
-				supportNegates(defender, sEff) || reactionNegates(attacker, defender, sk, state))
+				supportNegates(defender, sEff))
 			hitRate = 0;
 		else
 		{
@@ -144,7 +140,7 @@ public class FFTACalc
 					defender.status[StatusEffect.SLEEP.ordinal()] != 0 ||
 					defender.status[StatusEffect.EXPERT_GUARD.ordinal()] != 0)
 			{
-				hitRate = 100;
+				hitRate = 0;
 			}
 			else
 			{
@@ -185,7 +181,7 @@ public class FFTACalc
 	
 	public static int getDamage(ActiveUnit attacker, ActiveUnit defender, FFTASkill skill,
 			double damageFactor, boolean healing, boolean canCrit, boolean capToHP,
-			boolean capToMP, boolean leftHand, boolean preview)
+			boolean capToMP, boolean preview)
 	{
 		final int PHYSICAL = 1, MAGICAL = 2;
 		int dmg = 0;
@@ -214,7 +210,7 @@ public class FFTACalc
 			atk = atk * 307 / 256;
 		if (attacker.status[StatusEffect.FROG.ordinal()] != 0)
 			atk = atk * 25 / 256;
-		if (attacker.status[StatusEffect.BOOST.ordinal()] > 0 && skill.IS_PHYSICAL)
+		if (attacker.status[StatusEffect.BOOST.ordinal()] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 384 / 256;
 		if (attacker.status[StatusEffect.WATK_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
 			atk = atk * 281 / 256;
@@ -231,10 +227,7 @@ public class FFTACalc
 		if (attacker.status[StatusEffect.FROG.ordinal()] == 0)
 		{
 			if (skill.IS_PHYSICAL)
-				if (!leftHand)
-					atk += attacker.unit.getWAtkEquipBonus();
-				else
-					atk += attacker.unit.getWAtkEquipBonusLeft();
+				atk += attacker.unit.getWAtkEquipBonus();
 			else if (!skill.IS_PHYSICAL)
 				atk += attacker.unit.getMPowEquipBonus();
 		}
@@ -278,10 +271,10 @@ public class FFTACalc
 		if (defender.status[StatusEffect.MRES_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_UP.ordinal()] != 0 && !skill.IS_PHYSICAL)
 			def = def * 358 / 256;
 		
-		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && skill.IS_PHYSICAL)
+		if (defender.status[StatusEffect.WDEF_DOWN.ordinal()] != 0 && !skill.IS_PHYSICAL)
 			def = def * 179 / 256;
 		
 		// 9. Target's equipment check
@@ -303,17 +296,9 @@ public class FFTACalc
 		int power;
 		if (skill.POWER == -1)
 		{
-			if (leftHand)
-				power = attacker.unit.getWAtkEquipBonusLeft();
-			else
-				power = attacker.unit.getWAtkEquipBonus();
+			power = attacker.unit.getFightPower();
+			System.out.println("Power of EqAtk: " + power);
 		}
-		
-		else if (skill.POWER == -2)
-		{
-			power = defender.unit.getWAtkEquipBonus();
-		}
-		
 		else
 		{
 			power = skill.POWER;
@@ -331,9 +316,7 @@ public class FFTACalc
 			// a. Get attack element
 			Element element;
 			if (skill.ELEMENT == Element.AS_WEAPON)
-				element = attacker.unit.getWeapon(leftHand).element;
-			else if (skill.ELEMENT == Element.ENEMY_WEAP)
-				element = defender.unit.getWeapon(false).element;
+				element = attacker.unit.getWeapon().element;
 			else
 				element = skill.ELEMENT;
 			
@@ -409,7 +392,7 @@ public class FFTACalc
 			if (canCrit)
 			{
 				int rand = (int) (100 * Math.random());
-				if (rand < 5 || (rand < 25 && attacker.status[StatusEffect.ADVICE.ordinal()] > 0))
+				if (rand < 5)
 				{
 					wasCritical = true;
 					dmg = dmg * 3 / 2;
@@ -426,7 +409,7 @@ public class FFTACalc
 			dmg = 0;
 		
 		// 16. Weapon effects (basically just HEAL_HP since there is presently no way to inflict zombie)
-		FFTAEquip weapon = attacker.unit.getWeapon(leftHand);
+		FFTAEquip weapon = attacker.unit.getWeapon();
 		for (int i = 0; i < weapon.effects.length; i++)
 			if (skill == FFTASkill.FIGHT && weapon.effects[i] == ItemEffect.HEAL_HP)
 				dmg = -dmg;
@@ -455,157 +438,26 @@ public class FFTACalc
 	
 	
 	// TODO: Make this do something
-	public static boolean reactionNegates(ActiveUnit attacker, ActiveUnit defender, FFTASkill sk,
-											GameState state)
+	public static boolean reactionNegates(FFTAReaction rAbility, FFTASkill skill)
 	{
-		if (state.reactionApplies(attacker, defender, sk, false))
-		{
-			switch (defender.unit.reaction)
-			{
-				case REFLEX:
-					if (!state.reacting)
-						return true;
-					return false;
-					
-				case STRIKEBACK:
-					if (!state.reacting)
-						return true;
-					return false;
-					
-				case BLOCK_ARROWS:
-					if (!state.reacting)
-						return true;
-					return false;
-					
-				case RETURN_FIRE:
-					if (!state.reacting)
-						return true;
-					return false;
-					
-				default:
-					return false;
-			}	
-		}
-		
 		return false;
 	}
 	
 	public static boolean statusNegates(ActiveUnit defender, StatusEffect sEff)
 	{
-		// I
-		if (defender.status[sEff.ordinal()] > 0)
-			return true;
-		
 		// TODO: STOP prevents SLOW
 		// TODO: does it also prevent HASTE?
 		
 		return false;
 	}
 	
-	public static boolean equipmentNegates(ActiveUnit def, StatusEffect sEff)
+	public static boolean equipmentNegates(ActiveUnit defender, StatusEffect sEff)
 	{
-		boolean result = false;
-		switch (sEff)
-		{
-			case FROG:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_FROG, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case STOP:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_STOP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case SLOW:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLOW, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case CHARM:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CHARM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case IMMOBILIZE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_IMMOBILIZE, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case DISABLE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DISABLE, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case BERSERK:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BERSERK, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case DARKNESS:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BLIND, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case CONFUSE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CONFUSION, ItemEffect.MINDU_GEM, ItemEffect.RIBBON});
-				break;
-				
-			case DOOM:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DOOM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case SLEEP:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLEEP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case PETRIFY:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_PETRIFY, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case DEATH:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_KO, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case SILENCE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SILENCE, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case POISON:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_POISON, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case ADDLE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.RIBBON});
-				break;
-		}
-		
-		return result;
-	}
-	
-	private static boolean checkForItemEffects(ActiveUnit defender, ItemEffect[] effs)
-	{
-		for (int i = 0; i < 5; i++)
-		{
-			if (defender.unit.equips.slots[i] != FFTAEquip.NONE)
-				for (int j = 0; j < defender.unit.equips.slots[i].effects.length; j++)
-					for (int k = 0; k < effs.length; k++)
-						if (effs[k] == defender.unit.equips.slots[i].effects[j])
-						{
-							System.out.println("Blocked by " + effs[k]); 
-							return true;
-						}
-		}
-				
 		return false;
 	}
 	
 	public static boolean supportNegates(ActiveUnit defender, StatusEffect sEff)
 	{
-		if (defender.unit.support == FFTASupport.IMMUNITY &&
-			(sEff == StatusEffect.FROG 		||
-			sEff == StatusEffect.DARKNESS	||
-			sEff == StatusEffect.CONFUSE	||
-			sEff == StatusEffect.SLEEP		||	
-			sEff == StatusEffect.PETRIFY	||
-			sEff == StatusEffect.SILENCE	||
-			sEff == StatusEffect.POISON)	)
-		{
-			return true;
-		}
-		
 		return false;
 	}
 }

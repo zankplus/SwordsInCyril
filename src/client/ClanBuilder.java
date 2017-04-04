@@ -21,10 +21,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultFormatter;
-import javax.swing.text.PlainDocument;
 
 import fftadata.EquipSet;
 import fftadata.EquipType;
@@ -226,7 +223,6 @@ public class ClanBuilder extends JFrame
 		nameField = new JTextField();
 		basicFieldsPanel.add(nameField);
 		nameField.setColumns(10);
-		nameField.setDocument(new JTextFieldLimit(32));
 		
 		nameField.getDocument().addDocumentListener(new DocumentListener() {
 			@Override
@@ -1382,28 +1378,4 @@ public class ClanBuilder extends JFrame
 			}
 		}
 	}
-	
-	class JTextFieldLimit extends PlainDocument {
-		  private int limit;
-		  JTextFieldLimit(int limit) {
-		    super();
-		    this.limit = limit;
-		  }
-
-		  JTextFieldLimit(int limit, boolean upper) {
-		    super();
-		    this.limit = limit;
-		  }
-
-		  public void insertString(int offset, String str, AttributeSet attr) throws BadLocationException {
-		    if (str == null || str.contains("\\") || str.contains("/") || str.contains(":") || str.contains("*") || 
-		    		str.contains("?") || str.contains("\"") || str.contains("<") || str.contains(">") || 
-		    		str.contains("|"))
-		      return;
-
-		    if ((getLength() + str.length()) <= limit) {
-		      super.insertString(offset, str, attr);
-		    }
-		  }
-		}
 }

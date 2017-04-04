@@ -57,12 +57,10 @@ public class EquipSet implements Serializable
 				else
 				{
 					System.out.println("zzz");
-					rightHand = leftHand;
-					leftHand = -1;
-					
-					// If you're using a two-handed weapon without Monkeygrip, empty the right hand as well.
+					rightHand = -1;
+					// If you're using a two-handed weapon without Monkeygrip, empty the left hand as well.
 					if (slots[slot].isTwoHanded() && unit.support != FFTASupport.MONKEYGRIP)
-						rightHand = -1;
+						leftHand = -1;
 				}	
 			}
 			else if (type == EquipType.SHIELD)
@@ -78,8 +76,6 @@ public class EquipSet implements Serializable
 			
 			slots[slot] = FFTAEquip.NONE;
 		}
-		
-		 System.out.println(toString());
 	}
 	
 	public boolean equip(FFTAEquip eq)
@@ -197,7 +193,7 @@ public class EquipSet implements Serializable
 						// Make sure the uppermost (lowest index) weapon slot is the right hand
 						if (slot > rightHand)
 						{
-							System.out.println("option 2");
+							System.out.println("optjon 2");
 							leftHand = slot;
 						}
 						else if (slot < rightHand)
@@ -273,9 +269,7 @@ public class EquipSet implements Serializable
 		for (int i = 0; i < 5; i++)
 		{
 			equipOK = false;
-			if (slots[i] == FFTAEquip.NONE)
-				equipOK = true;
-			else
+			if (slots[i] != FFTAEquip.NONE)
 				if(unit.job.canEquip(slots[i].type) || (slots[i].type == EquipType.SHIELD && unit.support == FFTASupport.SHIELDBEARER))
 						equipOK = true;
 			if (!equipOK)
@@ -340,24 +334,5 @@ public class EquipSet implements Serializable
 			return slots[feet];
 		else
 			return null;
-	}
-	
-	public String toString()
-	{
-		String result = "";
-		result += "HEAD\t"   + head;
-		result += "\nBODY\t" + body;
-		result += "\nARMS\t" + arms;
-		result += "\nRHAND\t"+ rightHand;
-		result += "\nLHAND\t"+ leftHand;
-		result += "\nFEET\t" + feet;
-		result += "\n-------";
-		
-		for (int i = 0; i < 5; i++)
-			result += ("\n" + i + ": " + slots[i]);
-		
-		result += "\n";
-		
-		return result;
 	}
 }

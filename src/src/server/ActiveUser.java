@@ -13,7 +13,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
-import fftamap.MuscadetMapLoader;
 import server.ActiveGame.GameStatus;
 import zank.*;
 
@@ -24,7 +23,6 @@ public class ActiveUser extends Thread
 	public ObjectOutputStream out;
 	public InputStreamReader readyChecker;
 	public String nickname = null;
-	public String status;
 	public LinkedBlockingQueue<ZankMessage> messageQueue;
 	public ActiveGame game = null;
 	
@@ -33,8 +31,6 @@ public class ActiveUser extends Thread
 	{
 		this.connection = connection;
 		messageQueue = new LinkedBlockingQueue<ZankMessage>();
-		messageQueue.add(new ZankMessage (ZankMessageType.READY, null, null));
-		
 		try
 		{
 			connection.setSoTimeout(0);
@@ -44,8 +40,8 @@ public class ActiveUser extends Thread
 			out.flush();
 			readyChecker = new InputStreamReader(new BufferedInputStream(connection.getInputStream()));
 		}
-		catch (SocketException e) { e.printStackTrace(); }
-		catch (IOException e) { e.printStackTrace(); }
+		catch (SocketException e) { System.out.println("\r" + e); }
+		catch (IOException e) { System.err.println("\r" + e); }
 	}
 	
 	@SuppressWarnings({ "unchecked" })
@@ -60,7 +56,6 @@ public class ActiveUser extends Thread
 			{
 				try
 				{
-					
 					// Check reader for new messages to read
 					if (readyChecker.ready())
 					{
@@ -68,45 +63,41 @@ public class ActiveUser extends Thread
 
 						try
 						{
-							// Read message
 							msg = (ZankMessage) in.readObject();
-							ZankMessageType command = msg.type;
-							if (msg.type != ZankMessageType.BEEP)
-								System.out.println("IN:\t" + msg.type + " " + msg.user + " " + msg.data);
-							String username = msg.user;
 							
+							String username = msg.user;
+							ZankMessageType command = msg.type;
+								
 							// Special handlers for different message types
 							if (command.equals(ZankMessageType.LOGIN) && nickname == null)
 							{								
 								if (nickname == null)
 								{
 									nickname = username;
-									status = "Ready";
 									synchronized(ChatServer.userlist)
 									{
 										// Send notification of login to all other users
-										ZankUser[] toNotify = new ZankUser[ChatServer.userlist.size()];
+										StringBuilder toNotify = new StringBuilder();
 										for (int i = 0; i < ChatServer.userlist.size(); i++)
 										{
+											
 											String currNick = ChatServer.userlist.get(i).nickname;
 											if (currNick != null && !currNick.equals(nickname))
-											{
-												toNotify[i] = new ZankUser(currNick);
-												toNotify[i].status = ChatServer.userlist.get(i).status;
-												if (ChatServer.userlist.get(i).game != null)
-													toNotify[i].battleID = ChatServer.userlist.get(i).game.id;
-											}
+												toNotify.append(" " + currNick);
 										}
-										ZankMessage result = new ZankMessage(ZankMessageType.ONLINE, username, toNotify);
+										ZankMessage result = new ZankMessage(ZankMessageType.ONLINE, username, toNotify.toString());
 										messageQueue.put(result);
 									}
 								}
+								System.out.println("LOGIN: " + username);
 								ChatServer.masterMessageQueue.put(msg);
 							}
 							
 							else if (command.equals(ZankMessageType.LOGOUT))
 							{
+//								System.out.print("\r\n* " + username + " has left the room");
 								done = true;
+								ChatServer.masterMessageQueue.put(msg);
 							}
 							
 							else if (command.equals(ZankMessageType.CHAT))
@@ -115,15 +106,12 @@ public class ActiveUser extends Thread
 								ChatServer.masterMessageQueue.put(msg);
 							}
 							
-							else if (command.equals(ZankMessageType.BEEP))
-							{
-								//
-							}
-							
 							else if (command.equals(ZankMessageType.CHALLENGE))
 							{
 								String challenged = (String) msg.data;
 								ActiveUser challengedUser = null;
+								
+								
 								
 								for (ActiveUser user : ChatServer.userlist)
 								{
@@ -160,43 +148,15 @@ public class ActiveUser extends Thread
 									System.out.println("player 1 = " + player1.nickname);
 									System.out.println("player 2 = " + player2.nickname);
 									
-									game = new ActiveGame(player1, player2, MuscadetMapLoader.getMap(false));
+									game = new ActiveGame(player1, player2);
 									ChatServer.gamelist.add(game);
-									
-									player1.status = "vs. " + player2.nickname;
-									player2.status = "vs. " + player1.nickname;
-									
-									player1.game = game;
-									player2.game = game;
-									
-									ZankMessage startMessage = game.getStartMessage(false);
+									ZankMessage startMessage = game.getStartMessage();
 									player1.messageQueue.put(startMessage);
-									player2.messageQueue.put(startMessage);
-									
-									String[] data = {(String) msg.data, game.id};
-									ZankMessage engMsg = new ZankMessage(ZankMessageType.ENGAGE, player1.nickname, data);
-									
-									ChatServer.masterMessageQueue.put(engMsg);
+									player2.messageQueue.put(startMessage);										
+									ChatServer.masterMessageQueue.put(msg);
 								}
 								else
 									System.out.println("\r\nCouldn't find user " + msg.data);
-							}
-							
-							else if (command.equals(ZankMessageType.SPECTATE))
-							{
-								String gameID = (String) msg.data;
-								ActiveGame ag = ChatServer.findGame(gameID);
-								if (ag != null)
-									ag.joinRoom(this);
-								else
-									System.out.println("Couldn't find game " + gameID);
-								
-								messageQueue.put(ag.getStartMessage(true));
-								
-								if (ag.state != null)
-								{
-									messageQueue.put(ag.getSpecJoinMessage());
-								}
 							}
 							
 							else if (command.equals(ZankMessageType.GAME))
@@ -211,7 +171,8 @@ public class ActiveUser extends Thread
 									{
 										if (action.type == ZankGameActionType.CHAT || action.type == ZankGameActionType.START)
 										{
-											ag.sendToAll(msg);
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
 										}
 										
 										else if (action.type == ZankGameActionType.READY && ag.status == GameStatus.SETUP)
@@ -250,17 +211,9 @@ public class ActiveUser extends Thread
 												zm = new ZankMessage(ZankMessageType.GAME, null, za);
 												ag.player2.messageQueue.put(zm);
 												
-												// Send both teams to spectators
-												ArrayList<ActiveUnit>[] units = new ArrayList[2];
-												units[0] = ag.p1Units;
-												units[1] = ag.p2Units;
-												
-												za = new ZankGameAction(ZankGameActionType.SPECREADY, ag.id, null, null, units);
-												zm = new ZankMessage(ZankMessageType.GAME, null, za);
-												ag.sendToSpectators(zm);
-												
 												// Initialize turn order
 												ag.initializeTurnOrder();
+												
 												ag.advanceTurn();
 											}
 										}
@@ -274,66 +227,46 @@ public class ActiveUser extends Thread
 										{
 											int[] data = (int[]) action.data;
 											ag.moveUnit(data[0], data[1], data[2], data[3]);
-											ag.sendToAll(msg);
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
 										}
 										else if (action.type == ZankGameActionType.ACT)
-										{
-											ag.sendToAll(msg);
-											int[] data = (int[]) action.data;
-											
-											// Send intermediate facing
-											int x = data[2], y = data[3];
-											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x, y)}; 
-											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
-											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
-											ag.sendToAll(waitmsg);
-											
-											FFTASkill sk = FFTASkill.values[data[1]];
-											ag.doublecast = false;
-											ag.doAction(sk, x, y);
-											ag.victoryCheck();
-										}
-										
-										else if (action.type == ZankGameActionType.DOUBLECAST)
 										{
 											ag.player1.messageQueue.put(msg);
 											ag.player2.messageQueue.put(msg);
 											int[] data = (int[]) action.data;
+											System.out.println("run: target = " + data[0]);
 											
 											// Send intermediate facing
-											int x1 = data[2], y1 = data[3], x2 = data[6], y2 = data[7];
-											FFTASkill sk1 = FFTASkill.values[data[1]], sk2 = FFTASkill.values[data[5]
-													];
-											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x2, y2)}; 
+											int x = data[data.length - 2], y = data[data.length - 1];
+											int[] waitData = {ag.state.currentUnit, ag.intermediateFacing(ag.state.currentUnit, x, y)}; 
 											ZankGameAction face = new ZankGameAction(ZankGameActionType.WAIT, ag.id, null, null, waitData);
 											ZankMessage waitmsg = new ZankMessage(ZankMessageType.GAME, null, face);
-											ag.sendToAll(waitmsg);
+											ag.player1.messageQueue.put(waitmsg);
+											ag.player2.messageQueue.put(waitmsg);
 											
-											ag.doublecast = true;
-											ag.doAction(sk1, x1, y1);
-											ag.doAction(sk2, x2, y2);
+											int[] targets = new int[data.length - 3];
+											for (int i = 0; i < targets.length; i++)
+												targets[i] = data[i];
+											FFTASkill sk = FFTASkill.values[data[data.length - 3]];
+											ag.executeSkill(targets, sk);
 											ag.victoryCheck();
 										}
-										
 										else if (action.type == ZankGameActionType.WAIT)
 										{
 											int[] data = (int[]) action.data;
 											ag.waitUnit(data[0], data[1]);
-											ag.sendToAll(msg);
+											ag.player1.messageQueue.put(msg);
+											ag.player2.messageQueue.put(msg);
 											ag.advanceTurn();
 										}
 										else if (action.type == ZankGameActionType.EXIT)
 										{
 											ag.leaveRoom(msg.user);
-											status = "Ready";
 											if (ag.userlist.size() == 0)
 												ChatServer.gamelist.remove(ag);
 											
-											ChatServer.masterMessageQueue.add(new ZankMessage(ZankMessageType.AVAILABLE, msg.user, null));
-											
-											if (this == ag.player1 || this == ag.player2)
-												this.game = null;
-											
+											System.out.println("Closed game " + ag.id); 
 											System.out.println("List of active games:");
 											for (int i = 0; i < ChatServer.gamelist.size(); i++)
 												System.out.println("  " + ChatServer.gamelist.get(i));
@@ -354,15 +287,13 @@ public class ActiveUser extends Thread
 					if (!messageQueue.isEmpty() && !done)
 					{
 						ZankMessage m = messageQueue.take();
-						if (m.type != ZankMessageType.BEEP)
-							System.out.println("OUT: " + nickname + "\t" + m);
+						System.out.println("OUT: " + nickname + "\t" + m);
 						
 						out.writeObject(m);
 						out.flush();
 					}
 					sleep(50);
 				}
-				catch (SocketException e) { done = true; }
 				catch (IOException e) { done = true; e.printStackTrace(); }
 			}
 
@@ -370,10 +301,9 @@ public class ActiveUser extends Thread
 			if (connection != null) connection.close();
 			if (in != null) in.close();
 			synchronized (ChatServer.userlist) { ChatServer.userlist.remove(this); }
-			ChatServer.masterMessageQueue.put(new ZankMessage(ZankMessageType.LOGOUT, nickname, null));
 		}
-		catch (IOException e) { e.printStackTrace(); }
-		catch (InterruptedException e) { e.printStackTrace(); }
+		catch (IOException e) { System.err.println("\rAcceptance error: " + e.getMessage()); }
+		catch (InterruptedException e) { System.err.println("\rFailed to add message to queue. "); }
 	}
 	
 }

@@ -1,19 +1,14 @@
 package client;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.Graphics;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 import javax.swing.JTextField;
@@ -22,7 +17,7 @@ import javax.swing.JSplitPane;
 import javax.swing.JScrollPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.UIManager;
-import javax.swing.border.EmptyBorder;
+import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.html.HTMLDocument;
 
@@ -31,11 +26,8 @@ import fftadata.FFTASkill;
 import fftadata.StatusEffect;
 
 import javax.swing.JButton;
-import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.awt.GridLayout;
-
-import fftamap.*;
 
 public class EngagementWindow extends JFrame
 {
@@ -47,29 +39,26 @@ public class EngagementWindow extends JFrame
 	private JTextField chatEntry;
 	
 	JPanel gamePanel;
-	MapPanel mapPanel;
+	private MapPanel mapPanel;
 	private UnitActionPanel unitAction;
 	
 	private CardLayout deck;
 	private UnitPreviewPanel[] previews;
 	// TurnOrderPanel top;
 	
-	private int doublecastMode;
-	
 	FFTASkill selectedSkill;
+	
 	EngagementWindowRosterPanel rosterPanel;
 
-	private JPanel turnOrderPanel;
-	public TurnOrderBoy wait, actOnly, moveOnly, moveAct;
 	
-	ActiveUnit dcAu;
-	FFTASkill dcSkill;
-	int dcX, dcY;
+	
 	
 
+	/**
+	 * Create the frame.
+	 */
 	public EngagementWindow(Engagement game)
 	{
-		wait = new TurnOrderBoy("Wait");
 		this.game = game;
 		
 		try {
@@ -84,7 +73,7 @@ public class EngagementWindow extends JFrame
 		
 		try
 		{
-			setTitle(game.player.name + " vs. " + game.opponent.name );
+			setTitle("[" + "///" + "] " + game.player.username + " vs " + game.opponent.username );
 		} catch (NullPointerException e) { setTitle("Testin' mode"); }
 		
 		// Closing
@@ -152,26 +141,26 @@ public class EngagementWindow extends JFrame
 		gamePanel = new JPanel();
 		gamePanel.setLayout(new BorderLayout());
 		
-		
+		rosterPanel = new EngagementWindowRosterPanel(this);
 		mapPanel = new MapPanel(this);
 		
-		turnOrderPanel = new JPanel();
-		turnOrderPanel.setPreferredSize(new Dimension(96, 400));
+		JPanel turnOrderPanel = new JPanel();
+		turnOrderPanel.setBorder(new BevelBorder(BevelBorder.LOWERED, null, null, null, null));
+		turnOrderPanel.setPreferredSize(new Dimension(80, 10));
 		turnOrderPanel.setLayout(new GridLayout(1, 0, 0, 0));
 		
 		
 		leftPanel.add(gamePanel, BorderLayout.CENTER);
 		gamePanel.add(mapPanel, BorderLayout.CENTER);
 		gamePanel.add(turnOrderPanel, BorderLayout.EAST);
+		mapPanel.roster = rosterPanel.roster;
 		leftPanel.add(gamePanel);
+		
+		
 		damagePreviewPanel = null;
 		
-		if (game.playerNumber != 0)
-		{
-			rosterPanel = new EngagementWindowRosterPanel(this);
-			mapPanel.roster = rosterPanel.roster;
-			beginPlacementMode();
-		}
+		beginPlacementMode();
+		
 		
 	}
 	
@@ -183,8 +172,7 @@ public class EngagementWindow extends JFrame
 	
 	public void beginGame(ArrayList<ActiveUnit> otherTeam)
 	{
-		if (rosterPanel != null)
-			gamePanel.remove(rosterPanel);
+		gamePanel.remove(rosterPanel);
 		bottomPanel = new JPanel(new BorderLayout());
 		gamePanel.add(bottomPanel, BorderLayout.SOUTH);
 		
@@ -201,49 +189,15 @@ public class EngagementWindow extends JFrame
 		unitAction = new UnitActionPanel(this);
 		bottomPanel.add(unitAction, BorderLayout.EAST);
 		
-		// Set up other team's units (or both teams for specs)
+		// Set up other team's units
 		mapPanel.beginGame(otherTeam);
-		
-		
-		
-		// Initialize turn order panel
-		wait = new TurnOrderBoy("Wait");
-		actOnly = new TurnOrderBoy("Act Only");
-		moveOnly = new TurnOrderBoy("Move Only");
-		moveAct = new TurnOrderBoy("Move & Act");
-		
-		turnOrderPanel.setLayout(new GridLayout(20, 1, 0, 0));
-
-	}
-
-	// update turn order display
-	public void updateTurnOrder(int[] order)
-	{
-		turnOrderPanel.removeAll();
-		for (int i = 0; i < order.length; i++)
-		{
-			if (order[i] >= 0)
-				turnOrderPanel.add(new TurnOrderBoy(game.getUnits()[order[i]]));
-			else if (order[i] == -5)
-				turnOrderPanel.add(wait);
-			else if (order[i] == -7)
-				turnOrderPanel.add(actOnly);
-			else if (order[i] == -8)
-				turnOrderPanel.add(moveOnly);
-			else if (order[i] == -10)
-				turnOrderPanel.add(moveAct);
-			else
-				System.out.println("Notice: Invalid index given for turn order update");
-		}
-		
-		turnOrderPanel.repaint();
 	}
 	
-	public void beginTargetingMode(FFTASkill sk, int doublecastMode)
+	
+	public void beginTargetingMode(FFTASkill sk)
 	{
 		mapPanel.mode = 3;
 		selectedSkill = sk;
-		this.doublecastMode = doublecastMode; 
 		mapPanel.highlightTargetableTiles(sk);
 	}
 	
@@ -252,7 +206,7 @@ public class EngagementWindow extends JFrame
 		mapPanel.updateSprite(au);
 	}
 	
-	public void moveUnit(ActiveUnit au, FFTAMapTile dest)
+	public void moveUnit(ActiveUnit au, ZankMapTile dest)
 	{
 		mapPanel.moveUnit(au, dest);
 	}
@@ -277,13 +231,13 @@ public class EngagementWindow extends JFrame
 	public void showDamagePreview(ArrayList<ActiveUnit> targets)
 	{
 		previewDeck.remove(damagePreviewPanel);
-		damagePreviewPanel = new DamagePreviewPanel(game.currentUnit(), targets, selectedSkill, game.getState());
+		damagePreviewPanel = new DamagePreviewPanel(game.currentUnit(), targets, selectedSkill);
 		previewDeck.add(damagePreviewPanel, "Damage Preview");
 		deck.last(previewDeck);
 		revalidate();
 	}
 	
-	public void selectTile(FFTAMapTile tile)
+	public void selectTile(ZankMapTile tile)
 	{
 		mapPanel.selectTile(tile);
 	}
@@ -296,76 +250,28 @@ public class EngagementWindow extends JFrame
 	public void commitAction(ArrayList<Integer> targets)
 	{
 		int x = mapPanel.selectedTile.x, y = mapPanel.selectedTile.y;
-		switch (doublecastMode)
+		unitAction.unitHasActed = true;
+		
+		try
 		{
-			case 0:
-				unitAction.unitHasActed = true;
-				try
-				{
-					unitAction.hideActionPanel();
-					if (unitAction.unitHasMoved)
-					{
-						game.sendMove();
-						unitAction.sendMove = false;
-					}
-					
-					// Clear away the tile highlights and return to the actions menu
-					cancelMovementMode();
-					
-					// Reselect the current unit to remind the active player that further action is required of them
-					ActiveUnit au = game.currentUnit();
-					selectTile(game.map.mapData[au.x][au.y]);
-					
-					// Send the action
-					game.sendAction(au.id, selectedSkill, x, y);
-				}
-				catch (IOException e) { e.printStackTrace(); }
-				break;
-				
-			case 1:
-				ActiveUnit au = game.currentUnit();
-				selectTile(game.map.mapData[au.x][au.y]);
-				dcAu = au;
-				dcSkill = selectedSkill;
-				dcX = x;
-				dcY = y;
-				
-				unitAction.showPanel("Doublecast");
-				unitAction.doublecastMode = 2;
-				unitAction.dcPanel.btnSkillCancel.setText("Cancel " + dcSkill.NAME);
-				cancelMovementMode();
-				
-				break;
-				
-			case 2:
-				unitAction.unitHasActed = true;
-				try
-				{
-					unitAction.hideActionPanel();
-					if (unitAction.unitHasMoved)
-					{
-						game.sendMove();
-						unitAction.sendMove = false;
-					}
-					
-					// Clear away the tile highlights and return to the actions menu
-					cancelMovementMode();
-					
-					// Reselect the current unit to remind the active player that further action is required of them
-					ActiveUnit au2 = game.currentUnit();
-					selectTile(game.map.mapData[au2.x][au2.y]);
-					
-					// Send the actions
-					game.sendDoublecast(dcAu.id, dcSkill, dcX, dcY, au2.id, selectedSkill, x, y);
-				}
-				catch (IOException e) { e.printStackTrace(); }
-				break;
-				
-			default:
-				System.err.println("hey why come doublecastMode == " + doublecastMode);
+			unitAction.hideActionPanel();
+			if (unitAction.unitHasMoved)
+			{
+				game.sendMove();
+				unitAction.sendMove = false;
+			}
+			
+			// Clear away the tile highlights and return to the actions menu
+			cancelMovementMode();
+			
+			// Reselect the current unit to remind the active player that further action is required of them
+			ActiveUnit au = game.currentUnit();
+			selectTile(game.map.mapData[au.x][au.y]);
+			
+			// Send the action
+			game.sendAction(au.id, selectedSkill, x, y);
 		}
-		
-		
+		catch (IOException e) { e.printStackTrace(); }
 	}
 	
 	// Calls UnitActionPanel's finishAct() method to bring up the appropriate menu to finish the current unit's turn
@@ -421,7 +327,7 @@ public class EngagementWindow extends JFrame
 	public void undoMovement()
 	{
 		ActiveUnit au = game.currentUnit();
-		FFTAMapTile old = game.map.mapData[au.oldX][au.oldY];
+		ZankMapTile old = game.map.mapData[au.oldX][au.oldY];
 		mapPanel.moveUnit(au, old);
 		repaint();
 	}
@@ -529,164 +435,59 @@ public class EngagementWindow extends JFrame
 	{
 		mapPanel.selectTarget(clicks);
 	}
-	
+}
 
-	class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
+class EngagementWindowRosterPanel extends ClanBuilderRosterPanel
+{
+	Engagement game;
+	EngagementWindow window;
+	
+	public EngagementWindowRosterPanel(EngagementWindow window)
 	{
-		Engagement game;
-		EngagementWindow window;
+		this.window = window;
+		game = window.game;
 		
-		public EngagementWindowRosterPanel(EngagementWindow window)
-		{
-			this.window = window;
-			if (window != null)
-				game = window.game;
+		setPreferredSize(new Dimension(1, 162));
+		JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
+		padding.setPreferredSize(new Dimension(36, 1));
+		padding2.setPreferredSize(new Dimension(1, 22));
+		padding3.setPreferredSize(new Dimension(80, 1));
+		add(padding, BorderLayout.WEST);
+		add(padding2, BorderLayout.SOUTH);
+		rightPanel.add(padding3, BorderLayout.EAST);
+		btnNewUnit.setEnabled(false);
+		btnDelete.setEnabled(false);
+		btnSwapLeft.setEnabled(false);
+		btnSwapRight.setEnabled(false);
+		
+		JPanel readyPanel = new JPanel(new FlowLayout());
+		JButton btnReady = new JButton("Ready!");
+		btnReady.setPreferredSize(new Dimension(100, 30));
+		readyPanel.add(btnReady);
+		add(readyPanel, BorderLayout.NORTH);
+		
+		btnReady.addActionListener(new ActionListener() {
 			
-			setPreferredSize(new Dimension(1, 162));
-			JPanel padding = new JPanel(), padding2 = new JPanel(), padding3 = new JPanel();
-			padding.setPreferredSize(new Dimension(36, 1));
-			padding2.setPreferredSize(new Dimension(1, 22));
-			padding3.setPreferredSize(new Dimension(80, 1));
-			add(padding, BorderLayout.WEST);
-			add(padding2, BorderLayout.SOUTH);
-			rightPanel.add(padding3, BorderLayout.EAST);
-			btnNewUnit.setEnabled(false);
-			btnDelete.setEnabled(false);
-			btnSwapLeft.setEnabled(false);
-			btnSwapRight.setEnabled(false);
-			
-			JPanel readyPanel = new JPanel(new FlowLayout());
-			JButton btnReady = new JButton("Ready!");
-			btnReady.setPreferredSize(new Dimension(100, 30));
-			readyPanel.add(btnReady);
-			add(readyPanel, BorderLayout.NORTH);
-			
-			btnReady.addActionListener(new ActionListener() {
-				
-				@Override
-				public void actionPerformed(ActionEvent e)
+			@Override
+			public void actionPerformed(ActionEvent e)
+			{
+				ArrayList<ActiveUnit> units = window.getYourUnits();
+				if (units.size() > 0)
 				{
-					ArrayList<ActiveUnit> units = window.getYourUnits();
-					if (units.size() > 0)
+					try
 					{
-						try
-						{
-							game.sendReady();
-							if (game.playerNumber == 1)
-								game.p1Units = units;
-							else if (game.playerNumber == 2)
-								game.p2Units = units;
-							
-							btnReady.setEnabled(false);
-							btnReady.setText("Waiting for other player...");
-						}
-						catch (IOException ex) { ex.printStackTrace(); }
+						game.sendReady();
+						if (game.playerNumber == 1)
+							game.p1Units = units;
+						else if (game.playerNumber == 2)
+							game.p2Units = units;
+						
+						btnReady.setEnabled(false);
+						btnReady.setText("Waiting for other player...");
 					}
+					catch (IOException ex) { ex.printStackTrace(); }
 				}
-			});
-		}
-	}
-	
-	class TurnOrderBoy extends JPanel implements Comparable<TurnOrderBoy>
-	{
-		ActiveUnit unit;
-		double position;
-		
-		public TurnOrderBoy(ActiveUnit unit)
-		{
-			this.unit = unit;
-			position = 0;
-			
-			BorderLayout bl = new BorderLayout();
-			setLayout(bl);
-			setBorder(new EmptyBorder(2, 1, 0, 2));
-			setPreferredSize(new Dimension(96, 20));
-			
-			TOJobIconPanel panel = new TOJobIconPanel(unit);
-			panel.setPreferredSize(new Dimension(32, 16));
-			panel.setOpaque(false);
-			add(panel, BorderLayout.WEST);
-			
-			if (unit.team == 1)
-				setBackground(new Color(192, 192, 248));
-			else
-				setBackground(new Color(248, 192, 192));
-			
-			JLabel lblUnitName;
-			lblUnitName = new JLabel(" " + unit.unit.name);
-			lblUnitName.setFont(new Font("Tahoma", Font.BOLD, 11));
-			add(lblUnitName, BorderLayout.CENTER);
-			
-			repaint();
-		}
-
-		public TurnOrderBoy(String special)
-		{
-			this.unit = null;
-			this.position = position;
-			
-			FlowLayout flowLayout_1 = (FlowLayout) getLayout();
-			flowLayout_1.setAlignment(FlowLayout.LEFT);
-			flowLayout_1.setVgap(1);
-			flowLayout_1.setHgap(1);
-			setPreferredSize(new Dimension(96, 20));
-			setBackground(new Color(192, 248, 192));
-			
-			JLabel lblChevrons = new JLabel(">>>>");
-			JLabel lblAction = new JLabel(" " + special);
-			lblAction.setFont(new Font("Tahoma", Font.PLAIN, 11));
-			
-			add(lblChevrons);
-			add(lblAction);
-			repaint();
-		}
-		
-		@Override
-		public int compareTo(TurnOrderBoy to)
-		{
-			if (to.position > position)
-				return -1;
-			else if (to.position < position)
-				return 1;
-			else if (unit == null || to.unit == null)
-				return 1;
-			else if (to.unit.priority > unit.priority)
-				return -1;
-			else
-				return 1;
-		}	
-	}
-	
-	class TOJobIconPanel extends JPanel
-	{
-		BufferedImage icon;
-		String jobName;
-		
-		public TOJobIconPanel(ActiveUnit au)
-		{
-			super();
-			if (au != null)
-				jobName = au.unit.job.name();
-			update();
-		}
-		
-		public void update()
-		{
-			try {
-				if (jobName != null)
-					icon = ImageIO.read(new File("resources/icons/icon_" + jobName + ".png"));
-				else
-					icon = null;
-			} catch (IOException e) {}
-			repaint();
-		}
-		
-		@Override
-		protected void paintComponent(Graphics g)
-		{
-			super.paintComponent(g); 
-			if (icon != null)
-				g.drawImage(icon, 0, 0, null);
-		}
+			}
+		});
 	}
 }

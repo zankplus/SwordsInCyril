@@ -16,14 +16,12 @@ import javax.swing.text.html.HTMLDocument;
 import fftadata.ActiveUnit;
 import fftadata.EquipType;
 import fftadata.FFTAEquip;
-import fftadata.FFTAReaction;
 import fftadata.FFTASkill;
 import fftadata.GameState;
 import fftadata.SkillEffect;
 import fftadata.SkillEffectResult;
 import fftadata.StatusEffect;
 import fftadata.Targeting;
-import fftamap.*;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
 import zank.ZankMessage;
@@ -41,7 +39,7 @@ public class Engagement
 	
 	ObjectInputStream in;
 	ObjectOutputStream out;
-	FFTAMap map;
+	ZankGameMap map;
 	ZankGameAction action;
 	ZankMessage message;
 	ZankClient client;
@@ -63,7 +61,7 @@ public class Engagement
 		this.out = client.out;
 		gameOver = false;
 		
-		map = MuscadetMapLoader.getMap(true);
+		map = MuscadetMapLoader.getMap();
 		window = new EngagementWindow(this);
 	}
 	
@@ -71,21 +69,21 @@ public class Engagement
 	public void sendChat(String content) throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, content);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		client.sendZankMessage(message);
 	}
 	
 	public void sendForfeit() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.CHAT, gameID, null, null, null);
-		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.name, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.LOGIN, player.username, action);
 		client.sendZankMessage(message);
 	}
 	
 	public void sendReady() throws IOException
 	{
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.READY, gameID, null, null, window.getYourUnits());
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -94,39 +92,20 @@ public class Engagement
 		ActiveUnit au = currentUnit();
 		int[] data = {au.id, au.x, au.y, au.z};
 		ZankGameAction action = new ZankGameAction(ZankGameActionType.MOVE, gameID, null, null, data);
-		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		ZankMessage message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		client.sendZankMessage(message);
 	}
 	
 	public void sendAction(int user, FFTASkill sk, int x, int y) throws IOException
 	{
-		int[] data = new int[5];
+		int[] data = new int[4];
 		data[0] = user;
 		data[1] = sk.ordinal();
 		data[2] = x;
 		data[3] = y;
-		data[4] = state.reacting ? 1 : 0;
 		
 		action = new ZankGameAction(ZankGameActionType.ACT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
-		client.sendZankMessage(message);
-	}
-	
-	public void sendDoublecast(int user1, FFTASkill sk1, int x1, int y1,
-							   int user2, FFTASkill sk2, int x2, int y2) throws IOException
-	{
-		int[] data = new int[8];
-		data[0] = user1;
-		data[1] = sk1.ordinal();
-		data[2] = x1;
-		data[3] = y1; 
-		data[4] = state.reacting ? 1 : 0;
-		data[5] = sk2.ordinal();
-		data[6] = x2;
-		data[7] = y2;
-		
-		action = new ZankGameAction(ZankGameActionType.DOUBLECAST, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		client.sendZankMessage(message);
 	}
 	
@@ -134,7 +113,7 @@ public class Engagement
 	{
 		int[] data = {state.currentUnit, dir};
 		action = new ZankGameAction(ZankGameActionType.WAIT, gameID, null, null, data);
-		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -142,7 +121,7 @@ public class Engagement
 	public void sendTurnTest(int ct) throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.TURNTEST, gameID, null, null, ct);
-		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -150,7 +129,7 @@ public class Engagement
 	public void sendExit() throws IOException
 	{
 		action = new ZankGameAction(ZankGameActionType.EXIT, gameID, null, null, null);
-		message = new ZankMessage(ZankMessageType.GAME, player.name, action);
+		message = new ZankMessage(ZankMessageType.GAME, player.username, action);
 		
 		client.sendZankMessage(message);
 	}
@@ -186,56 +165,7 @@ public class Engagement
 			aus[i + p1Units.size()].id = i + p1Units.size();
 		}
 		
-		state = new GameState(aus, map);
-		beginGame();
-		window.setupPreviews();
-		System.out.println("Finished setting up previews, now beginning game");
-		window.repaint();
-	}
-	
-	// SPECREADY: create a list all the game's units in gamePanel
-	// before telling gamePanel to start the game.
-	public void receiveSpecReady(ArrayList<ActiveUnit>[] units)
-	{
-		p1Units = units[0];
-		p2Units = units[1];
-		
-		ActiveUnit[] aus = new ActiveUnit[p1Units.size() + p2Units.size()];
-		
-		for (int i = 0; i < p1Units.size(); i++)
-		{
-			aus[i] = p1Units.get(i);
-			aus[i].id = i;
-		}
-		
-		for (int i = 0; i < p2Units.size(); i++)
-		{
-			aus[i + p1Units.size()] = p2Units.get(i);
-			aus[i + p1Units.size()].id = i + p1Units.size();
-		}
-		
-		state = new GameState(aus, map);
-		beginGame();
-		window.setupPreviews();
-		System.out.println("Finished setting up previews, now beginning game");
-		window.repaint();
-	}
-	
-	public void receiveSpecJoin(GameState state)
-	{
-		p1Units = new ArrayList<ActiveUnit>();
-		p2Units = new ArrayList<ActiveUnit>();
-		
-		for (ActiveUnit au : state.units)
-			if (au.team == 1)
-				p1Units.add(au);
-			else if (au.team == 2)
-				p2Units.add(au);
-		
-		this.state = state;
-		
-		state.map = MuscadetMapLoader.getMap(true);
-		
+		state = new GameState(aus);
 		beginGame();
 		window.setupPreviews();
 		System.out.println("Finished setting up previews, now beginning game");
@@ -339,7 +269,7 @@ public class Engagement
 	public void receiveMove(int[] data)
 	{
 		ActiveUnit au = state.units[data[0]];
-		FFTAMapTile dest = map.mapData[data[1]][data[2]];
+		ZankMapTile dest = map.mapData[data[1]][data[2]];
 		window.moveUnit(au, dest);
 	}
 	
@@ -348,11 +278,9 @@ public class Engagement
 	{
 		FFTASkill sk = FFTASkill.values[data[1]];
 		int user = data[0], x = data[2], y = data[3];
-		boolean restrictAoE = data[4] != 0 ? true : false;
-			
-		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user], restrictAoE);
+		ArrayList<Integer> targets = state.getTargets(x, y, sk, state.units[user]);
 		
-		if (sk.NAME.equals("Fight"))
+		if (sk == FFTASkill.FIGHT)
 			window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
 				"</strong> attacks <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		else
@@ -360,17 +288,6 @@ public class Engagement
 					"</strong> uses " + sk.NAME + " on <strong>" + state.units[targets.get(0)].unit.name + "</strong>!");
 		
 		state.expendMP(sk);
-		window.updateUnitPreview(currentID());
-	}
-	
-	public void receiveDoublecast(int[] data)
-	{
-		int user = data[0];
-		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-					"</strong> uses Doublecast!");
-		FFTASkill sk1 = FFTASkill.values[data[2]], sk2 = FFTASkill.values[data[5]];
-		state.expendMP(sk1);
-		state.expendMP(sk2);
 		window.updateUnitPreview(currentID());
 	}
 	
@@ -397,7 +314,7 @@ public class Engagement
 		if (results[0].reflect)
 			window.appendToChat("<em><span style=\"color:gray\">......<strong><span style=\"color:blue\">Reflected</span></strong>!");
 			
-		// determine whether the attack missed
+		// determine whether the attack missed, and report so if it does
 		for (int i = 0; i < results.length; i++)
 			if (results[i] != null && results[i].success)
 				miss = false;
@@ -439,7 +356,7 @@ public class Engagement
 		
 		
 		// Check auto-life trigger
-		if (results[results.length - 1].autoLife)
+		if (!miss)
 		{
 			boolean autoLifeRevived = state.checkAutoLife(target);
 			if (autoLifeRevived)
@@ -453,16 +370,8 @@ public class Engagement
 				window.updateUnitPreview(target.id);
 			}
 		}
-	}
-	
-	// DCHIT: display the individual skill name before applying the results
-	public void receiveDCHit(SkillEffectResult[] results)
-	{
-		FFTASkill sk = results[0].skill;
-		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + currentUnit().unit.name +
-				"</strong> uses " + sk.NAME + "!");
 		
-		receiveHit(results);
+		
 	}
 	
 	// WAIT: change the indicated unit's facing in the MapPanel
@@ -479,13 +388,13 @@ public class Engagement
 		String p1name, p2name;
 		if (playerNumber == 1)
 		{
-			p1name = player.name;
-			p2name = opponent.name;
+			p1name = player.username;
+			p2name = opponent.username;
 		}
 		else
 		{
-			p2name = player.name;
-			p1name = opponent.name;
+			p2name = player.username;
+			p1name = opponent.username;
 		}
 		
 		// If data[0] and data[1] are both true, the match has ended in a tie
@@ -528,96 +437,18 @@ public class Engagement
 		window.appendToChat("<em><strong>" + username + " has left the room.</strong>");
 	}
 	
-	public void receiveReaction(int[] data)
-	{
-		FFTAReaction reaction = FFTAReaction.values()[data[1]];
-		ActiveUnit reactor = getUnit(data[0]);
-		int amt = data[2];
-		
-		window.appendToChat("<em><span style=\"color:gray\">...<strong>" + reactor.unit.name +
-							"</strong>'s </em><span style=\"color:red\">" + reaction.toString() +
-							"<span style=\"color:gray\"><em> activates!");
-		
-		switch (reaction)
-		{
-			case ABSORB_MP:
-			{
-				state.applyMPHealing(data[0], amt);
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						"</strong> recovers <strong><span style=\"color:cyan\">" + amt + "</strong> MP!";
-				window.appendToChat(report);
-				break;
-			}
-			case AUTO_REGEN:
-			{
-				state.applyStatus(reactor, StatusEffect.REGEN);
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						 "</strong>" + StatusEffect.REGEN.REPORT;
-				window.appendToChat(report);
-				break;
-			}
-			case DRAGONHEART: 
-			{
-				state.applyStatus(reactor, StatusEffect.AUTO_LIFE);
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						 "</strong>" + StatusEffect.AUTO_LIFE.REPORT;
-				window.appendToChat(report);
-				break;
-			}
-			case LAST_HASTE:
-			{
-				state.applyStatus(reactor, StatusEffect.HASTE);
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						"</strong>" + StatusEffect.HASTE.REPORT;
-				window.appendToChat(report);
-				break;
-			}
-			
-			case LAST_QUICKEN:
-			{
-				state.applyStatus(reactor, StatusEffect.QUICK);
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						 "</strong>" + StatusEffect.QUICK.REPORT;
-				window.appendToChat(report);
-				break;
-			}
-			
-			case RETURN_FIRE:
-			{
-				String report = "<em><span style=\"color:gray\">......<strong>" + reactor.unit.name +
-						 "</strong> throws the arrow back!";
-				window.appendToChat(report);
-				break;
-			}
-			
-			default:
-				break;
-		}
-	}
-	
-	public void receiveTurnOrder(int[] data)
-	{
-		window.updateTurnOrder(data);
-	}
-	
 	public void beginGame()
 	{
 		ArrayList<ActiveUnit> otherTeam;
 		if (playerNumber == 1)
 			otherTeam = p2Units;
-		else if (playerNumber == 2)
-			otherTeam = p1Units;
 		else
-		{
-			otherTeam = new ArrayList<ActiveUnit>();
-			for (ActiveUnit au : p1Units) otherTeam.add(au);
-			for (ActiveUnit au : p2Units) otherTeam.add(au);
-		}
+			otherTeam = p1Units;
 		
 		window.beginGame(otherTeam);
 	}
 	
-	public void faceTowardTile(ActiveUnit unit, FFTAMapTile tile)
+	public void faceTowardTile(ActiveUnit unit, ZankMapTile tile)
 	{
 		int x1 = unit.x, y1 = unit.y;
 		int x2 = tile.x, y2 = tile.y;
@@ -680,7 +511,7 @@ public class Engagement
 	
 	public ArrayList<Integer> getTargets(int x, int y, FFTASkill sk, ActiveUnit user)
 	{
-		return state.getTargets(x,  y, sk, user, false);
+		return state.getTargets(x,  y, sk, user);
 	}
 	
 	public GameState getState()
