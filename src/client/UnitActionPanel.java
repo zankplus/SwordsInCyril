@@ -15,11 +15,15 @@ import fftadata.FFTAEquip;
 import fftadata.FFTAJob;
 import fftadata.FFTASkill;
 import fftadata.FFTASupport;
+import fftadata.Morph;
 import fftadata.StatusEffect;
 import fftadata.Targeting;
 import zank.ZankMessage;
 
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
+
 import java.awt.BorderLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
@@ -50,35 +54,22 @@ public class UnitActionPanel extends JPanel
 						btnNe, btnNw, btnSe, btnSw, btnFight, btnSkillset_1, btnSkillset_2,
 						btnItem, btnSkillCancel, btnOk;
 	private JPanel blankPanel, actionsPanel, movePanel, waitPanel, directionsPanel, actPanel,
-		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel;
+		actInnerPanel, actSkillsetPanel, skillPanel, skillInnerPanel, doublecastPanel, morphPanel,
+		unmorphConfirmPanel;
 	private JLabel lblMoveInstruction; 
 	boolean unitHasMoved, unitHasActed, sendMove;
 	private JPanel fightPanel;
 	private JButton btnFightCancel;
 	private JLabel lblClickTheUnit;
+	SkillPanel dcPanel;
+	int doublecastMode;
 	String prevCard;
 	Engagement game;
+	JButton btnFightConfirm, btnUnmorph;
+	private String actTarget;
+	private String fightDesc;
 	
-	/**
-	 * Create the panel.
-	 */
-	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-//					MapPanelTest frame = new MapPanelTest();
-//					UnitActionPanel uap = new UnitActionPanel(null);
-//					uap.showActionsPanel();
-//					frame.getContentPane().add(uap);
-//					frame.pack();
-//					frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
-	}
-	
+
 	public UnitActionPanel(EngagementWindow window)
 	{
 		this.window = window;
@@ -133,11 +124,13 @@ public class UnitActionPanel extends JPanel
 		});
 		actionsPanel.add(btnMove);
 		
+		actTarget = "Act";
+		
 		btnAct = new JButton("Act");
 		btnAct.addActionListener(new ActionListener(){
 			public void actionPerformed(ActionEvent e)
 			{
-				showActPanel();
+				showPanel(actTarget);
 			}
 		});
 		actionsPanel.add(btnAct);
@@ -151,6 +144,42 @@ public class UnitActionPanel extends JPanel
 		});
 		actionsPanel.add(btnWait);
 		
+		btnUnmorph = new JButton("Unmorph");
+		btnUnmorph.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showPanel("Unmorph Confirm");
+			}
+		});
+		
+		// Unmorph panel
+		unmorphConfirmPanel = new JPanel(new BorderLayout());
+		JButton btnUnmorphConfirm = new JButton("Confirm unmorph");
+		btnUnmorphConfirm.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				try
+				{
+					au.morph = Morph.NONE;
+					game.sendUnmorph(au.id);
+				}
+				catch (IOException ex) { ex.printStackTrace(); }
+				cancelMorphUI();
+				showPanel("Actions");
+			}
+		});
+		
+		JButton btnUnmorphCancel = new JButton("Cancel");
+		btnUnmorphCancel.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				showPanel("Actions");
+			}
+		});
+		unmorphConfirmPanel.add(btnUnmorphConfirm, BorderLayout.CENTER);
+		unmorphConfirmPanel.add(btnUnmorphCancel, BorderLayout.SOUTH);
+		
+		add(unmorphConfirmPanel, "Unmorph Confirm");
 		
 		// Move Panel: Prompts the player to click a tile on the map to move to
 		movePanel = new JPanel();
@@ -189,11 +218,14 @@ public class UnitActionPanel extends JPanel
 		actPanel.add(actInnerPanel, BorderLayout.CENTER);
 		actInnerPanel.setLayout(new BorderLayout(0, 0));
 		
+		fightDesc = "";
 		btnFight = new JButton("<html><strong>Fight");
 		btnFight.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				prevCard = "Act";
-				showSkillUsePanel(game.currentUnit().getFightSkill());
+				showSkillUsePanel(game.currentUnit().getFightSkill(), 0);
+				window.skillDesc.setText(fightDesc);
+				window.deck.show(window.previewDeck, "Blank");
 			}
 		});
 		btnFight.setPreferredSize(new Dimension(112, 23));
@@ -210,6 +242,16 @@ public class UnitActionPanel extends JPanel
 		add(fightPanel, "Fight");
 		fightPanel.setLayout(new BorderLayout(0, 0));
 		
+		btnFightConfirm = new JButton("Confirm");
+		btnFightConfirm.setEnabled(false);
+		fightPanel.add(btnFightConfirm, BorderLayout.CENTER);
+		btnFightConfirm.addActionListener(new ActionListener(){
+			public void actionPerformed(ActionEvent e)
+			{
+				window.mapPanel.selectTarget(2);
+			}
+		});
+		
 		btnFightCancel = new JButton("Cancel");
 		fightPanel.add(btnFightCancel, BorderLayout.SOUTH);
 		btnFightCancel.addActionListener(new ActionListener(){
@@ -221,7 +263,7 @@ public class UnitActionPanel extends JPanel
 		
 		lblClickTheUnit = new JLabel("<html>Click the unit to target.<br>Double-click to confirm action.");
 		lblClickTheUnit.setHorizontalAlignment(SwingConstants.CENTER);
-		fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
+		// fightPanel.add(lblClickTheUnit, BorderLayout.CENTER);
 			
 		// Wait Panel: Lets the player select a direction for the unit to face before before ending their turn
 		waitPanel = new JPanel();
@@ -275,8 +317,23 @@ public class UnitActionPanel extends JPanel
 		this.au = au;
 		UnitActionPanel thisRef = this;	// reference to 'this', which is hidden from inside of action listener definitions
 		
+		if (au.morph != Morph.NONE)
+		{
+			actionsPanel.setLayout(new GridLayout(4, 1, 0, 0));
+			actionsPanel.remove(btnWait);
+			actionsPanel.add(btnUnmorph);
+			actionsPanel.add(btnWait);
+		}
+		else
+		{
+			cancelMorphUI();
+		}
+		
 		// Wipe the old actSkillsetPanel
 		actSkillsetPanel.removeAll();
+		
+		// Set fightdesc
+		fightDesc = au.getFightSkill().getDesc();
 		
 		// Add first skillset button
 		btnSkillset_1 = new JButton("" + au.unit.job.command);
@@ -289,7 +346,7 @@ public class UnitActionPanel extends JPanel
 				cl.show(thisRef, "Skillset 1");
 			}
 		});
-		add(new SkillPanel(au.unit.job.command), "Skillset 1");
+		add(new SkillPanel(au.unit.job.command.SKILLS, "Act"), "Skillset 1");
 		if (au.status[StatusEffect.FROG.ordinal()] > 0 || au.status[StatusEffect.ADDLE.ordinal()] > 0)
 			btnSkillset_1.setEnabled(false);
 		else
@@ -314,9 +371,8 @@ public class UnitActionPanel extends JPanel
 				else
 					btnSkillset_2.setEnabled(true);
 			
-			add(new SkillPanel(au.unit.secondary), "Skillset 2");
+			add(new SkillPanel(au.unit.secondary.SKILLS, "Act"), "Skillset 2");
 		}
-		
 		
 		// Add Item skillset button, if the user is an alchemist
 		if (au.unit.job == FFTAJob.ALCHEMIST && au.unit.secondary != FFTACommand.ITEM)
@@ -335,7 +391,48 @@ public class UnitActionPanel extends JPanel
 			else
 				btnItem.setEnabled(true);
 			
-			add(new SkillPanel(FFTACommand.ITEM), "AlchItem");
+			add(new SkillPanel(FFTACommand.ITEM.SKILLS, "Act"), "AlchItem");
+		}
+		
+		// Add a morph panel, if the unit is morphed
+		if (au.morph != Morph.NONE)
+		{
+			add(new SkillPanel(au.morph.skillset.SKILLS, "Actions"), "Morph");
+			btnAct.setText("Act (" + au.morph.name + ")");
+			actTarget = "Morph";
+		}
+		
+		// Add doublecast panel
+		if (au.unit.job == FFTAJob.RED_MAGE || au.unit.secondary == FFTACommand.RED_MAGIC)
+		{
+			// Identify magic skillsets
+			FFTASkill[] second = new FFTASkill[0];
+			if (au.unit.job.command == FFTACommand.WHITE_MAGIC || 
+				au.unit.job.command == FFTACommand.SPIRIT_MAGIC || 
+				au.unit.job.command == FFTACommand.SUMMON_MAGIC)
+			{
+				second = au.unit.job.command.SKILLS;
+			}
+			else if (au.unit.secondary== FFTACommand.WHITE_MAGIC || 
+				au.unit.secondary == FFTACommand.SPIRIT_MAGIC || 
+				au.unit.secondary == FFTACommand.SUMMON_MAGIC)
+			{
+				second = au.unit.secondary.SKILLS;
+			}
+			
+			FFTASkill[] dcSkills = new FFTASkill[FFTACommand.RED_MAGIC.SKILLS.length + second.length - 1];
+			for (int i = 0; i < FFTACommand.RED_MAGIC.SKILLS.length - 1; i++)
+				dcSkills[i] = FFTACommand.RED_MAGIC.SKILLS[i];
+			for (int i = 0; i < second.length; i++)
+				dcSkills[i + FFTACommand.RED_MAGIC.SKILLS.length - 1] = second[i];
+			
+			String prev;
+			if (au.unit.job == FFTAJob.RED_MAGE)
+				prev = "Skillset 1";
+			else
+				prev = "Skillset 2";
+			dcPanel = new SkillPanel(dcSkills, prev);
+			add(dcPanel, "Doublecast");
 		}
 		
 		actSkillsetPanel.revalidate();
@@ -390,9 +487,9 @@ public class UnitActionPanel extends JPanel
 		cl.show(this, "Move");
 	}
 	
-	public void showActPanel()
+	public void showPanel(String panelName)
 	{
-		cl.show(this, "Act");
+		cl.show(this, panelName);
 	}
 	
 	public void showPrevPanel()
@@ -426,25 +523,40 @@ public class UnitActionPanel extends JPanel
 			showActionsPanel();
 	}
 
-	public void showSkillUsePanel(FFTASkill sk)
+	public void showSkillUsePanel(FFTASkill sk, int doublecastMode)
 	{
-		window.beginTargetingMode(sk);
-		lblClickTheUnit.setText(window.selectedSkill + "");
+		window.beginTargetingMode(sk, doublecastMode);
+		btnFightConfirm.setText("Execute " + window.selectedSkill.NAME);
 		cl.show(this, "Fight");
 	}
 	
 	public void cancelFight()
 	{
-		window.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just clears the highlighted
-		window.selectTile();
-		showPrevPanel();			// tiles and sets the map panel's mode to 0, it serves our purpose here
+		window.cancelMovementMode();	// Properly we're not even IN movement mode, but since this just 
+										// clears the highlighted tiles and sets the map panel's mode to 0,
+		window.selectTile();			// it serves our purpose here
+		
+		if (doublecastMode > 0)
+			showPanel("Doublecast");
+		else if (au.morph != Morph.NONE)
+			showPanel("Morph");
+		else
+			showPrevPanel();
+		
+		if (prevCard.equals("Act"))
+			window.skillDesc.setText("");
 	}
 	
 	
 	
 	public void finishAct()
 	{
-		if (unitHasMoved)
+		window.skillDesc.setText("");
+		if (au.cannotAct())
+		{
+			doWait(au.dir);
+		}
+		else if (unitHasMoved)
 		{
 			btnWaitCancel.setEnabled(false);
 			showWaitPanel();
@@ -477,24 +589,52 @@ public class UnitActionPanel extends JPanel
 			btnNw.setEnabled(false);
 			btnSw.setEnabled(false);
 			btnSe.setEnabled(false);
+			btnWaitCancel.setEnabled(false);
 			
 //			hideActionPanel();
 		}
 		catch (IOException e) { e.printStackTrace(); }
-
 	}
 	
-	private class SkillPanel extends JPanel
+	public void cancelMorphUI()
 	{
-		public SkillPanel(FFTACommand skillset)
+		actionsPanel.setLayout(new GridLayout(3, 1, 0, 0));
+		actionsPanel.remove(btnUnmorph);
+		btnAct.setText("Act");
+		actTarget = "Act";
+		actionsPanel.revalidate();
+	}
+	
+	class SkillPanel extends JPanel
+	{
+		public JButton btnSkillCancel;
+		
+		public SkillPanel(FFTASkill[] skills, String prevPanel)
 		{
+			doublecastMode = 0;
 			setLayout(new BorderLayout(0, 0));
 			
 			// Initialize 'Cancel' button 
-			JButton btnSkillCancel = new JButton("Cancel Skill");
+			btnSkillCancel = new JButton("Cancel Skill");
 			btnSkillCancel.addActionListener(new ActionListener() {
 				public void actionPerformed(ActionEvent arg0) {
-					showActPanel();
+					
+					if (doublecastMode < 2)
+					{
+						showPanel(prevPanel);
+						doublecastMode = 0;
+						btnSkillCancel.setText("Cancel Skill");
+						window.mapPanel.selectTile(window.mapPanel.selectedTile);
+						window.skillDesc.setText("");
+					}
+					else
+					{
+						showPanel("Doublecast");
+						doublecastMode = 1;
+						btnSkillCancel.setText("Cancel Doublecast");
+						revalidate();
+						repaint();
+					}
 				}
 			});
 			add(btnSkillCancel, BorderLayout.SOUTH);
@@ -535,7 +675,18 @@ public class UnitActionPanel extends JPanel
 					result.setBorder(new EmptyBorder(1, 2, 1, 0));
 					result.setOpaque(true);
 					
-					result.setEnabled(FFTASkill.canUseSkill(sk, au));
+					if (doublecastMode == 2)
+					{
+						int offset = window.dcSkill.MP_COST;
+						if (au.unit.support == FFTASupport.HALF_MP)
+							offset /= 2;
+						else if (au.unit.support == FFTASupport.TURBO_MP)
+							offset *= 2;
+						
+						result.setEnabled(FFTASkill.canUseSkill(sk, au, offset));
+					}
+					else
+						result.setEnabled(FFTASkill.canUseSkill(sk, au, 0));
 
 					
 					if (isSelected)
@@ -554,8 +705,18 @@ public class UnitActionPanel extends JPanel
 			}
 			skillList.setCellRenderer(new SkillCellRenderer());
 			
+			ListSelectionModel model = skillList.getSelectionModel();
+			model.addListSelectionListener(new ListSelectionListener()
+			{
+				public void valueChanged(ListSelectionEvent arg0) 
+				{
+					game.window.skillDesc.setText(skillList.getSelectedValue().getDesc());
+					game.window.deck.show(game.window.previewDeck, "Blank");
+				}
+				
+			});
+			
 			// Create and populate list model and assign it to the list
-			FFTASkill[] skills = skillset.SKILLS;
 			DefaultListModel<FFTASkill> skListModel = new DefaultListModel<FFTASkill>();
 			for (FFTASkill sk : skills)
 				skListModel.addElement(sk);
@@ -573,13 +734,35 @@ public class UnitActionPanel extends JPanel
 				public void actionPerformed(ActionEvent e)
 				{
 					FFTASkill sk = skillList.getSelectedValue();
-					if (sk != null && FFTASkill.canUseSkill(sk, au))
+					int offset = 0;
+					if (doublecastMode == 2)
 					{
-						showSkillUsePanel(sk);
-						if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES)
+						offset = window.dcSkill.MP_COST;
+						if (au.unit.support == FFTASupport.HALF_MP)
+							offset /= 2;
+						else if (au.unit.support == FFTASupport.TURBO_MP)
+							offset *= 2;
+					}
+					
+					if (sk != null && FFTASkill.canUseSkill(sk, au, offset))
+					{
+						if (sk == FFTASkill.DOUBLECAST)
 						{
-							// window.selectTile();
-							window.selectTarget(0);
+							dcPanel.btnSkillCancel.setText("Cancel Doublecast");
+							showPanel("Doublecast");
+							doublecastMode = 1;
+							System.out.println("boops");
+							revalidate();
+						}
+						else
+						{
+							showSkillUsePanel(sk, doublecastMode);
+							if (sk.TARGETING == Targeting.SELF_CENTER || sk.TARGETING == Targeting.ALL_ENEMIES ||
+								sk.TARGETING == Targeting.ALL || sk.TARGETING == Targeting.SAME_LEVEL_DIGIT)
+							{
+								// window.selectTile();
+								window.selectTarget(0);
+							}
 						}
 					}
 				}

@@ -263,7 +263,7 @@ public class FFTAUnit implements Serializable
 		{
 			result += equips.slots[i].evade;
 		}
-		return (int) result;
+		return Math.min((int) result, 100);
 	}
 
 	public FFTAEquip getWeapon(boolean leftHand)

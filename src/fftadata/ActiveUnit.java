@@ -22,6 +22,9 @@ public class ActiveUnit implements Serializable
 	public int covering;
 	public int switchedInFor;
 	public int turnCoverUsed;
+	public boolean reacting;
+	
+	public Morph morph;
 	
 	public int[] status;
 		
@@ -48,6 +51,8 @@ public class ActiveUnit implements Serializable
 		covering = -1;
 		switchedInFor = -1;
 		turnCoverUsed = -1;
+		
+		morph = Morph.NONE;
 	}
 	
 	public String getSpriteURL()
@@ -64,7 +69,9 @@ public class ActiveUnit implements Serializable
 		else if (team == 2)
 			url.append("_enemy");
 		
-		if (currHP > unit.maxHP / 4)
+		if (morph != Morph.NONE)
+			url.append("_morph");
+		else if (currHP > unit.maxHP / 4)
 			url.append("_stand");
 		else if (currHP > 0)
 			url.append("_kneel");
@@ -148,4 +155,26 @@ public class ActiveUnit implements Serializable
 		else
 			return FFTASkill.FIGHT;
 	}
+
+	public boolean cannotAct() {
+		return currHP == 0 || status[StatusEffect.PETRIFY.ordinal()] > 0 ||
+				status[StatusEffect.SLEEP.ordinal()] > 0 || status[StatusEffect.STOP.ordinal()] > 0;
+	}
+
+	public int getBaseWAtk()
+	{
+		if (morph != Morph.NONE && !reacting)
+			return 999;
+		else
+			return (int) unit.wAtk;
+	}
+	
+	public int getBaseMPow()
+	{
+		if (morph != Morph.NONE && !reacting)
+			return 999;
+		else
+			return (int) unit.mPow;
+	}
 }
+

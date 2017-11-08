@@ -341,7 +341,7 @@ public enum FFTAEquip implements Serializable
 	DARK_GEAR		("Dark Gear",		EquipType.CLOTHING,		0,	32,	0,	3,	2,	0,	0,	1,	0,	Element.NULL,		1,	new ItemEffect[] {ItemEffect.NULL_STOP}),
 	GAIA_GEAR		("Gaia Gear",		EquipType.CLOTHING,		0,	24,	0,	12,	0,	0,	0,	0,	0,	Element.NULL,		1,	new ItemEffect[] {ItemEffect.ABSB_EARTH}),
 	GALMIA_SET		("Galmia Set",		EquipType.CLOTHING,		0,	26,	0,	18,	0,	0,	0,	0,	0,	Element.NULL,		2,	new ItemEffect[] {}),
-	JUDGE_COAT		("Judge Goat",		EquipType.CLOTHING,		0,	38,	0,	28,	0,	0,	0,	0,	0,	Element.NULL,		2,	new ItemEffect[] {}),
+	JUDGE_COAT		("Judge Coat",		EquipType.CLOTHING,		0,	38,	0,	28,	0,	0,	0,	0,	0,	Element.NULL,		2,	new ItemEffect[] {}),
 	JUDO_UNIFORM	("Judo Uniform",	EquipType.CLOTHING,		0,	34,	0,	8,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {ItemEffect.NULL_DOOM}),
 	LEATHER_GARB	("Leather Garb",	EquipType.CLOTHING,		0,	18,	0,	4,	0,	0,	0,	0,	0,	Element.NULL,		0,	new ItemEffect[] {}),
 	MIRAGE_VEST		("Mirage Vest",		EquipType.CLOTHING,		0,	32,	0,	16,	0,	0,	0,	0,	0,	Element.NULL,		1,	new ItemEffect[] {ItemEffect.NULL_KO}),
@@ -586,7 +586,7 @@ public enum FFTAEquip implements Serializable
 			case THIEF_ARMLETS	: effect2.append("Improves chance to steal."); break;
 			case ANGEL_RING		: effect2.append("Auto-Raise. Nullifies Zombie, Darkness, Silence, Frog, Poison, Slow, Immobilize, Disable, and Doom."); break;
 			case FORTUNE_RING	: effect2.append("Nullifies Sleep and Doom."); break;
-			case MINDU_GEM		: effect2.append("Nullifies multiple debuffs (mouse-over for list)."); break;
+			case MINDU_GEM		: effect2.append("Nullifies Stone, Frog, Poison, Darkness, and Silence. Halves Thunder."); break;
 			case RUBY_EARRING	: effect2.append("Nullifies Confuse and Charm. Halves Dark."); break;
 			case SCARAB			: effect2.append("Nullifies Immobilize, Disable, and Charm."); break;
 			case STAR_ARMLET	: effect2.append("Nullifies Stop and Slow."); break;
@@ -652,15 +652,15 @@ enum ItemEffect
 	HEAL_HP("Heal's the target's HP"), AUTO_RAISE("Auto-Raise"), AUTO_REFLECT("Auto-Reflect");
 	
 	final static ItemEffect[][] elemEffs = { {ABSB_FIRE, NULL_FIRE, HALF_FIRE, WEAK_FIRE},
-											 {ABSB_ICE, NULL_ICE, HALF_ICE, WEAK_ICE},
 											 {ABSB_LIGHTNING, NULL_LIGHTNING, HALF_LIGHTNING, WEAK_LIGHTNING},
+											 {ABSB_ICE, NULL_ICE, HALF_ICE, WEAK_ICE},
 											 {ABSB_WIND, NULL_WIND, HALF_WIND, WEAK_WIND},
 											 {ABSB_EARTH, NULL_EARTH, HALF_EARTH, WEAK_EARTH},
 											 {ABSB_WATER, NULL_WATER, HALF_WATER, WEAK_WATER},
 											 {ABSB_HOLY, NULL_HOLY, HALF_HOLY, WEAK_HOLY},
 											 {ABSB_DARK, NULL_DARK, HALF_DARK, WEAK_DARK}};
 	
-	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_ICE, ENHN_LIGHTNING, ENHN_WIND,
+	final static ItemEffect[] enhnEffs = { ENHN_FIRE, ENHN_LIGHTNING, ENHN_ICE, ENHN_WIND,
 										   ENHN_EARTH, ENHN_WATER, ENHN_HOLY, ENHN_DARK };
 	
 	
@@ -673,9 +673,3 @@ enum ItemEffect
 }
 
 
-enum Status
-{
-	PETRIFY, BERSERK, FROG, POISON, DARKNESS, SLEEP, SILENCE, CONFUSION, IMMOBILIZE, DISABLE,
-	AUTO_LIFE, REGEN, ASTRA, REFLECT, DOOM, HASTE, SLOW, STOP, PROTECT, CHARM, ADDLE,
-	KO, ZOMBIE, WATK_UP, WATK_DOWN, WDEF_UP, WDEF_DOWN, MPOW_UP, MPOW_DOWN, MRES_UP, MRES_DOWN, SPEED_DOWN;
-}

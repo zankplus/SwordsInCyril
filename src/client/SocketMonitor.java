@@ -15,6 +15,7 @@ import java.util.List;
 import javax.swing.SwingWorker;
 
 import fftadata.ActiveUnit;
+import fftadata.GameState;
 import fftadata.SkillEffectResult;
 import zank.ZankGameAction;
 import zank.ZankGameActionType;
@@ -112,13 +113,14 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 				
 				String user = msg.user;
 				
-				// CHAT: a user has sent a message for the lobby chat
+				
 				if (type.equals(ZankMessageType.READY))
 				{
 					// Show user that connection succeeded
 					client.loginWindow.connectSuccess();
 				}
 				
+				// CHAT: a user has sent a message for the lobby chat
 				else if (type.equals(ZankMessageType.CHAT))
 				{
 					client.chatWindow.receiveChat(user, (String) msg.data);
@@ -139,7 +141,7 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 				// ONLINE: the server has notified the client of which users are online
 				else if (type.equals(ZankMessageType.ONLINE))
 				{
-					client.chatWindow.receiveOnline((String) msg.data);
+					client.chatWindow.receiveOnline((ZankUser[]) msg.data);
 				}
 				
 				// CHALLENGE: another user has issued a challenge to the client
@@ -151,19 +153,19 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 				// ENGAGE: two users are engaging in a battle
 				else if (type.equals(ZankMessageType.ENGAGE))
 				{
-					client.chatWindow.receiveEngage(msg.user, (String) msg.data);
+					client.chatWindow.receiveEngage(msg.user, ((String[]) msg.data)[0], ((String[]) msg.data)[1]);
+				}
+				
+				// AVAILABLE: server has indicated the target user is not presently battling
+				else if (type.equals(ZankMessageType.AVAILABLE))
+				{
+					client.chatWindow.receiveAvailable((String) user);
 				}
 				
 				// BEEP: server has sent a heartbeat
 				else if (type.equals(ZankMessageType.BEEP))
 				{
 					//
-				}
-				
-				// BEEP: the server has sent a heartbeat
-				else if (type.equals(ZankMessageType.ENGAGE))
-				{
-					System.out.println("dub");
 				}
 				
 				// GAME: a category of actions, indicating that some action has been taken pertaining to the client in a game they are a part of
@@ -175,7 +177,8 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 					// START: the challenge has been accepted and the client's game is beginning
 					if (action.type.equals(ZankGameActionType.START))
 					{
-						client.launchEngagementWindow(action);
+						boolean spectator = (msg.user != null && msg.user.equals("spec"));
+						client.launchEngagementWindow(action, spectator);
 					}
 					
 					// CHAT: a user in the engagement has sent a message to the engagement chat 
@@ -188,6 +191,12 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 					else if (action.type.equals(ZankGameActionType.READY))
 					{
 						game.receiveReady((ArrayList<ActiveUnit>) action.data);
+					}
+					
+					// SPECREADY: as above, but just for spectators
+					else if (action.type.equals(ZankGameActionType.SPECREADY))
+					{
+						game.receiveSpecReady((ArrayList<ActiveUnit>[]) action.data);
 					}
 					
 					// NEXT: the server has indicated that a new unit's turn should begin
@@ -208,13 +217,25 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 						game.receiveAct((int[]) action.data);
 					}
 					
-					// HIT: the server has indicated that a unit in combat has taken damage
+					// DOUBLECAST: the server has indicated that a unit is using the Doublecast ability
+					else if (action.type.equals(ZankGameActionType.DOUBLECAST))
+					{
+						game.receiveDoublecast((int[]) action.data);
+					}
+					
+					// HIT: the server has sent the results of a combat action
 					else if (action.type.equals(ZankGameActionType.HIT))
 					{
 						game.receiveHit((SkillEffectResult[]) action.data);
 					}
+					
+					// DCHIT: the server has sent the results of a doublecasted spell
+					else if (action.type.equals(ZankGameActionType.DCHIT))
+					{
+						game.receiveDCHit((SkillEffectResult[]) action.data);
+					}
 						
-					// WAIT: the server has indicated that some unit has settled their direction, indicating the end of their turn
+					// WAIT: the server has indicated that some unit ended their turn, picking a direction
 					else if (action.type.equals(ZankGameActionType.WAIT))
 					{
 						game.receiveWait((int[]) action.data);
@@ -231,12 +252,45 @@ public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 					{
 						game.receiveExit((String) action.data);
 					}
+					
+					// REACTION: A unit's R-Ability has activated
+					else if (action.type.equals(ZankGameActionType.REACTION))
+					{
+						game.receiveReaction((int[]) action.data);
+					}
+					
+					// TURN_ORDER: An able unit's turn has begun and the turn order must be updated
+					else if (action.type.equals(ZankGameActionType.TURN_ORDER))
+					{
+						game.receiveTurnOrder((int[]) action.data); 
+					}
+					
+					// SPECJOIN: A unit has joined the game mid-engagement
+					else if (action.type.equals(ZankGameActionType.SPECJOIN))
+					{
+						Object[] data = (Object[]) action.data;
+						game.receiveSpecJoin((GameState) data[0]);
+						game.receiveNext((int[]) data[1]);
+						game.receiveTurnOrder((int[]) data[2]);
+					}
+					
+					// SPECNOTICE: A spectator has joined your game
+					else if (action.type.equals(ZankGameActionType.SPECNOTICE))
+					{
+						game.receiveSpecNotice((String) action.data);
+					}
+					
+					// UNMORPH: A morphed unit has reverted to unmorphed form
+					else if (action.type.equals(ZankGameActionType.UNMORPH))
+					{
+						game.receiveUnmorph((int) action.data);
+					}
 				}
 				else
 					System.out.println("received bad game message from server: " + msg);
 
 				if (client.chatWindow != null)
-					client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());							
+					client.chatWindow.chat.setCaretPosition(client.chatWindow.chat.getDocument().getLength());
 			}
 			catch (NullPointerException e) { e.printStackTrace(); }
 		}

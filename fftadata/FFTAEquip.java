@@ -671,5 +671,3 @@ enum ItemEffect
 		this.desc = desc;
 	}
 }
-
-

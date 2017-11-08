@@ -45,58 +45,20 @@ public class ZankClient
 
 	public void sendChallenge(String user) throws IOException
 	{
-		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.username, user);
+		message = new ZankMessage(ZankMessageType.CHALLENGE, zu.name, user);
 		sendZankMessage(message);
 	}
 	
 	public void sendEngage(String user) throws IOException
 	{
-		message = new ZankMessage(ZankMessageType.ENGAGE, zu.username, user);
+		message = new ZankMessage(ZankMessageType.ENGAGE, zu.name, user);
 		sendZankMessage(message);
 	}
 	
-	public void launchEngagementWindow(ZankGameAction startMsg)
+	public void sendSpectate(String user) throws IOException
 	{
-		String opponentName;
-		int playerNumber;
-		
-		if (zu.username.equals(startMsg.player1))
-		{
-			opponentName = startMsg.player2;
-			playerNumber = 1;
-		}
-		
-		else
-		{
-			opponentName = startMsg.player1;
-			playerNumber = 2;
-		}
-		
-		
-		game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
-		game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
-		game.window.setVisible(true);	
-	}
-	
-	public void launchClanBuilder()
-	{
-		if (clanBuilder != null)
-		{
-			if (!clanBuilder.isVisible())
-			{
-				clanBuilder.dispose();
-				clanBuilder = new ClanBuilder();
-				clanBuilder.setVisible(true);
-			}
-			else
-				clanBuilder.toFront();
-		}
-		else
-		{
-			clanBuilder = new ClanBuilder();
-			clanBuilder.setVisible(true);
-		}
-		
+		message = new ZankMessage(ZankMessageType.SPECTATE, zu.name, user);
+		sendZankMessage(message);
 	}
 	
 	public void sendZankMessage(ZankMessage zm)
@@ -123,6 +85,63 @@ public class ZankClient
 			}
 			
 		}
+	}
+
+	public void launchEngagementWindow(ZankGameAction startMsg, boolean spectator)
+	{
+		String opponentName;
+		int playerNumber;
+		
+		if (spectator)
+		{
+			opponentName = startMsg.player2;
+			playerNumber = 0;
+			
+			game = new Engagement(new ZankUser(startMsg.player1), playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
+			game.window.appendToChat("<em>You are now watching <strong>" + startMsg.player1 +
+									 "</strong> and <strong>" + startMsg.player2 + "</strong> engage.");
+		}
+		else if (zu.name.equals(startMsg.player1))
+		{
+			opponentName = startMsg.player2;
+			playerNumber = 1;
+			
+			game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
+			game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
+		}
+		else
+		{
+			opponentName = startMsg.player1;
+			playerNumber = 2;
+			
+			game = new Engagement(zu, playerNumber, new ZankUser(opponentName), startMsg.gameID, this);
+			game.window.appendToChat("<em>You are now engaging with <strong>" + opponentName + "</strong>.");
+		}
+		
+		
+		
+		game.window.setVisible(true);	
+	}
+	
+	public void launchClanBuilder()
+	{
+		if (clanBuilder != null)
+		{
+			if (!clanBuilder.isVisible())
+			{
+				clanBuilder.dispose();
+				clanBuilder = new ClanBuilder();
+				clanBuilder.setVisible(true);
+			}
+			else
+				clanBuilder.toFront();
+		}
+		else
+		{
+			clanBuilder = new ClanBuilder();
+			clanBuilder.setVisible(true);
+		}
+		
 	}
 	
 	public void launchSocketMonitor()
@@ -177,4 +196,6 @@ public class ZankClient
 		System.setProperty("apple.eawt.quitStrategy", "CLOSE_ALL_WINDOWS");	// Lets the program close on command-Q on macs
 			
 	}
+
+	
 }
