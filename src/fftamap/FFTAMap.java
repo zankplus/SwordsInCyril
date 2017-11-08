@@ -16,7 +16,7 @@ class FFTAMap
 {
 	public BufferedImage background, ground;
 	public TreeSet<ForegroundObject> mapObjects;
-	public FFTAMapTile[][] mapData;
+	public FFTAMapTile[][] mapData; 
 	public FFTAMapTile[] tileList, p1StartingTiles, p2StartingTiles;
 	
 	public ArrayList<FFTAMapTile> getReachableTiles(ActiveUnit au)

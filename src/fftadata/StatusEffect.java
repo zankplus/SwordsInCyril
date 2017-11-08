@@ -4,7 +4,7 @@ public enum StatusEffect
 {
 	// Basic debuffs
 	POISON			("Poison",			1,	false,	" is <strong><span style=\"color:maroon\">poisoned</strong></span>!"),
-	DARKNESS 		("Darkness",		1,	false,	" 's eyes go <strong><span style=\"color:maroon\">dark</strong></span>!"),
+	DARKNESS 		("Darkness",		1,	false,	"'s eyes go <strong><span style=\"color:maroon\">dark</strong></span>!"),
 	SILENCE			("Silence",			3,	false,	" is <strong><span style=\"color:maroon\">silenced</strong></span>!"),
 	SLEEP 			("Sleep",			3,	false,	" falls <strong><span style=\"color:maroon\">asleep</strong></span>!"),
 	IMMOBILIZE 		("Immobilize",		3,	false,	" is <strong><span style=\"color:maroon\">immobilized</strong></span>!"),
@@ -21,11 +21,11 @@ public enum StatusEffect
 	BERSERK 		("Berserk",			1,	false,	" is driven <strong><span style=\"color:maroon\">berserk</strong></span>!"),
 	
 	// Stat-down debuffs
-	WATK_DOWN 		("WAtk Down",		1,	true,	"'s <strong><span style=\"color:maroon\">WAtk drops</strong></span>!"),
-	WDEF_DOWN 		("WDef Down",		1,	true,	"'s <strong><span style=\"color:maroon\">WDef drops</strong></span>!"),
-	MPOW_DOWN 		("MPow Down",		1,	true,	"'s <strong><span style=\"color:maroon\">MPow drops</strong></span>!"),
-	MRES_DOWN 		("MRes Down",		1,	true,	"'s <strong><span style=\"color:maroon\">MRes drops</strong></span>!"),
-	SPEED_DOWN 		("Speed Down",		1,	true,	"'s <strong><span style=\"color:maroon\">Speed drops</strong></span>!"),
+	WATK_DOWN 		("WAtk-",			1,	true,	"'s <strong><span style=\"color:maroon\">WAtk drops</strong></span>!"),
+	WDEF_DOWN 		("WDef-",			1,	true,	"'s <strong><span style=\"color:maroon\">WDef drops</strong></span>!"),
+	MPOW_DOWN 		("MPow-",			1,	true,	"'s <strong><span style=\"color:maroon\">MPow drops</strong></span>!"),
+	MRES_DOWN 		("MRes-",			1,	true,	"'s <strong><span style=\"color:maroon\">MRes drops</strong></span>!"),
+	SPEED_DOWN 		("Speed-",			1,	true,	"'s <strong><span style=\"color:maroon\">Speed drops</strong></span>!"),
 	
 	// Death
 	DEATH			("Death",			0,	false,	"'s</em> <strong><span style=\"color:black\">spirit leaves the body</span></strong!"),
@@ -43,17 +43,13 @@ public enum StatusEffect
 	EXPERT_GUARD 	("Expert Guard",	1,	true,	" is <strong><span style=\"color:aqua\">immune to damage</strong></span>!"),
 	ADVICE		 	("Advice",			1,	true,	"'s <strong><span style=\"color:aqua\">Critical Hit rate improves</strong></span>!"),
 	
-	WATK_UP 		("WAtk UP",			1,	true,	"'s <strong><span style=\"color:cyan\">WAtk rises</strong></span>!"),
-	WDEF_UP 		("WDef UP",			1,	true,	"'s <strong><span style=\"color:cyan\">WDef rises</strong></span>!"),
-	MPOW_UP 		("MPow UP",			1,	true,	"'s <strong><span style=\"color:cyan\">MPow rises</strong></span>!"),
-	MRES_UP 		("MRes UP",			1,	true,	"'s <strong><span style=\"color:cyan\">MRes rises</strong></span>!"),
+	WATK_UP 		("WAtk+",			1,	true,	"'s <strong><span style=\"color:cyan\">WAtk rises</strong></span>!"),
+	WDEF_UP 		("WDef+",			1,	true,	"'s <strong><span style=\"color:cyan\">WDef rises</strong></span>!"),
+	MPOW_UP 		("MPow+",			1,	true,	"'s <strong><span style=\"color:cyan\">MPow rises</strong></span>!"),
+	MRES_UP 		("MRes+",			1,	true,	"'s <strong><span style=\"color:cyan\">MRes rises</strong></span>!"),
 	
 	
 	HIBERNATE 		("Hibernate",		1,	true,	""),
-	
-	
-	
-	
 	
 	
 	
@@ -63,7 +59,7 @@ public enum StatusEffect
 	
 	// Status effects that persist after death
 	FROG 			("Frog",			1,	false,	" turns into a <strong><span style=\"color:maroon\">frog</strong></span>!"),
-	AUTO_LIFE		("Auto-Life",		1,	true,	" is granted an <strong><span style=\"color:aqua\">Auto-Life</strong></span>!");
+	AUTO_LIFE		("Auto-Life",		1,	true,	" is granted <strong><span style=\"color:aqua\">Auto-Life</strong></span>!");
 	
 	
 	public final String NAME, REPORT;

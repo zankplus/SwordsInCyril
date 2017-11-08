@@ -24,11 +24,11 @@ public ActiveUnit[] units;
 	{
 		ActiveUnit max = units[0];
 		
+		// Transfer reserve to counter
 		for (ActiveUnit au : units)
 		{
 			if (au.currHP > 0)
 			{
-				au.counter += au.getTickSpeed();
 				au.counter += au.reserve;
 				au.reserve = 0;
 				
@@ -38,10 +38,27 @@ public ActiveUnit[] units;
 			
 		}
 		
+		// Check for units with more than 1000 counter
+		// If there are none, increment speed
+		if (max.counter < 1000)
+		{
+			for (ActiveUnit au : units)
+			{
+				if (au.currHP > 0)
+				{
+					au.counter += au.getTickSpeed();
+					if (au.counter > max.counter)
+						max = au;		
+				}
+			}
+		}
+		
+		// If the highest unit has more than 1000 counter, transfer the excess amount to
+		// everyone's reserve
 		if (max.counter >= 1000)
 		{
-			int baseReserve = Math.min(max.counter - 1000, 500);
-//			int baseReserve = max.counter - 1000;
+//			int baseReserve = Math.min(max.counter - 1000, 500);
+			int baseReserve = max.counter - 1000;
 			
 			
 			for (ActiveUnit au : units)
@@ -50,10 +67,11 @@ public ActiveUnit[] units;
 				{
 					int res = Math.min(baseReserve, au.counter);
 					au.counter -= res;
-					au.reserve = res;
+					au.reserve = Math.min(res, 500);
 				}
 			}
 		}
+		
 					
 		System.out.print("\t");
 		for (ActiveUnit au : units)
