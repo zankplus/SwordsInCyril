@@ -1,19 +1,9 @@
 package client;
 import java.awt.*;
-import java.awt.event.*;
 import java.net.*;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.io.*;
-import net.miginfocom.swing.MigLayout;
 import zank.*;
-
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
-
-import fftadata.ActiveUnit;
 
 public class ZankClient
 {

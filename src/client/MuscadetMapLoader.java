@@ -10,7 +10,7 @@ public class MuscadetMapLoader
 {
 	static ZankGameMap map;
 	
-	public static ZankGameMap getMap()
+	public static ZankGameMap getMap(boolean b)
 	{
 		map = new ZankGameMap();
 		
