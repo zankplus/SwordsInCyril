@@ -28,6 +28,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.text.html.HTMLDocument;
 
+import clanBuilder.ClanBuilderRosterPanel;
 import fftadata.ActiveUnit;
 import fftadata.FFTASkill;
 import fftadata.StatusEffect;

@@ -15,6 +15,7 @@ import java.util.TreeSet;
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
 
+import clanBuilder.ClanBuilderRoster;
 import fftamap.*;
 import fftadata.ActiveUnit;
 import fftadata.EquipType;

@@ -7,7 +7,7 @@ public class FFTAUnit implements Serializable
 	public String name;
 	public FFTARace race;
 	public FFTAJob job;
-	public FFTACommand secondary;
+	public FFTACommand secondary, bonus;
 	public FFTASupport support;
 	public FFTAReaction reaction;
 	public FFTACombo combo;
@@ -20,6 +20,8 @@ public class FFTAUnit implements Serializable
 	public double maxHP, maxMP, wAtk, wDef, mPow, mRes, speed;
 	public int move, jump, evade; 
 	public int leftHandWAtk;
+	
+	public KnownSkill[] primarySkills, secondarySkills;
 	
 	// No args constructor: make a new bangaa warrior unit
 	public FFTAUnit()
@@ -37,6 +39,7 @@ public class FFTAUnit implements Serializable
 		support = FFTASupport.NONE;
 		reaction = FFTAReaction.NONE;
 		combo = FFTACombo.NONE;
+		bonus = FFTACommand.NONE;
 		
 		statBase = race.jobs[0];
 		levels = new int[race.jobs.length];
@@ -46,6 +49,13 @@ public class FFTAUnit implements Serializable
 		
 		updateDeepStats();
 		updateShallowStats();
+		
+		// Initialize skill list
+		primarySkills = new KnownSkill[job.command.SKILLS.length];
+		for (int i = 0; i < job.command.SKILLS.length; i++)
+			primarySkills[i] = new KnownSkill(job.command.SKILLS[i]);
+		
+		secondarySkills = new KnownSkill[] { };
 	}
 	
 	public int getLevel()
@@ -78,6 +88,17 @@ public class FFTAUnit implements Serializable
 	public void changeJob(FFTAJob newJob)
 	{
 		job = newJob;
+		
+		// Reset skill list
+		primarySkills = new KnownSkill[job.command.SKILLS.length];
+		for (int i = 0; i < job.command.SKILLS.length; i++)
+			primarySkills[i] = new KnownSkill(job.command.SKILLS[i]);
+		
+		if (newJob == FFTAJob.ALCHEMIST)
+			bonus = FFTACommand.ITEM;
+		else
+			bonus = FFTACommand.NONE;
+		
 		equips.removeIllegalEquipment();
 		updateShallowStats();
 	}
@@ -320,6 +341,15 @@ public class FFTAUnit implements Serializable
 		evade =	job.evade;
 	}
 	
+	public void setSecondary(FFTACommand secondary)
+	{
+		this.secondary = secondary; 
+		
+		secondarySkills = new KnownSkill[secondary.SKILLS.length];
+		for (int i = 0; i < secondary.SKILLS.length; i++)
+			secondarySkills[i] = new KnownSkill(secondary.SKILLS[i]);
+	}
+	
 	public String toString()
 	{
 		String result = (name + " the " + race + " " + job);
@@ -341,5 +371,35 @@ public class FFTAUnit implements Serializable
 		
 		return result;
 	}
-}
 
+	public int getElementalResistance(Element element, boolean healing) 
+	{
+		int resistance = 0;	//	0=placeholder	1=weak	2=norm	3=half	4=null	5=absb
+		int elemIndex = element.ordinal();
+		
+		if (element != Element.NULL || healing)
+		{
+			for (int i = 0; i < 5; i++)
+			{
+				for (int j = 0; j < equips.slots[i].effects.length; j++)
+				{
+					if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][3])
+						resistance = Math.max(resistance, 1);
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][2])
+						resistance = Math.max(resistance, 3);
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][1])
+						resistance = Math.max(resistance, 4);
+					else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][0])
+						resistance = Math.max(resistance, 5);
+					
+					// System.out.println("res: " + resistance);
+				}
+			}
+		}
+	
+		if (resistance == 0)
+			resistance = 2;
+		
+		return resistance;
+	}
+}

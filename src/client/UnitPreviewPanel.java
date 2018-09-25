@@ -14,6 +14,10 @@ import java.awt.Dimension;
 
 import javax.swing.border.BevelBorder;
 import javax.swing.border.TitledBorder;
+
+import clanBuilder.ClanBuilderRosterPanel;
+import clanBuilder.EquipCellRenderer;
+
 import javax.imageio.ImageIO;
 import javax.swing.JLabel;
 import java.awt.GridLayout;

@@ -132,7 +132,7 @@ public class FFTACalc
 		
 		// 2. Status check | 3. Equipment check | 4. Immunity check | 4.5. Support Check
 		if (statusNegates(defender, sEff) || equipmentNegates(defender, sEff) ||
-				supportNegates(defender, sEff) || reactionNegates(attacker, defender, sk, state))
+				supportNegates(defender.unit, sEff) || reactionNegates(attacker, defender, sk, state))
 			hitRate = 0;
 		else
 		{
@@ -338,41 +338,16 @@ public class FFTACalc
 				element = skill.ELEMENT;
 			
 			// b. Retrieve target's resistance
-			EquipSet equips = defender.unit.equips;
-			int resistance = 0;	//	0=placeholder	1=weak	2=norm	3=half	4=null	5=absb
-			int elemIndex = element.ordinal();
-			
-			if (element != Element.NULL || healing)
-			{
-				for (int i = 0; i < 5; i++)
-				{
-					for (int j = 0; j < equips.slots[i].effects.length; j++)
-					{
-						if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][3])
-							resistance = Math.max(resistance, 1);
-						else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][2])
-							resistance = Math.max(resistance, 3);
-						else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][1])
-							resistance = Math.max(resistance, 4);
-						else if (equips.slots[i].effects[j] == ItemEffect.elemEffs[elemIndex - 1][0])
-							resistance = Math.max(resistance, 5);
-						
-						// System.out.println("res: " + resistance);
-					}
-				}
-			}
-		
-			if (resistance == 0)
-				resistance = 2;
+			int resistance = defender.unit.getElementalResistance(element, healing);
 			
 			// c. Element enhancement from equipment
-			equips = attacker.unit.equips;
+			EquipSet equips = attacker.unit.equips;
 			int enhanced = 0;
 			if (element != Element.NULL)
 			{
 				for (int i = 0; i < 5; i++)
 					for (int j = 0; j < equips.slots[i].effects.length; j++)
-						if (equips.slots[i].effects[j] == ItemEffect.enhnEffs[elemIndex - 1])
+						if (equips.slots[i].effects[j] == ItemEffect.enhnEffs[element.ordinal() - 1])
 							enhanced++;
 							
 				// Preserving the enhancement stacking glitch
@@ -504,89 +479,23 @@ public class FFTACalc
 	
 	public static boolean equipmentNegates(ActiveUnit def, StatusEffect sEff)
 	{
-		boolean result = false;
-		switch (sEff)
+		for (NegatableStatusEffect nEff : NegatableStatusEffect.values())
 		{
-			case FROG:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_FROG, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case STOP:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_STOP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case SLOW:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLOW, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case CHARM:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CHARM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case IMMOBILIZE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_IMMOBILIZE, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case DISABLE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DISABLE, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case BERSERK:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BERSERK, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case DARKNESS:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_BLIND, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case CONFUSE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_CONFUSION, ItemEffect.MINDU_GEM, ItemEffect.RIBBON});
-				break;
-				
-			case DOOM:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_DOOM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case SLEEP:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SLEEP, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case PETRIFY:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_PETRIFY, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case DEATH:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_KO, ItemEffect.RIBBON, ItemEffect.CACHUSHA});
-				break;
-				
-			case SILENCE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_SILENCE, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case POISON:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.NULL_POISON, ItemEffect.MINDU_GEM, ItemEffect.RIBBON, ItemEffect.BARETTE});
-				break;
-				
-			case ADDLE:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.RIBBON});
-				break;
-				
-			case MISC_EFFECT:
-				result = checkForItemEffects(def, new ItemEffect[] {ItemEffect.RIBBON});
-				break;
+			if (sEff == nEff.STATUS_EFFECT)
+				return checkForItemEffects(def.unit, nEff.NEGATORS);
 		}
 		
-		return result;
+		return false;
 	}
 	
-	private static boolean checkForItemEffects(ActiveUnit defender, ItemEffect[] effs)
+	public static boolean checkForItemEffects(FFTAUnit unit, ItemEffect[] effs)
 	{
 		for (int i = 0; i < 5; i++)
 		{
-			if (defender.unit.equips.slots[i] != FFTAEquip.NONE)
-				for (int j = 0; j < defender.unit.equips.slots[i].effects.length; j++)
+			if (unit.equips.slots[i] != FFTAEquip.NONE)
+				for (int j = 0; j < unit.equips.slots[i].effects.length; j++)
 					for (int k = 0; k < effs.length; k++)
-						if (effs[k] == defender.unit.equips.slots[i].effects[j])
+						if (effs[k] == unit.equips.slots[i].effects[j])
 						{
 							System.out.println("Blocked by " + effs[k]); 
 							return true;
@@ -596,19 +505,14 @@ public class FFTACalc
 		return false;
 	}
 	
-	public static boolean supportNegates(ActiveUnit defender, StatusEffect sEff)
+	public static boolean supportNegates(FFTAUnit unit, StatusEffect sEff)
 	{
-		if (defender.unit.support == FFTASupport.IMMUNITY &&
-			(sEff == StatusEffect.FROG 		||
-			sEff == StatusEffect.DARKNESS	||
-			sEff == StatusEffect.CONFUSE	||
-			sEff == StatusEffect.SLEEP		||	
-			sEff == StatusEffect.PETRIFY	||
-			sEff == StatusEffect.SILENCE	||
-			sEff == StatusEffect.POISON)	)
-		{
-			return true;
-		}
+		if (unit.support == FFTASupport.IMMUNITY)
+			for (int i = 0; i < NegatableStatusEffect.NUM_EFFECTS_BLOCKED_BY_IMMUNITY; i++)
+			{
+				if (sEff == NegatableStatusEffect.values()[i].STATUS_EFFECT)
+					return true;
+			}
 		
 		return false;
 	}

@@ -45,7 +45,7 @@ public class Engagement
 	FFTAMap map;
 	ZankGameAction action;
 	ZankMessage message;
-	ZankClient client;
+	SwordsClient client;
 	
 	ArrayList<ActiveUnit> p1Units, p2Units;
 	
@@ -53,7 +53,7 @@ public class Engagement
 	private GameState state;
 	
 	
-	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, ZankClient client)
+	public Engagement(ZankUser player, int playerNumber, ZankUser opponent, String id, SwordsClient client)
 	{
 		this.player = player;
 		this.playerNumber = playerNumber;

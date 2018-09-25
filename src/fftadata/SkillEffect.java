@@ -429,7 +429,7 @@ public enum SkillEffect implements Serializable
 	{	return applyHastebreak(result, state);															}	}),
 	
 	MATRA_MAGIC_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, GameState state, boolean preview, boolean bonecrusher)
-	{ 	return genericStatusEffect(result, state, 1, StatusEffect.MISC_EFFECT, false, preview, false);	}	public String applyEffect(SkillEffectResult result, GameState state)
+	{ 	return genericStatusEffect(result, state, 1, StatusEffect.MISC_EFFECT, true, preview, false);	}	public String applyEffect(SkillEffectResult result, GameState state)
 	{	return switchHPandMP(result, state);															}	}),
 	
 	WHITE_WIND_EFFECT																				(new SkillEffectHandler() { public SkillEffectResult resolveEffect(SkillEffectResult result, SkillEffectResult previous, SkillEffectResult first, GameState state, boolean preview, boolean bonecrusher)
@@ -830,7 +830,7 @@ public enum SkillEffect implements Serializable
 		if (sEff != null &&
 			(FFTACalc.equipmentNegates(target, sEff) ||
 			 FFTACalc.statusNegates   (target, sEff) ||
-			 FFTACalc.supportNegates  (target, sEff) ))
+			 FFTACalc.supportNegates  (target.unit, sEff) ))
 		{
 			result.hitChance = 0;
 			result.success = false;

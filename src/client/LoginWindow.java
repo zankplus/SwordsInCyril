@@ -37,7 +37,7 @@ import java.awt.Dimension;
 
 public class LoginWindow extends JFrame {
 
-	ZankClient client;
+	SwordsClient client;
 	private JPanel connectPane, connectingPane;
 	
 	protected ZankUser zUser;
@@ -66,7 +66,7 @@ public class LoginWindow extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public LoginWindow(ZankClient client)
+	public LoginWindow(SwordsClient client)
 	{
 		this.client = client;
 		

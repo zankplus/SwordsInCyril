@@ -46,7 +46,7 @@ import java.awt.Cursor;
 
 public class ChatWindow extends JFrame {
 
-	ZankClient client;
+	SwordsClient client;
 	ZankUser self;
 	Socket socket;
 	ObjectOutputStream out;
@@ -62,7 +62,7 @@ public class ChatWindow extends JFrame {
 	/**
 	 * Create the frame.
 	 */
-	public ChatWindow(ZankClient client)
+	public ChatWindow(SwordsClient client)
 	{
 		this.client = client;
 		socket = client.socket;
@@ -333,7 +333,7 @@ class ChallengeeDialog extends JDialog
 	Socket socket;
 	String user; 
 		
-	public ChallengeeDialog(String user, ZankClient gui)
+	public ChallengeeDialog(String user, SwordsClient gui)
 	{
 		this.user = user;
 		setModal(true);
@@ -386,7 +386,7 @@ class ChallengerDialog extends JDialog
 	Socket socket;
 	String user; 
 		
-	public ChallengerDialog(String user, ZankClient client)
+	public ChallengerDialog(String user, SwordsClient client)
 	{
 		this.user = user;
 		setModal(true);
@@ -441,7 +441,7 @@ class SpectatorDialog extends JDialog
 	Socket socket;
 	String user; 
 		
-	public SpectatorDialog(ZankUser user, ZankClient client)
+	public SpectatorDialog(ZankUser user, SwordsClient client)
 	{
 		this.user = user.name;
 		String user2 = user.status.split(" ")[1];

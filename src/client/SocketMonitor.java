@@ -25,14 +25,14 @@ import zank.ZankUser;
 
 public class SocketMonitor extends SwingWorker<List<ZankMessage>, ZankMessage>
 {
-	ZankClient client;
+	SwordsClient client;
 	Socket socket;
 	ObjectOutputStream out;
 	ObjectInputStream in;
 	InputStreamReader readyChecker;
 	boolean done;
 	
-	public SocketMonitor(ZankClient client)
+	public SocketMonitor(SwordsClient client)
 	{
 		super();
 		this.client = client;
